@@ -1,0 +1,12 @@
+#目录
+output
+.vscode
+Listing
+Objects
+
+#文件
+*.o
+*.obj
+*.elf
+*.hex
+*.strip
