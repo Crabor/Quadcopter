@@ -1,6 +1,6 @@
 # Four-Axis-Vehicle
 
-README [English](README_EN.md) | [中文](../README.md)
+README [English](README_EN.md) | [中文](README.md)
 
 ## Introduction
 
