@@ -1,11 +1,11 @@
-# Four-Axis-Vehicle
+# Quadcopter
 
 README [English](README_EN.md) | [中文](README.md)
 
 ## 项目介绍
 
-[![MIT](https://img.shields.io/github/license/Crabor/Four-Axis-Vehicle.svg)](https://github.com/Crabor/Four-Axis-Vehicle/tree/65eae864c7d39532fc4979a467a7aa47c9dc2918/LICENSE/README.md)
-![repo size](https://img.shields.io/github/repo-size/Crabor/Four-Axis-Vehicle.svg)
+[![MIT](https://img.shields.io/github/license/Crabor/Quadcopter.svg)](https://github.com/Crabor/Quadcopter/tree/65eae864c7d39532fc4979a467a7aa47c9dc2918/LICENSE/README.md)
+![repo size](https://img.shields.io/github/repo-size/Crabor/Quadcopter.svg)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-orange.svg)
 
 本项目是电子科技大学信息与软件工程学院综合课程设计课题：基于STM32F4的四轴飞行器。主要内容包括：
