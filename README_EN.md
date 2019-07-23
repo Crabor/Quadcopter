@@ -4,7 +4,7 @@ README [English](README_EN.md) | [中文](README.md)
 
 ## Introduction
 
-[![MIT](https://img.shields.io/github/license/Crabor/Quadcopter.svg)](https://github.com/Crabor/Quadcopter/tree/65eae864c7d39532fc4979a467a7aa47c9dc2918/LICENSE/README.md)
+[![MIT](https://img.shields.io/github/license/Crabor/Quadcopter.svg)](LICENSE)
 ![repo size](https://img.shields.io/github/repo-size/Crabor/Quadcopter.svg)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-orange.svg)
 
