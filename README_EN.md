@@ -8,66 +8,64 @@ README [English](README_EN.md) | [中文](README.md)
 ![repo size](https://img.shields.io/github/repo-size/Crabor/Quadcopter.svg)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-orange.svg)
 
-This is an Integrated Course Design of School of Information and Software Engineering of UESTC: Four-Axis Vehicle Based on STM32F401RE. It contains:
+This is an Integrated Course Design of School of Information and Software Engineering of UESTC: Quadcopter Based on STM32F401RE. It contains:
 
 * Extending attitude sensor module on STM32 board to determine the flying attitude of quadcopter
 
-* 姿态传感器采集数据后，在STM32上完成姿态解算
+* Complete the task of attitude calculation on STM32 board after the data from attitude sensor module are collected
 
-* STM32上通过PID控制及PMW电机调速，使四轴飞行器能够通过调节四轴的扇叶转速保持平稳的飞行，并不断调整以达到稳定，如图所示
+* Through the PID control and PWM motor speed regulation on STM32, the quadcopter can maintain stable flight by adjusting the speed of the propeller, and constantly adjust to achieve stability, as shown in the figure.
 
-![ ](https://i.loli.net/2019/07/22/5d359b246f42576211.png)
+![ ](https://i.loli.net/2019/07/23/5d36c3cba3aa786036.bmp)
 
-## 硬件要求
+## Hardware Requirement
 
-| 部件           | 型号                       |
-| :----------------: | :----------------------------: |
-| 机架           | F450 (螺旋桨螺距为450mm) |
-| 无刷电机     | 好盈Skywalker-20A          |
-| 马达           | A2212/13T（1000KV）        |
-| 螺旋桨        | 乾丰1045                   |
-| 电池           | 格式航模电池（2200mAh 25C） |
-| 开发板        | STM32F401RE（最高频84MHz） |
-| 加速度计、陀螺仪 | MPU6050（集成在MPU6050） |
-| 电子罗盘     | HMC5883L（集成在MPU6050） |
-| 高精度气压传感器 | MS5611                       |
-| 遥控器        | RadioLink T4EU-6（4通道） |
-| 遥控接收器  | RadioLink R7EH-S（7通道） |
-| 电池           | 格氏航模电池（2200mAh、25C） |
-| 蓝牙           | HM-10 * 2                    |
-| 扩展板       | Altium Designer软件设计  |
+| Components                  | Type and Parameters                                 |
+| :----------------:          | :----------------------------:                      |
+|       Quadcopter Rack       |           F450 (Propeller pitch is 450mm)           |
+| Brushless Motor             |               Hobbywing Skywalker-20A               |
+|            Motor            |                  A2212/13T (1000KV)                  |
+|          Propeller          |  Gemfan 1045 (Diameter is 10 inches; Blade angle is 45°)   |
+|           Battery           |       ACE 2200mAh 25C lithium-polymer battery       |
+|     Development Board      |              STM32F401RE (Up to 84MHZ)              |
+|  Accelerometer & Gyroscope  |            MPU6050 (Integrated in GY-86)            |
+|        Magnetometer         |           HMC5883L (Integrated in GY-86)            |
+|      Remote Controller      | RadioLink T4EU-6 2.4G four-channels remote controller |
+|       Remote Receiver       | RadioLink R7EH-S 2.4G seven-channels remote receiver  |
+|          Bluetooth          |            HM-10 * 2            |
+|       Expansion Board       |         Design and draw using Altium Desogner          |
 
-## 软件要求
+## Software Requirement
 
-操作系统：`Windows`或者`Linux`
+Operating System: `Windows` or `Linux`
 
-IDE：`Keil v5`
+IDE: `Keil v5`
 
-编译器：`ARM Compiler`（`Keil uVision`内置）或者 `gcc-arm-none-eabi`（`Linux`）
+Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`Linux`)
 
-## 快速使用
+## Get Started
 
-* `Windows`
+* `Windows` (Keil uVision has been installed)
 
-  1. 打开`Project/exp4.uvprojx`
+  1. Open `Project/exp4.uvprojx`
 
-  1. 点击编译按钮
+  1. Click button `Build`
 
-  1. 烧录运行
+  1. Click button `DownLoad` to burn
 
-* `Linux`（已安装`gcc-arm-none-eabi`、`st-flash`）
+* `Linux` (`gcc-arm-none-eabi` and `st-flash` have been installed)
 
-  1. 输入命令`make`生成`hex`文件
+  1. Execute `make` instruction
 
-  1. 输入命令`make burn`进行烧录
+  1. Execute `make burn` instruction to burn
 
-## 鸣谢
+## Acknowledgement
 
-廖勇老师、[施荣圳师兄](https://github.com/AlronSze)
+LIAO Yong,[Alron](https://github.com/AlronSze)
 
-正点原子、野火电子
+[Openedv](http://www.openedv.com/),[WildFire](http://www.proewildfire.cn/)
 
-## 联系
+## Contact
 
 [![jianshu](https://img.shields.io/badge/-Black__Mirror-white.svg?style=social&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAABUUlEQVQ4T52SQUsCQRTH/4NokVQsGC1sYeChS2AXO9bRY+cufgGh1u4W2D23Q1+gT+A1j3tKO0kdDApW0DAka1lztWWdmAezSKVY/8sw895vZt57fwYAzYKug+MIjG2I/URxbnEwY/20eMEIAitOBX4EeY41CzkLQFzE5je3EE2m4FRMSvXfu1D2D9C7MTEaurT37TeAc0uAXCSFlhWsZLLwXp4xF0+gVzURXtXogrCqYWg9ol+rYth4orMAFMkhJYaR+4GIqsGt3xHQr91iIZmC127RpVIBKF9VD/PoVUyCxxWJJ9A6O/4dFF/tXF1iaS8NzqkCkmOWoeXPJ4MyKFa7XKLvxTJZAmYGRW2+3cXibvpvoH1dwmjg0jhmflHUKOW9duA7No3qe3MCA8jmjHdTzDe6vYPPdguDh3sZavzfcoHJwXRpvSm+bQDcWDsxjC9+b722Av5UFwAAAABJRU5ErkJggg==)](https://www.jianshu.com/u/68e65b750b62)
 [![weibo](https://img.shields.io/badge/-Winterhell__-white.svg?style=social&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAOCAYAAADJ7fe0AAAB10lEQVQ4T5WTP3rTQBTEZ1aRqQCXfB/+lwbLVcQJYm4g38A5AbmBkxNgToByAsgJECdwqBRobKTQGzokpOHbteXESUPUSNrV/t68mSfiEVfaa60I9AHYezzMinN7nI9g4FvXi2pxTTCCwRTCIsjLNw8g6QsMjO/PRES2gGpNRjd/E/v8/aUf1oYzorpgbVa1h0TgfA+Sdv0piXcA241CAeejrDhrIJXHiNCphFMKIQyOd5ANgB/ut0cploVulVHVpKYXWoBUz2nMZwexvYrex//yR7i0hw3VFs1A4CmXbbT/PPOXTQuSLgAkkFYNdGck+NwqG+blid3b+OeFvO74cxi+BfRLtSJrYto5GBtjjgGthllpoXDFnvoJyCMbsak0efWzvHIRN9mbSq/t4i10q0P4FOTF5EHbwmWQFy5BXvdagvQ1yMvQymOrtUSt9yAHoPoAwyArnHcuYo8LF730ZZSX442Srp+Q7AdZcWg/qgzmdvNum0FWusjTXuuMwGwLORnlZewgGzoSm7tdTLt+7EabHO/5dGcErPmjvJzeGm8rdA7GMCamsAAqC6Edb09cy8ORhOkOCs6b4duDNC/u34CJCITbFCDgB4UrUMmT32V8uMb6/jz9Axzp8nOYDG1qAAAAAElFTkSuQmCC)](https://www.weibo.com/u/2694246064?topnav=1&wvr=6&topsug=1&is_all=1)
