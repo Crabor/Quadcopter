@@ -61,9 +61,9 @@ Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`L
 
 ## Acknowledgement
 
-LIAO Yong,[Alron](https://github.com/AlronSze)
+LIAO Yong, [Alron](https://github.com/AlronSze)
 
-[Openedv](http://www.openedv.com/),[WildFire](http://www.proewildfire.cn/)
+[Openedv](http://www.openedv.com/), [WildFire](http://www.proewildfire.cn/)
 
 ## Contact
 
