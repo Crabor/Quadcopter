@@ -3,6 +3,7 @@ output
 .vscode
 Listings
 Objects
+docs
 
 #文件
 *.o
