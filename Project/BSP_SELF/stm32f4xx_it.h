@@ -54,7 +54,9 @@ void SysTick_Handler(void);
 
 //外部中断
 void TIM3_IRQHandler(void);
-//void USART2_IRQHandler(void);
+void TIM5_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART6_IRQHandler(void);
 
 #ifdef __cplusplus
 }
