@@ -5,7 +5,6 @@ README [English](README_EN.md) | [中文](README.md)
 ## Introduction
 
 [![MIT](https://img.shields.io/github/license/Crabor/Quadcopter.svg)](LICENSE)
-![repo size](https://img.shields.io/github/repo-size/Crabor/Quadcopter)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux-orange.svg)
 
 This is an Integrated Course Design of School of Information and Software Engineering of UESTC: Quadcopter Based on STM32F401RE. It contains:
