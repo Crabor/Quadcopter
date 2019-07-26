@@ -86,3 +86,28 @@ void PWM_OUT_INIT(void){
 //	TIM_ARRPreloadConfig(TIM3,ENABLE);//ARPE 使能
 //	TIM_Cmd(TIM3, ENABLE); //使能 TIM3
 }
+
+void TIM5_CH1_Cap_Init(void){
+	uint32_t arr = 0xffffffff;
+	uint16_t psc = 83;//以1Mhz的频率计数
+	
+	RCC->APB1ENR|=1<<3; //TIM5 时钟使能
+	RCC->AHB1ENR|=1<<0; //使能 PORTA 时钟
+	//GPIO_Set(GPIOA,PIN0,GPIO_MODE_AF,GPIO_OTYPE_PP,GPIO_SPEED_100M,GPIO_PUPD_PD);//复用功能,下拉
+	GPIO_Set(GPIOA,GPIO_Pin_0,GPIO_Mode_AF,GPIO_OType_PP,GPIO_Fast_Speed,GPIO_PuPd_DOWN);
+	GPIO_AF_Set(GPIOA,0,2); //PA0,AF2
+	TIM5->ARR=arr; //设定计数器自动重装值
+	TIM5->PSC=psc; //预分频器
+	TIM5->CCMR1|=1<<0; //CC1S=01 选择输入端 IC1 映射到 TI1 上
+	TIM5->CCMR1|=0<<4; //IC1F=0000 配置输入滤波器 不滤波
+	TIM5->CCMR1|=0<<10; //IC1PS=00 配置输入分频,不分频
+	TIM5->CCER|=0<<1; //CC1P=0 上升沿捕获
+	TIM5->CCER|=1<<0; //CC1E=1 允许捕获计数器的值到捕获寄存器中
+	TIM5->EGR=1<<0; //软件控制产生更新事件,使写入 PSC 的值立即生效,
+	//否则将会要等到定时器溢出才会生效!
+	TIM5->DIER|=1<<1; //允许捕获 1 中断
+	TIM5->DIER|=1<<0; //允许更新中断
+	TIM5->CR1|=0x01; //使能定时器 2
+	MY_NVIC_Init(2,0,TIM5_IRQn,2);//抢占 2，子优先级 0，组 2
+}
+

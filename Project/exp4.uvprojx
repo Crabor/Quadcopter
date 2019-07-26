@@ -508,6 +508,61 @@
               <FileType>5</FileType>
               <FilePath>.\APP_FUNC\pwm.h</FilePath>
             </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\delay.h</FilePath>
+            </File>
+            <File>
+              <FileName>defines.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\defines.h</FilePath>
+            </File>
+            <File>
+              <FileName>GY86.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\GY86.c</FilePath>
+            </File>
+            <File>
+              <FileName>GY86.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\GY86.h</FilePath>
+            </File>
+            <File>
+              <FileName>IIC_Init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\IIC_Init.c</FilePath>
+            </File>
+            <File>
+              <FileName>IIC_Init.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\IIC_Init.h</FilePath>
+            </File>
+            <File>
+              <FileName>IMU.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\IMU.c</FilePath>
+            </File>
+            <File>
+              <FileName>IMU.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\IMU.h</FilePath>
+            </File>
+            <File>
+              <FileName>TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>TIM.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\TIM.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -987,6 +1042,11 @@
               <FileName>stdio.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\CLIB\stdio.h</FilePath>
+            </File>
+            <File>
+              <FileName>math.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CLIB\math.h</FilePath>
             </File>
           </Files>
         </Group>

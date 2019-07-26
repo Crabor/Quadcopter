@@ -1,105 +1,82 @@
 #include "includes.h"
 
-//u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
-////接收状态
-////bit15，	接收完成标志
-////bit14，	接收到0x0d
-////bit13~0，	接收到的有效字节数目
-//u16 USART_RX_STA=0;       //接收状态标记	
+u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
+//接收状态
+//bit15，	接收完成标志
+//bit14，	接收到0x0d
+//bit13~0，	接收到的有效字节数目
+u16 USART_RX_STA=0;       //接收状态标记	
+
+extern u8 TIM5CH1_CAPTURE_STA; //输入捕获状态
+extern u32 TIM5CH1_CAPTURE_VAL; //输入捕获值
 
 
-#define TASK_1_PRIO 4
-#define TASK_2_PRIO 5
+#define TASK_1_PRIO 3
 
 #define TASK_1_STK_SIZE 2048
-#define TASK_2_STK_SIZE 2048
 
 static OS_STK Task_1_STK[TASK_1_STK_SIZE];
-static OS_STK Task_2_STK[TASK_2_STK_SIZE];
 
 static void Task_1(void *p_arg);
-static void Task_2(void *p_arg);
-//static void Task_usart(void *p_arg);
 
 int main(void){
 	BSP_Init();
 	OSInit();
 	OSTaskCreate(Task_1, (void *)0, &Task_1_STK[TASK_1_STK_SIZE - 1], TASK_1_PRIO);
-	//OSTaskCreate(Task_2, (void *)0, &Task_2_STK[TASK_2_STK_SIZE - 1], TASK_2_PRIO);
 	OSStart();
 	return 0;
 } 
 
-//static void Task_usart(void *p_arg){
-////	u8 t;
-////	u8 len;
-////	u16 times=0;
-////	while(1){
-////		if(USART_RX_STA&0x8000)
-////		{
-////			len=USART_RX_STA&0x3fff;//得到此次接收到的数据长度
-////			printf("\r\nYou:\r\n");
-////			for(t=0;t<len;t++)
-////			{
-////				USART1->DR=USART_RX_BUF[t];
-////				while((USART1->SR&0X40)==0);//等待发送结束
-////			}
-////			printf("\r\n\r\n");//插入换行
-////			USART_RX_STA=0;
-////		}else
-////		{
-////			times++;
-////			if(times%5000==0)
-////			{
-////				printf("\r\nALIENTEK STM32F407\r\n");
-////			}
-////			if(times%200==0)printf("Enter data, end with enter:\r\n");
-////			OSTimeDly(10);
-////		}
-////	}
-//	int i=1;
-//	while(i++){
-//		printf("%d\r\n",i);
-//		OSTimeDly(1000);
+
+static void Task_1(void *p_arg){
+  while(1){
+	  printf("Hello STM32!\n");
+	  OSTimeDly(1000);
+  }
+}
+
+//static void Task_1(void *p_arg){
+//	uint32_t lowPulse=54;
+//	long long temp=0;
+//	//最低占空比启动电机
+//	TIM3->CCR1 = lowPulse;
+//	TIM3->CCR2 = lowPulse;
+//	TIM3->CCR3 = lowPulse;
+//	TIM3->CCR4 = lowPulse;
+//	OSTimeDly(5000);
+//	printf("Open quadcopter successful!\r\n");
+//	OSTimeDly(1000);
+//	MPU6050_Init();
+//	while(1)
+//	{
+//		OSTimeDly(100);
+//		if(TIM5CH1_CAPTURE_STA&0X80) //成功捕获到了一次高电平
+//		{
+//			temp=TIM5CH1_CAPTURE_STA&0X3F;
+//			temp*=0XFFFFFFFF; //溢出时间总和
+//			temp+=TIM5CH1_CAPTURE_VAL; //得到总的高电平时间
+//			printf("Duty:%f %%\r\n",temp*1.0/18600); //打印占空比
+//			TIM3->CCR1 = temp/18.6;
+//			TIM3->CCR2 = temp/18.6;
+//			TIM3->CCR3 = temp/18.6;
+//			TIM3->CCR4 = temp/18.6;
+//			TIM5CH1_CAPTURE_STA=0; //开启下一次捕获
+//		}
+//		
+//		/* 打印 x, y, z 轴加速度 */
+//		printf("ACCEL_X: %lf\r\n", GetData_MPU6050(ACCEL_XOUT_H) / 16384.0);
+//		printf("ACCEL_Y: %lf\r\n", GetData_MPU6050(ACCEL_YOUT_H) / 16384.0);
+//		printf("ACCEL_Z: %lf\r\n", GetData_MPU6050(ACCEL_ZOUT_H) / 16384.0);
+//		
+//		/* 打印温度，需要根据手册的公式换算为摄氏度 */
+//		printf("TEMP: %0.2f\r\n", GetData_MPU6050(TEMP_OUT_H) / 340.0 + 36.53);
+//		
+//		/* 打印 x, y, z 轴角速度 */
+//		printf("GYRO_X: %lf\r\n", GetData_MPU6050(GYRO_XOUT_H)*0.001064);
+//		printf("GYRO_Y: %lf\r\n", GetData_MPU6050(GYRO_YOUT_H)*0.001064);
+//		printf("GYRO_Z: %lf\r\n", GetData_MPU6050(GYRO_ZOUT_H)*0.001064);
+//		
+//		printf("\r\n");
 //	}
 //}
 
-
-static void Task_1(void *p_arg){
-	uint32_t lowPulse=55,highPulse=90;
-	//最低占空比启动电机
-	//TIM_SetCompare1(TIM3,lowPulse);
-	TIM3->CCR1 = lowPulse;
-	TIM3->CCR2 = lowPulse;
-	TIM3->CCR3 = lowPulse;
-	TIM3->CCR4 = lowPulse;
-	//TIM3->CR1|=1<<0; //使能定时器 3
-	printf("lowPulse/arr: %f\r\n",(float)TIM3->CCR1/(TIM3->ARR+1));
-	OSTimeDly(5000);
-	//TIM_SetCompare1(TIM3,highPulse);
-	TIM3->CCR1 = highPulse;
-	TIM3->CCR2 = highPulse;
-	TIM3->CCR3 = highPulse;
-	TIM3->CCR4 = highPulse;
-	printf("highPulse/arr: %f\r\n",(float)TIM3->CCR1/(TIM3->ARR+1));
-	while(1){
-		printf("pulse: %f\r\n",(float)TIM3->CCR1/(TIM3->ARR+1));
-		//TIM_SetCompare1(TIM3,highPulse);
-		OSTimeDly(1000);
-	}
-}
-
-static void Task_2(void *p_arg){
-	int i=0,dir=1;
-	while(1){
-		if(dir)i++;
-		else i--;
-		if(i>=499){
-			dir=0;
-		}else if(i<=1){
-			dir=1;
-		}
-		TIM2->CCR1=i;
-		OSTimeDly(10);
-	}
-}

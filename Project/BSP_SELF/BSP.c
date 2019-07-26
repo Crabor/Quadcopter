@@ -6,10 +6,12 @@ void BSP_Init(void){
 //	LED_INIT(GPIO_Pin_5,GPIO_Mode_OUT,GPIO_Speed_2MHz,GPIO_OType_PP,GPIO_PuPd_NOPULL);
 //	TIM_LED_INIT();
 	
-	PWM_LED_INIT();
-	
-	uart_init(42,115200);
-	PWM_OUT_INIT();
+//	PWM_LED_INIT();
+	uart6_init(84,9600);
+//	I2C_Congiguration();
+//	PWM_OUT_INIT();
+//	TIM5_CH1_Cap_Init();
+	//delay_init(168);
 }
 
 void SysTick_Init(void){
