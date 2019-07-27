@@ -52,7 +52,7 @@ Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`L
 
   1. Click button `DownLoad` to burn
 
-* `Linux` (`gcc-arm-none-eabi` and `st-flash` have been installed)
+* `Linux` (`gcc-arm-none-eabi` and `st-flash` have been installed)(**Coming soon**)
 
   1. Execute `make` instruction
 

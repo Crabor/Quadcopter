@@ -53,7 +53,7 @@ IDE：`Keil v5`
 
   1. 点击`Download`按钮烧录
 
-* `Linux`（已安装`gcc-arm-none-eabi`、`st-flash`）
+* `Linux`（已安装`gcc-arm-none-eabi`、`st-flash`）（**暂未实现**）
 
   1. 输入命令`make`生成`hex`文件
 
