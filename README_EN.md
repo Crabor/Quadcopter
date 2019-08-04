@@ -71,3 +71,7 @@ LIAO Yong, [Alron](https://github.com/AlronSze)
 ![QQ](https://img.shields.io/badge/-564102478-white.svg?style=social&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAABF0lEQVQ4T42SQU7CQBSG/99CMl3JDWwj7OEE1hu4dVGDJzCcgHoDbkBsQ1zqDRhPoPs2KUdgZ40ZnpnGYikCneWb+f7/vX8e0TjdRT7sbMwUggBETwQrALowzgT3/rp6zjpXQsYsLdAUhGAtXWdU3PpWCDugSrIVgYs96LcgwFMR9sc7oErSgODyEFTVP8N+abZ1VEkaEZyeAgVyXYQD/QfGqSZ51QJ8LMJBVIJHQ2koVXMS87znOib/N8kD9tJxfLpJNgPwcKrF+r11pYpTDXJI4LwtLCJvpaMBtAO8tAE3wskZxaulmo1JzI/BewugnnOP3+a9TUDW8evucrZ1dOPsVYigmtWqQ2A/+gYUT0APIh8gIrsAP1/XbEGbe63NAAAAAElFTkSuQmCC)
 ![wechat](https://img.shields.io/badge/-troy15270658794-white.svg?style=social&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAOCAYAAADJ7fe0AAABSklEQVQ4T4WSIVLDUBCGv80U3WoM3IBGEAs9AEN7AorDMQwCHEUygwCHbE9AUUiqU2YSblAcjlYh6MxjdvMCCSRlTbJv933Z/88KeSS0WHKMo4vQBuZACkxocEtoeWWInca0EZ6AVk3fHEeHyKB/QkjYZEliAMcLYl/c8Z2vfpp9m6xBSMjsN0WIGSIcWEHo2dNx7xtPEGbfuWNERL8KkngP6iQvEIbAB87kvuF4KErTSVKErUqCygt4xHFeUVfDe2p4WU65cwHcAWf+WPNm6d2REhHmxqrreUOOUsCR92hEwNi80YtrdFjybrWAvewXP9PFme4i6KowRZ1f+jOuM4jGlDGw67MmjguEy/rbviKcFiEDGtyUNnNqO7GxEiSs/0CqOrNNnlT4lXU7DokYroZoo270JwOEbgGmmzxjO5P/P6ROS0xfp9DyF8keXaKcVCZ8AAAAAElFTkSuQmCC)
 [![twitter](https://img.shields.io/twitter/follow/Arya_PPGYR.svg?label=Follow&style=social)](https://twitter.com/Arya_PPGYR)
+
+## About
+
+My learning process is recorded on [Wiki](https://github.com/Crabor/Quadcopter/wiki).
