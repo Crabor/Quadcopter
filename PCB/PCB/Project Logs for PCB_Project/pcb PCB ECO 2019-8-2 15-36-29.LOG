@@ -1,0 +1,64 @@
+Added Component: Designator=Bluetooth(Bluetooth)
+Added Component: Designator=CN7(CN7)
+Added Component: Designator=CN10(CN10)
+Added Component: Designator=GY-86(GY-86)
+Added Component: Designator=M1(M)
+Added Component: Designator=M2(M)
+Added Component: Designator=M3(M)
+Added Component: Designator=M4(M)
+Added Component: Designator=Receiver(Receiver)
+Added Pin To Net: NetName=3V3_1 Pin=Bluetooth-2
+Added Pin To Net: NetName=3V3_1 Pin=CN7-12
+Added Net: Name=3V3_1
+Added Pin To Net: NetName=5V_1 Pin=CN7-6
+Added Pin To Net: NetName=5V_1 Pin=M1-1
+Added Net: Name=5V_1
+Added Pin To Net: NetName=5V_2 Pin=GY-86-1
+Added Pin To Net: NetName=5V_2 Pin=M2-1
+Added Net: Name=5V_2
+Added Pin To Net: NetName=5V_3 Pin=M3-1
+Added Pin To Net: NetName=5V_3 Pin=Receiver-1
+Added Net: Name=5V_3
+Added Pin To Net: NetName=PA0 Pin=CN7-28
+Added Pin To Net: NetName=PA0 Pin=Receiver-3
+Added Net: Name=PA0
+Added Pin To Net: NetName=PA1 Pin=CN7-30
+Added Pin To Net: NetName=PA1 Pin=Receiver-4
+Added Net: Name=PA1
+Added Pin To Net: NetName=PA2 Pin=CN10-35
+Added Pin To Net: NetName=PA2 Pin=Receiver-5
+Added Net: Name=PA2
+Added Pin To Net: NetName=PA3 Pin=CN10-37
+Added Pin To Net: NetName=PA3 Pin=Receiver-6
+Added Net: Name=PA3
+Added Pin To Net: NetName=PA6 Pin=CN10-13
+Added Pin To Net: NetName=PA6 Pin=M1-3
+Added Net: Name=PA6
+Added Pin To Net: NetName=PA7 Pin=CN10-15
+Added Pin To Net: NetName=PA7 Pin=M2-3
+Added Net: Name=PA7
+Added Pin To Net: NetName=PB0 Pin=CN7-34
+Added Pin To Net: NetName=PB0 Pin=M3-3
+Added Net: Name=PB0
+Added Pin To Net: NetName=PB1 Pin=CN10-24
+Added Pin To Net: NetName=PB1 Pin=M4-3
+Added Net: Name=PB1
+Added Pin To Net: NetName=PB6 Pin=CN10-17
+Added Pin To Net: NetName=PB6 Pin=GY-86-3
+Added Net: Name=PB6
+Added Pin To Net: NetName=PB7 Pin=CN7-21
+Added Pin To Net: NetName=PB7 Pin=GY-86-4
+Added Net: Name=PB7
+Added Pin To Net: NetName=PB8 Pin=CN10-3
+Added Pin To Net: NetName=PB8 Pin=Receiver-7
+Added Net: Name=PB8
+Added Pin To Net: NetName=PB9 Pin=CN10-5
+Added Pin To Net: NetName=PB9 Pin=Receiver-8
+Added Net: Name=PB9
+Added Pin To Net: NetName=PC6 Pin=Bluetooth-5
+Added Pin To Net: NetName=PC6 Pin=CN10-4
+Added Net: Name=PC6
+Added Pin To Net: NetName=PC7 Pin=Bluetooth-4
+Added Pin To Net: NetName=PC7 Pin=CN10-19
+Added Net: Name=PC7
+Added Class: Name=pcb

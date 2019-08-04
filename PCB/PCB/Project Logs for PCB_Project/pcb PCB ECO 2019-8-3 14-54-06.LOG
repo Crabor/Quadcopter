@@ -1,0 +1,37 @@
+Added Component: Designator=Bluetooth(Bluetooth)
+Added Component: Designator=GY-86(GY-86)
+Added Component: Designator=M1(M)
+Added Component: Designator=M2(M)
+Added Component: Designator=M3(M)
+Added Component: Designator=M4(M)
+Added Component: Designator=Receiver(Receiver)
+Added Pin To Net: NetName=3V3_1 Pin=Bluetooth-2
+Added Pin To Net: NetName=GND Pin=Bluetooth-3
+Added Pin To Net: NetName=PC7 Pin=Bluetooth-4
+Added Pin To Net: NetName=PC6 Pin=Bluetooth-5
+Added Pin To Net: NetName=5V_2 Pin=GY-86-1
+Added Pin To Net: NetName=GND Pin=GY-86-2
+Added Pin To Net: NetName=PB6 Pin=GY-86-3
+Added Pin To Net: NetName=PB7 Pin=GY-86-4
+Added Pin To Net: NetName=PA6 Pin=M1-3
+Added Pin To Net: NetName=5V_2 Pin=M2-1
+Added Pin To Net: NetName=PA7 Pin=M2-3
+Added Pin To Net: NetName=5V_3 Pin=M3-1
+Added Pin To Net: NetName=PB0 Pin=M3-3
+Added Pin To Net: NetName=5V_1 Pin=M4-1
+Added Pin To Net: NetName=PB1 Pin=M4-3
+Added Pin To Net: NetName=5V_3 Pin=Receiver-1
+Added Pin To Net: NetName=GND Pin=Receiver-2
+Added Pin To Net: NetName=PA0 Pin=Receiver-3
+Added Pin To Net: NetName=PA1 Pin=Receiver-4
+Added Pin To Net: NetName=PA2 Pin=Receiver-5
+Added Pin To Net: NetName=PA3 Pin=Receiver-6
+Added Pin To Net: NetName=PB8 Pin=Receiver-7
+Added Pin To Net: NetName=PB9 Pin=Receiver-8
+Added Member To Class: ClassName=pcb Member=Component Bluetooth
+Added Member To Class: ClassName=pcb Member=Component GY-86
+Added Member To Class: ClassName=pcb Member=Component M1 M
+Added Member To Class: ClassName=pcb Member=Component M2 M
+Added Member To Class: ClassName=pcb Member=Component M3 M
+Added Member To Class: ClassName=pcb Member=Component M4 M
+Added Member To Class: ClassName=pcb Member=Component Receiver

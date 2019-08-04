@@ -1,0 +1,23 @@
+Removed Pin From Net: NetName=PB8 Pin=CN10-3
+Removed Pin From Net: NetName=PC6 Pin=CN10-4
+Removed Pin From Net: NetName=PB9 Pin=CN10-5
+Removed Pin From Net: NetName=PA6 Pin=CN10-13
+Removed Pin From Net: NetName=PA7 Pin=CN10-15
+Removed Pin From Net: NetName=PB6 Pin=CN10-17
+Removed Pin From Net: NetName=PC7 Pin=CN10-19
+Removed Pin From Net: NetName=PB1 Pin=CN10-24
+Removed Pin From Net: NetName=PA2 Pin=CN10-35
+Removed Pin From Net: NetName=PA3 Pin=CN10-37
+Removed Member From Class: ClassName=pcb Member=CN10
+Added Component: Designator=*(CN10)
+Added Pin To Net: NetName=PB8 Pin=*-3
+Added Pin To Net: NetName=PC6 Pin=*-4
+Added Pin To Net: NetName=PB9 Pin=*-5
+Added Pin To Net: NetName=PA6 Pin=*-13
+Added Pin To Net: NetName=PA7 Pin=*-15
+Added Pin To Net: NetName=PB6 Pin=*-17
+Added Pin To Net: NetName=PC7 Pin=*-19
+Added Pin To Net: NetName=PB1 Pin=*-24
+Added Pin To Net: NetName=PA2 Pin=*-35
+Added Pin To Net: NetName=PA3 Pin=*-37
+Added Member To Class: ClassName=pcb Member=Component * CN10
