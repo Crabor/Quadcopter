@@ -1,80 +1,59 @@
 Protel Design System Design Rule Check
-PCB File : C:\Users\yangrong\Desktop\PCB\pcb\pcb.PcbDoc
-Date     : 2019/8/3
-Time     : 13:46:04
+PCB File : H:\file\sizhou\Four-Axis-Vehicle\PCB\PCB\pcb.PcbDoc
+Date     : 2019/8/6
+Time     : 21:50:42
 
-Processing Rule : Width Constraint (Min=1.014mm) (Max=1.018mm) (Preferred=1.016mm) (InNetClass('5V'))
+Processing Rule : Clearance Constraint (Gap=0.5mm) (InPolygon),(All)
 Rule Violations :0
 
-Processing Rule : Width Constraint (Min=1.014mm) (Max=1.018mm) (Preferred=1.016mm) (InNetClass('3V3'))
+Processing Rule : Short-Circuit Constraint (Allowed=No) (All),(All)
 Rule Violations :0
 
-Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
-Rule Violations :0
-
-Processing Rule : Net Antennae (Tolerance=0mm) (All)
-Rule Violations :0
-
-Processing Rule : Silk primitive without silk layer
-Rule Violations :0
-
-Processing Rule : Silk to Silk (Clearance=0.254mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Silk To Solder Mask (Clearance=0.254mm) (IsPad),(All)
-Rule Violations :0
-
-Processing Rule : Minimum Solder Mask Sliver (Gap=0.254mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Hole To Hole Clearance (Gap=0.254mm) (All),(All)
-Rule Violations :0
-
-Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (All)
-Rule Violations :0
-
-Processing Rule : Height Constraint (Min=0mm) (Max=25.4mm) (Prefered=12.7mm) (All)
-Rule Violations :0
-
-Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (All)
-Rule Violations :0
-
-Processing Rule : Power Plane Connect Rule(Relief Connect )(Expansion=0.508mm) (Conductor Width=0.254mm) (Air Gap=0.254mm) (Entries=4) (All)
+Processing Rule : Un-Routed Net Constraint ( (All) )
 Rule Violations :0
 
 Processing Rule : Clearance Constraint (Gap=0.254mm) (All),(All)
 Rule Violations :0
 
-Processing Rule : Un-Routed Net Constraint ( (All) )
-   Violation between Un-Routed Net Constraint: Net PC7 Between Pad Bluetooth-4 (41.41,22.36mm) And Pad CN10-19 (61.3,22.86mm)
-   Violation between Un-Routed Net Constraint: Net PC6 Between Pad Bluetooth-5 (43.95,22.36mm) And Pad CN10-4 (63.84,43.18mm)
-   Violation between Un-Routed Net Constraint: Net PB9 Between Pad Receiver-8 (45.22,7.12mm) And Pad CN10-5 (61.3,40.64mm)
-   Violation between Un-Routed Net Constraint: Net PB8 Between Pad Receiver-7 (42.68,7.12mm) And Pad CN10-3 (61.3,43.18mm)
-   Violation between Un-Routed Net Constraint: Net PB7 Between Pad CN7-21 (0,20.32mm) And Pad GY-86-4 (18.55,14.74mm)
-   Violation between Un-Routed Net Constraint: Net PB6 Between Pad GY-86-3 (18.55,12.2mm) And Pad CN10-17 (61.3,25.4mm)
-   Violation between Un-Routed Net Constraint: Net PB1 Between Pad M4-3 (8.255,29.845mm) And Pad CN10-24 (63.84,17.78mm)
-   Violation between Un-Routed Net Constraint: Net PB0 Between Pad CN7-34 (2.54,5.08mm) And Pad M3-3 (8.39,10.93mm)
-   Violation between Un-Routed Net Constraint: Net PA7 Between Pad M2-3 (55.38,16.01mm) And Pad CN10-15 (61.3,27.94mm)
-   Violation between Un-Routed Net Constraint: Net PA6 Between Pad M1-3 (55.38,29.98mm) And Pad CN10-13 (61.3,30.48mm)
-   Violation between Un-Routed Net Constraint: Net PA3 Between Pad Receiver-6 (40.14,7.12mm) And Pad CN10-37 (61.3,0mm)
-   Violation between Un-Routed Net Constraint: Net PA2 Between Pad Receiver-5 (37.6,7.12mm) And Pad CN10-35 (61.3,2.54mm)
-   Violation between Un-Routed Net Constraint: Net PA1 Between Pad CN7-30 (2.54,10.16mm) And Pad Receiver-4 (35.06,7.12mm)
-   Violation between Un-Routed Net Constraint: Net PA0 Between Pad CN7-28 (2.54,12.7mm) And Pad Receiver-3 (32.52,7.12mm)
-   Violation between Un-Routed Net Constraint: Net 5V_3 Between Pad M3-1 (8.39,16.01mm) And Pad Receiver-1 (32.52,9.66mm)
-   Violation between Un-Routed Net Constraint: Net 5V_2 Between Pad GY-86-1 (18.55,7.12mm) And Pad M2-1 (55.38,10.93mm)
-   Violation between Un-Routed Net Constraint: Net 5V_1 Between Pad CN7-6 (2.54,40.64mm) And Pad M4-1 (8.255,34.925mm)
-   Violation between Un-Routed Net Constraint: Net 3V3_1 Between Pad CN7-12 (2.54,33.02mm) And Pad Bluetooth-2 (36.33,22.36mm)
-   Violation between Un-Routed Net Constraint: Net GND Between Pad GY-86-2 (18.55,9.66mm) And Pad Receiver-2 (32.52,12.2mm)
-   Violation between Un-Routed Net Constraint: Net GND Between Pad Receiver-2 (32.52,12.2mm) And Pad Bluetooth-3 (38.87,22.36mm)
-   Violation between Un-Routed Net Constraint: Net GND Between Pad CN7-8 (2.54,38.1mm) And Pad GY-86-2 (18.55,9.66mm)
-Rule Violations :21
-
-Processing Rule : Short-Circuit Constraint (Allowed=No) (All),(All)
+Processing Rule : Power Plane Connect Rule(Relief Connect )(Expansion=0.508mm) (Conductor Width=0.254mm) (Air Gap=0.254mm) (Entries=4) (All)
 Rule Violations :0
 
-Processing Rule : Clearance Constraint (Gap=0.5mm) (InPolygon),(All)
+Processing Rule : Width Constraint (Min=0.252mm) (Max=0.256mm) (Preferred=0.254mm) (All)
+Rule Violations :0
+
+Processing Rule : Height Constraint (Min=0mm) (Max=25.4mm) (Prefered=12.7mm) (All)
+Rule Violations :0
+
+Processing Rule : Hole Size Constraint (Min=0.025mm) (Max=2.54mm) (All)
+Rule Violations :0
+
+Processing Rule : Hole To Hole Clearance (Gap=0.254mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Minimum Solder Mask Sliver (Gap=0.254mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Silk To Solder Mask (Clearance=0.254mm) (IsPad),(All)
+Rule Violations :0
+
+Processing Rule : Silk to Silk (Clearance=0.254mm) (All),(All)
+Rule Violations :0
+
+Processing Rule : Silk primitive without silk layer
+Rule Violations :0
+
+Processing Rule : Net Antennae (Tolerance=0mm) (All)
+Rule Violations :0
+
+Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
+Rule Violations :0
+
+Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (InNet('3V3_1'))
+Rule Violations :0
+
+Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (InNetClass('5V'))
 Rule Violations :0
 
 
-Violations Detected : 21
+Violations Detected : 0
 Time Elapsed        : 00:00:00

@@ -1,0 +1,19 @@
+Added Component: Designator=M1(M)
+Added Component: Designator=M2(M)
+Added Component: Designator=M3(M)
+Added Component: Designator=M4(M)
+Added Pin To Net: NetName=GND Pin=CN7-20
+Added Pin To Net: NetName=PA6 Pin=M1-3
+Added Pin To Net: NetName=GND Pin=M2-1
+Added Pin To Net: NetName=5V_3 Pin=M2-2
+Added Pin To Net: NetName=PA7 Pin=M2-3
+Added Pin To Net: NetName=GND Pin=M3-1
+Added Pin To Net: NetName=5V_2 Pin=M3-2
+Added Pin To Net: NetName=PB0 Pin=M3-3
+Added Pin To Net: NetName=GND Pin=M4-1
+Added Pin To Net: NetName=5V_1 Pin=M4-2
+Added Pin To Net: NetName=PB1 Pin=M4-3
+Added Member To Class: ClassName=pcb Member=Component M1 M
+Added Member To Class: ClassName=pcb Member=Component M2 M
+Added Member To Class: ClassName=pcb Member=Component M3 M
+Added Member To Class: ClassName=pcb Member=Component M4 M

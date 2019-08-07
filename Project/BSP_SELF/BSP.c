@@ -8,9 +8,9 @@ void BSP_Init(void){
 	
 //	PWM_LED_INIT();
 	uart6_init(84,9600);
-//	I2C_Congiguration();
-//	PWM_OUT_INIT();
-//	TIM5_CH1_Cap_Init();
+	I2C_Congiguration();
+	PWM_OUT_INIT();
+	TIM5_CH1_Cap_Init();
 	//delay_init(168);
 }
 
