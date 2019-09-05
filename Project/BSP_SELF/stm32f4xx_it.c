@@ -232,70 +232,113 @@ void TIM5_IRQHandler(void)
 	TIM5->SR=0;//清除中断标志位
 }
 
-//#if EN_USART2_RX   //如果使能了接收
-//串口1中断服务程序
-//注意,读取USARTx->SR能避免莫名其妙的错误   	
-extern u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
-//接收状态
-//bit15，	接收完成标志
-//bit14，	接收到0x0d
-//bit13~0，	接收到的有效字节数目
-extern u16 USART_RX_STA;       //接收状态标记	  
+////#if EN_USART2_RX   //如果使能了接收
+////串口1中断服务程序
+////注意,读取USARTx->SR能避免莫名其妙的错误   	
+//extern u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
+////接收状态
+////bit15，	接收完成标志
+////bit14，	接收到0x0d
+////bit13~0，	接收到的有效字节数目
+//extern u16 USART_RX_STA;       //接收状态标记	  
   
 void USART2_IRQHandler(void)
 {
-	u8 res;	
+//	u8 res;	
 	OSIntEnter();   
-	if(USART2->SR&(1<<5))//接收到数据
-	{	 
-		res=USART2->DR; 
-		if((USART_RX_STA&0x8000)==0)//接收未完成
-		{
-			if(USART_RX_STA&0x4000)//接收到了0x0d
-			{
-				if(res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
-				else USART_RX_STA|=0x8000;	//接收完成了 
-			}else //还没收到0X0D
-			{	
-				if(res==0x0d)USART_RX_STA|=0x4000;
-				else
-				{
-					USART_RX_BUF[USART_RX_STA&0X3FFF]=res;
-					USART_RX_STA++;
-					if(USART_RX_STA>(USART_REC_LEN-1))USART_RX_STA=0;//接收数据错误,重新开始接收	  
-				}		 
-			}
-		}  		 									     
-	} 
+//	if(USART2->SR&(1<<5))//接收到数据
+//	{	 
+//		res=USART2->DR; 
+//		if((USART_RX_STA&0x8000)==0)//接收未完成
+//		{
+//			if(USART_RX_STA&0x4000)//接收到了0x0d
+//			{
+//				if(res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
+//				else USART_RX_STA|=0x8000;	//接收完成了 
+//			}else //还没收到0X0D
+//			{	
+//				if(res==0x0d)USART_RX_STA|=0x4000;
+//				else
+//				{
+//					USART_RX_BUF[USART_RX_STA&0X3FFF]=res;
+//					USART_RX_STA++;
+//					if(USART_RX_STA>(USART_REC_LEN-1))USART_RX_STA=0;//接收数据错误,重新开始接收	  
+//				}		 
+//			}
+//		}  		 									     
+//	} 
 	OSIntExit();  								
 } 
 
-void USART6_IRQHandler(void)
-{
-	u8 res;	
-	OSIntEnter();   
-	if(USART6->SR&(1<<5))//接收到数据
-	{	 
-		res=USART6->DR; 
-		if((USART_RX_STA&0x8000)==0)//接收未完成
-		{
-			if(USART_RX_STA&0x4000)//接收到了0x0d
-			{
-				if(res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
-				else USART_RX_STA|=0x8000;	//接收完成了 
-			}else //还没收到0X0D
-			{	
-				if(res==0x0d)USART_RX_STA|=0x4000;
-				else
-				{
-					USART_RX_BUF[USART_RX_STA&0X3FFF]=res;
-					USART_RX_STA++;
-					if(USART_RX_STA>(USART_REC_LEN-1))USART_RX_STA=0;//接收数据错误,重新开始接收	  
-				}		 
-			}
-		}  		 									     
-	} 
-	OSIntExit();  								
-} 
+void USART6_IRQHandler(void){
+	Usart6_IRQ();
+}
+
+
+//u8 TxBuffer[256];
+//u8 TxCounter = 0;
+//u8 count = 0;
+
+//void USART6_IRQHandler(void)
+//{
+//	u8 res;	
+//	OSIntEnter();  
+
+//	//接收中断
+//	if ( USART_GetITStatus ( USART2, USART_IT_RXNE ) )
+//	{
+//		if(USART6->SR&(1<<5))//接收到数据
+//		{	 
+//			res=USART6->DR; 
+//			if((USART_RX_STA&0x8000)==0)//接收未完成
+//			{
+//				if(USART_RX_STA&0x4000)//接收到了0x0d
+//				{
+//					if(res!=0x0a)USART_RX_STA=0;//接收错误,重新开始
+//					else USART_RX_STA|=0x8000;	//接收完成了 
+//				}else //还没收到0X0D
+//				{	
+//					if(res==0x0d)USART_RX_STA|=0x4000;
+//					else
+//					{
+//						USART_RX_BUF[USART_RX_STA&0X3FFF]=res;
+//						USART_RX_STA++;
+//						if(USART_RX_STA>(USART_REC_LEN-1))USART_RX_STA=0;//接收数据错误,重新开始接收	  
+//					}		 
+//				}
+//			}  		 									     
+//		} 	
+//	}
+
+//	//发送（进入移位）中断
+//	if ( USART_GetITStatus ( USART6, USART_IT_TXE ) )
+//	{
+
+//			USART6->DR = TxBuffer[TxCounter++]; //写DR清除中断标志
+//			if ( TxCounter == count )
+//			{
+//					USART6->CR1 &= ~USART_CR1_TXEIE;		//关闭TXE（发送中断）中断
+//			}
+
+//			//USART_ClearITPendingBit(USART6,USART_IT_TXE);
+//	}
+//	OSIntExit();  								
+//} 
+
+//void Usart6_Send( unsigned char *DataToSend , u8 data_num )
+//{
+//    u8 i;
+//    for ( i = 0; i < data_num; i++ )
+//    {
+//        TxBuffer[count++] = * ( DataToSend + i );
+//    }
+
+//    if ( ! ( USART6->CR1 & USART_CR1_TXEIE ) )
+//    {
+//        USART_ITConfig ( USART6, USART_IT_TXE, ENABLE ); //打开发送中断
+//    }
+
+//}
+
 //#endif			
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -35,7 +35,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
-
+#include "includes.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -57,6 +57,8 @@ void TIM3_IRQHandler(void);
 void TIM5_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART6_IRQHandler(void);
+
+//void Usart6_Send( unsigned char *DataToSend , u8 data_num );
 
 #ifdef __cplusplus
 }

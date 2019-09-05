@@ -3,14 +3,14 @@
 
 #define LED_EN 0u
 #define TIM_LED_EN 0u
-#define PWM_LED_EN 1u
+#define PWM_LED_EN 0u
 #define GPIO_EN 1u
 #define NVIC_EN 1u
 #define USART_EN 1u
-#define PWM_EN 1u
+#define PWM_EN 0u
 #define I2C_EN 1u
 #define MPU9150_EN 1u
-#define DELAY_EN 1u
+#define DELAY_EN 0u
 
 #if LED_EN
 	#include "led.h"

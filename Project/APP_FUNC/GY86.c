@@ -195,11 +195,11 @@ void HMC5883L_Init(void)
 	
 	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_INT_PIN_CFG,MPU6050_I2C_BYPASS_EN);
 	/*Ê¹ÄÜbypass*/
-	delay_ms(10);	
+	OSTimeDly(10);	
 	I2C_ByteWrite(HMC5883L_WRITE_ADDRESS,HMC5883L_CONFIG_A,0x78);
-	delay_ms(10);
+	OSTimeDly(10);
 	I2C_ByteWrite(HMC5883L_WRITE_ADDRESS,HMC5883L_MODE,0x00);
-	delay_ms(10);	
+	OSTimeDly(10);	
 }
 
 /*************************************
