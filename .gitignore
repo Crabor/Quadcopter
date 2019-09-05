@@ -12,3 +12,5 @@ Objects
 *.hex
 *.strip
 #.gitkeep:可push空文件夹
+*.exe
+*.rar
