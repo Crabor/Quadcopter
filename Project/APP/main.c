@@ -79,7 +79,7 @@ void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u1
 	u16 MAG_X=7,MAG_Y=8,MAG_Z=9;
 	
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
-	testdatatosend[_cnt++]=0x00;//0x00为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0x05;//0x00为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
 	testdatatosend[_cnt++]=0x02;//0xF1，表示本帧为F1用户自定义帧，对应高级收码的F1功能帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了

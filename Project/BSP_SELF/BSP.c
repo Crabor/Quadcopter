@@ -7,7 +7,7 @@ void BSP_Init(void){
 //	TIM_LED_INIT();
 	
 //	PWM_LED_INIT();
-	uart6_init(9600);
+	uart6_init(115200);
 //	uart6_init(84,9600);
 	//pclk:84MHz
 	I2C_Congiguration();
