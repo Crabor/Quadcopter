@@ -1,15 +1,5 @@
 #include "includes.h"
 
-///************************串口通信***********************************************************************/
-//u8 USART_RX_BUF[USART_REC_LEN];     //接收缓冲,最大USART_REC_LEN个字节.
-////接收状态
-////bit15，	接收完成标志
-////bit14，	接收到0x0d
-////bit13~0，	接收到的有效字节数目
-//u16 USART_RX_STA=0;       //接收状态标记	
-///*******************************************************************************************************/
-
-
 /************************匿名四轴上位机高级收码*********************************************************/
 //数据拆分宏定义，在发送大于1字节的数据类型时，比如int16、float等，需要把数据拆分成单独字节进行发送
 #define BYTE0(dwTemp)       ( *( (char *)(&dwTemp)	  ) )
@@ -32,7 +22,6 @@ static OS_STK Task_1_STK[TASK_1_STK_SIZE];
 
 static void Task_1(void *p_arg);
 void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u16 GYRO_Z);
-//extern void USART6_Send( unsigned char *DataToSend , u8 data_num );
 
 int main(void){
 	BSP_Init();
@@ -44,28 +33,29 @@ int main(void){
 
 
 static void Task_1(void *p_arg){
-	u16 ACCEL_X,ACCEL_Y,ACCEL_Z,GYRO_X,GYRO_Y,GYRO_Z;
+	int16_t ACCEL_X=0,ACCEL_Y=0,ACCEL_Z=0,GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
 //  while(1){
 //	  printf("Hello STM32!\n");
 //	  OSTimeDly(1000);
 //  }
 	
-	
-	MPU6050_Init();
 	while(1){
 		OSTimeDly(10);
-		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H) / 16384.0;
-		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H) / 16384.0;
-		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H) / 16384.0;
-		GYRO_X=GetData_MPU6050(GYRO_XOUT_H)*0.001064;
-		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H)*0.001064;
-		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H)*0.001064;
-//		ACCEL_X=1;
-//		ACCEL_Y=2;
-//		ACCEL_Z=3;
-//		GYRO_X=4;
-//		GYRO_Y=5;
-//		GYRO_Z=6;
+		
+//		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H) / 16384.0;
+//		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H) / 16384.0;
+//		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H) / 16384.0;
+//		GYRO_X=GetData_MPU6050(GYRO_XOUT_H)*0.001064;
+//		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H)*0.001064;
+//		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H)*0.001064;
+		
+		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H);
+		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H);
+		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H);
+		GYRO_X=GetData_MPU6050(GYRO_XOUT_H);
+		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H);
+		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H);
+
 		SendSenser(ACCEL_X,ACCEL_Y,ACCEL_Z,GYRO_X,GYRO_Y,GYRO_Z);
 	}
 	
@@ -76,7 +66,7 @@ void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u1
 	u8 _cnt=0;
 	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
 	int i;
-	u16 MAG_X=7,MAG_Y=8,MAG_Z=9;
+	int16_t MAG_X=0,MAG_Y=0,MAG_Z=0;
 	
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
 	testdatatosend[_cnt++]=0x05;//0x00为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
@@ -121,19 +111,6 @@ void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u1
  
 }
 
-
-//		/* 打印 x, y, z 轴加速度 */
-//		printf("ACCEL_X: %lf\r\n", GetData_MPU6050(ACCEL_XOUT_H) / 16384.0);
-//		printf("ACCEL_Y: %lf\r\n", GetData_MPU6050(ACCEL_YOUT_H) / 16384.0);
-//		printf("ACCEL_Z: %lf\r\n", GetData_MPU6050(ACCEL_ZOUT_H) / 16384.0);
-//		
-//		/* 打印温度，需要根据手册的公式换算为摄氏度 */
-//		printf("TEMP: %0.2f\r\n", GetData_MPU6050(TEMP_OUT_H) / 340.0 + 36.53);
-//		
-//		/* 打印 x, y, z 轴角速度 */
-//		printf("GYRO_X: %lf\r\n", GetData_MPU6050(GYRO_XOUT_H)*0.001064);
-//		printf("GYRO_Y: %lf\r\n", GetData_MPU6050(GYRO_YOUT_H)*0.001064);
-//		printf("GYRO_Z: %lf\r\n", GetData_MPU6050(GYRO_ZOUT_H)*0.001064);
 
 
 //static void Task_1(void *p_arg){

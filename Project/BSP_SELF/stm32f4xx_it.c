@@ -271,7 +271,9 @@ void USART2_IRQHandler(void)
 } 
 
 void USART6_IRQHandler(void){
+//	OSIntEnter();
 	Usart6_IRQ();
+//	OSIntExit();
 }
 
 
