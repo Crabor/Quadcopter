@@ -10,6 +10,14 @@
 u8 testdatatosend[50];	//发送数据缓存
 /*******************************************************************************************************/
 
+/**********************************姿态解算相关数据******************************************************/
+extern Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
+extern Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
+extern Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
+extern Angle angle;//姿态解算-角度值
+extern PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
+/*******************************************************************************************************/
+
 extern u8 TIM5CH1_CAPTURE_STA; //输入捕获状态
 extern u32 TIM5CH1_CAPTURE_VAL; //输入捕获值
 
@@ -34,6 +42,9 @@ int main(void){
 
 static void Task_1(void *p_arg){
 	int16_t ACCEL_X=0,ACCEL_Y=0,ACCEL_Z=0,GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
+	offsetAcc.x=-330;
+	offsetAcc.y=40;
+	offsetAcc.z=40;
 //  while(1){
 //	  printf("Hello STM32!\n");
 //	  OSTimeDly(1000);
@@ -49,9 +60,9 @@ static void Task_1(void *p_arg){
 //		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H)*0.001064;
 //		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H)*0.001064;
 		
-		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H);
-		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H);
-		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H);
+		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H)-offsetAcc.x;
+		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H)-offsetAcc.y;
+		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H)-offsetAcc.z;
 		GYRO_X=GetData_MPU6050(GYRO_XOUT_H);
 		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H);
 		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H);

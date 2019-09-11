@@ -10,7 +10,7 @@
 #define PWM_EN 0u
 #define I2C_EN 1u
 #define MPU9150_EN 1u
-#define DELAY_EN 0u
+#define IMU_EN 1u
 
 #if LED_EN
 	#include "led.h"
@@ -48,8 +48,8 @@
 	#include "GY86.h"
 #endif
 
-#if DELAY_EN
-	#include "delay.h"
+#if IMU_EN
+	#include "IMU.h"
 #endif
 
 #endif

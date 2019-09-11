@@ -1,22 +1,65 @@
-#ifndef __IMU_H
-#define	__IMU_H
+#ifndef IMU_H
+#define IMU_H
+
 #include "includes.h"
-#include "defines.h"
 #include "math.h"
-#define RtA 	57.324841				
-#define AtR    	0.0174533				
-#define Acc_G 	0.0011963				
-#define Gyro_G 	0.0152672				
-#define Gyro_Gr	0.0002663	   
 
-void Get_Attitude(void);
+#define Pi	3.1415927f
+#define Radian_to_Angle	   57.2957795f
+#define RawData_to_Angle	0.0610351f	//以下参数对应2000度每秒
+#define RawData_to_Radian	0.0010653f
+#define Filter_Num 2
+
+/* MPU6050--加速度计结构体 */
+typedef struct
+{
+	int16_t x;
+	int16_t y;
+	int16_t z;
+}Acc;
+
+/* MPU6050--陀螺仪结构体 */
+typedef struct
+{
+	int16_t x;
+	int16_t y;
+	int16_t z;
+}Gyro;
+
+/* float结构体 */
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+}Float;
+
+/* 姿态解算--角度值 */
+typedef struct
+{
+	float yaw;
+	float roll;
+	float pitch;
+}Angle;
+
+/* pid变量 */
+typedef struct
+{
+	float kp;
+	float ki;
+	float kd;
+	float integral;
+	
+	float output;
+}PID;
+
+
+float invSqrt(float x);
+void Calculate_FilteringCoefficient(float Time, float cutOff);
+void ACC_IIR_Filter(Acc *accIn,Acc *accOut);
+void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);
+void Get_Radian(Gyro *gyroIn,Float *gyroOut);
 void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az);
-void ACC_ANGLE(void);
-void Get_YawOffSet(void);
-//float Acc_Get_Angle(float x,float y,float z,u8 dir);
-extern S_FLOAT_XYZ Q_ANGLE;
-extern S_FLOAT_XYZ A_ANGLE;
-extern float g_fYawOffSet;
+void Get_Eulerian_Angle(Angle *angle);
+
 #endif
-
-

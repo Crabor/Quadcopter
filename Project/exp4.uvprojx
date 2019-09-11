@@ -509,21 +509,6 @@
               <FilePath>.\APP_FUNC\pwm.h</FilePath>
             </File>
             <File>
-              <FileName>delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\APP_FUNC\delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>delay.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP_FUNC\delay.h</FilePath>
-            </File>
-            <File>
-              <FileName>defines.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP_FUNC\defines.h</FilePath>
-            </File>
-            <File>
               <FileName>GY86.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\APP_FUNC\GY86.c</FilePath>
@@ -552,16 +537,6 @@
               <FileName>IMU.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\APP_FUNC\IMU.h</FilePath>
-            </File>
-            <File>
-              <FileName>TIM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\APP_FUNC\TIM.c</FilePath>
-            </File>
-            <File>
-              <FileName>TIM.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP_FUNC\TIM.h</FilePath>
             </File>
           </Files>
         </Group>

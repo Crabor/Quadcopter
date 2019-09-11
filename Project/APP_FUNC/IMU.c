@@ -1,231 +1,192 @@
 #include "IMU.h"
-         
-S_FLOAT_XYZ Q_ANGLE;			//ËÄÔªÊı¼ÆËã³öµÄ½Ç¶È
-S_FLOAT_XYZ A_ANGLE;
-float g_fYawOffSet=0;
 
+Acc acc,filterAcc,offsetAcc;//åŸå§‹æ•°æ®ã€æ»¤æ³¢åæ•°æ®ã€é›¶åæ•°æ®
+Gyro gyro,filterGyro,offsetGyro;//åŸå§‹æ•°æ®ã€æ»¤æ³¢åæ•°æ®ã€é›¶åæ•°æ®
+Float fAcc,fGyro;//åŠ é€Ÿåº¦æ•°æ®ï¼ˆm/s2ï¼‰ã€è§’é€Ÿåº¦æ•°æ®ï¼ˆradï¼‰
+Angle angle;//å§¿æ€è§£ç®—-è§’åº¦å€¼
+PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
+float ACC_IIR_FACTOR;
 
-float q0 = 1, q1 = 0, q2 = 0, q3 = 0;    // quaternion elements representing the estimated orientation
-float exInt = 0, eyInt = 0, ezInt = 0;    // scaled integral error
+// ==================================================================================
+// æè¿°:
+// å¿…é¡»å®šä¹‰'halfT 'ä¸ºå‘¨æœŸçš„ä¸€åŠï¼Œä»¥åŠæ»¤æ³¢å™¨çš„å‚æ•°Kpå’ŒKi
+// å››å…ƒæ•°'q0', 'q1', 'q2', 'q3'å®šä¹‰ä¸ºå…¨å±€å˜é‡
+// éœ€è¦åœ¨æ¯ä¸€ä¸ªé‡‡æ ·å‘¨æœŸè°ƒç”¨'IMUupdate()'å‡½æ•°
+// é™€èºä»ªæ•°æ®å•ä½æ˜¯å¼§åº¦/ç§’ï¼ŒåŠ é€Ÿåº¦è®¡çš„å•ä½æ— å…³é‡è¦ï¼Œå› ä¸ºä¼šè¢«è§„èŒƒåŒ–
+// ==================================================================================
+#define Kp 	1.0f    // æ¯”ä¾‹å¸¸æ•°
+#define Ki 	0.001f  // ç§¯åˆ†å¸¸æ•°
+#define halfT 0.0005f//åŠå‘¨æœŸ
+#define T	0.001f  // å‘¨æœŸä¸º1ms
+// ==================================================================================
+// å˜é‡å®šä¹‰
+float q0 = 1, q1 = 0, q2 = 0, q3 = 0;     	// å››å…ƒæ•°
+float exInt = 0, eyInt = 0, ezInt = 0;    	// è¯¯å·®ç§¯åˆ†ç´¯è®¡å€¼ 
 
-
-#define Kp 		2.0f                        // proportional gain governs rate of convergence to accelerometer/magnetometer
-#define Ki 		0.01f                          // integral gain governs rate of convergence of gyroscope biases
-#define halfT 	0.005f                   // half the sample period²ÉÑùÖÜÆÚµÄÒ»°ë
-
-//±ÈÀıÔöÒæ¿ØÖÆÊÕÁ²ËÙ¶È,¼ÓËÙ¶È¼ÆºÍ´ÅÇ¿¼Æ
-//»ı·ÖÔöÒæ¿ØÖÆÊÕÁ²ËÙÂÊÍÓÂİµÄÆ«ÒÆ
-//Ò»°ëµÄÑù±¾ÆÚ¼ä
-
-/**************************************
- * º¯ÊıÃû£ºGet_Attitude
- * ÃèÊö  £ºµÃµ½µ±Ç°×ËÌ¬
- * ÊäÈë  £ºÎŞ
- * Êä³ö  £ºÎŞ
- * µ÷ÓÃ  £ºÍâ²¿µ÷ÓÃ
- *************************************/
-void Get_Attitude(void)
+// Fast inverse square-root
+// See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+// å¿«é€Ÿè®¡ç®—å¼€æ ¹å·çš„å€’æ•°
+float invSqrt(float x)
 {
-	IMUupdate(MPU6050_GYRO_LAST.X*Gyro_Gr,MPU6050_GYRO_LAST.Y*Gyro_Gr,MPU6050_GYRO_LAST.Z*Gyro_Gr,
-			ACC_AVG.X,ACC_AVG.Y,ACC_AVG.Z);	//*0.0174×ª³É»¡¶È
-
+  float halfx = 0.5f * x;
+  float y = x;
+  long i = *(long*)&y;
+  i = 0x5f3759df - (i>>1);
+  y = *(float*)&i;
+  y = y * (1.5f - (halfx * y * y));
+  return y;
 }
 
-void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az)
+/******************************************************************************
+å‡½æ•°åŸå‹ï¼š	void Calculate_FilteringCoefficient(float Time, float cutOff)
+åŠŸ    èƒ½ï¼š	iirä½é€šæ»¤æ³¢å‚æ•°è®¡ç®—
+*******************************************************************************/ 
+void Calculate_FilteringCoefficient(float Time, float cutOff)
 {
-  	float norm;
-	//  float hx, hy, hz, bx, bz;
-  	float vx, vy, vz;// wx, wy, wz;
-  	float ex, ey, ez;
+	ACC_IIR_FACTOR = Time /( Time + 1/(2.0f*Pi*cutOff) );
+}
 
-  	// ÏÈ°ÑÕâĞ©ÓÃµÃµ½µÄÖµËãºÃ
-  	float q0q0 = q0*q0;
-  	float q0q1 = q0*q1;
-  	float q0q2 = q0*q2;
-	//  float q0q3 = q0*q3;//
-  	float q1q1 = q1*q1;
-	//  float q1q2 = q1*q2;//
-  	float q1q3 = q1*q3;
-  	float q2q2 = q2*q2;
-  	float q2q3 = q2*q3;
-  	float q3q3 = q3*q3;
+
+/******************************************************************************
+å‡½æ•°åŸå‹ï¼š	void ACC_IIR_Filter(Acc *accIn,Acc *accOut)
+åŠŸ    èƒ½ï¼š	iirä½é€šæ»¤æ³¢
+*******************************************************************************/ 
+void ACC_IIR_Filter(Acc *accIn,Acc *accOut)
+{
+	accOut->x = accOut->x + ACC_IIR_FACTOR*(accIn->x - accOut->x); 
+	accOut->y = accOut->y + ACC_IIR_FACTOR*(accIn->y - accOut->y); 
+	accOut->z = accOut->z + ACC_IIR_FACTOR*(accIn->z - accOut->z); 
+}
+
+/******************************************************************************
+å‡½æ•°åŸå‹ï¼š	void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut)
+åŠŸ    èƒ½ï¼š	gyroçª—å£æ»‘åŠ¨æ»¤æ³¢
+*******************************************************************************/ 
+void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut)
+{
+	static int16_t Filter_x[Filter_Num],Filter_y[Filter_Num],Filter_z[Filter_Num];
+	static uint8_t Filter_count;
+	int32_t Filter_sum_x=0,Filter_sum_y=0,Filter_sum_z=0;
+	uint8_t i=0;
 	
-	if(ax*ay*az==0)
- 		return;
-		
-  	norm = sqrt(ax*ax + ay*ay + az*az);       //accÊı¾İ¹éÒ»»¯
-  	ax = ax /norm;
-  	ay = ay / norm;
-  	az = az / norm;
+	Filter_x[Filter_count] = gyroIn->x;
+	Filter_y[Filter_count] = gyroIn->y;
+	Filter_z[Filter_count] = gyroIn->z;
 
-  	// estimated direction of gravity and flux (v and w)              ¹À¼ÆÖØÁ¦·½ÏòºÍÁ÷Á¿/±äÇ¨
-  	vx = 2*(q1q3 - q0q2);												//ËÄÔªËØÖĞxyzµÄ±íÊ¾
-  	vy = 2*(q0q1 + q2q3);
-  	vz = q0q0 - q1q1 - q2q2 + q3q3 ;
-
-  	// error is sum of cross product between reference direction of fields and direction measured by sensors
-  	ex = (ay*vz - az*vy) ;                           					 //ÏòÁ¿Íâ»ıÔÚÏà¼õµÃµ½²î·Ö¾ÍÊÇÎó²î
-  	ey = (az*vx - ax*vz) ;
-  	ez = (ax*vy - ay*vx) ;
-
-  	exInt = exInt + ex * Ki;								  //¶ÔÎó²î½øĞĞ»ı·Ö
-  	eyInt = eyInt + ey * Ki;
-  	ezInt = ezInt + ez * Ki;
-
-  	// adjusted gyroscope measurements
-  	gx = gx + Kp*ex + exInt;					   							//½«Îó²îPIºó²¹³¥µ½ÍÓÂİÒÇ£¬¼´²¹³¥ÁãµãÆ¯ÒÆ
-  	gy = gy + Kp*ey + eyInt;
-  	gz = gz + Kp*ez + ezInt;				   							//ÕâÀïµÄgzÓÉÓÚÃ»ÓĞ¹Û²âÕß½øĞĞ½ÃÕı»á²úÉúÆ¯ÒÆ£¬±íÏÖ³öÀ´µÄ¾ÍÊÇ»ı·Ö×ÔÔö»ò×Ô¼õ
-
-  	// integrate quaternion rate and normalise						   //ËÄÔªËØµÄÎ¢·Ö·½³Ì
-  	q0 = q0 + (-q1*gx - q2*gy - q3*gz)*halfT;
-  	q1 = q1 + (q0*gx + q2*gz - q3*gy)*halfT;
-  	q2 = q2 + (q0*gy - q1*gz + q3*gx)*halfT;
-  	q3 = q3 + (q0*gz + q1*gy - q2*gx)*halfT;
-
-  	// normalise quaternion
-  	norm = sqrt(q0q0 + q1q1 + q2q2 + q3q3);
-  	q0 = q0 / norm;
-  	q1 = q1 / norm;
-  	q2 = q2 / norm;
-  	q3 = q3 / norm;
-
-  	//Q_ANGLE.Z = atan2(2 * q1q2 + 2 * q0q3, -2 * q2q2 - 2 * q3q3 + 1)* 57.3; // yaw
-  Q_ANGLE.X = atan2(2*q2q3 + 2*q0q1, -2*q1q1 - 2*q2q2 + 1)*57.3; // roll
-	Q_ANGLE.Y = asin(-2*q1q3 + 2*q0q2)* 57.3; // pitch
-	Q_ANGLE.Z = (-Read_HMC5883L())-g_fYawOffSet;
-	//if(Q_ANGLE.Z<=-180)	Q_ANGLE.Z = Q_ANGLE.Z+360;//yaw
-
-}
-
-void Get_YawOffSet(void)
-{
-	double temp=0;
-	int i=0;
-	for(i=0;i<200;i++)
+	for(i=0;i<Filter_Num;i++)
 	{
-		temp+= (-Read_HMC5883L());
-	}
-	g_fYawOffSet = (float)(temp/200);
-}
-
-//»ñµÃ¼ÓËÙ¶È¼Æ½Ç¶È
-void ACC_ANGLE(void)
-{
-	float x,y,z;
-	x=MPU6050_ACC_LAST.X;
-	y=MPU6050_ACC_LAST.Y;
-	z=MPU6050_ACC_LAST.Z;
-	A_ANGLE.X=atan(sqrt((x*x+y*y))/z)*180/3.14;
-	A_ANGLE.Y=atan(x/sqrt((y*y+z*z)))*180/3.14;
-	A_ANGLE.X=atan(y/sqrt((x*x+z*z)))*180/3.14;		
-}
-
-
-/***************************************************************
-//µÃµ½½Ç¶È
-//x,y,z:x,y,z·½ÏòµÄÖØÁ¦¼ÓËÙ¶È·ÖÁ¿(²»ĞèÒªµ¥Î»,Ö±½ÓÊıÖµ¼´¿É)
-//dir:Òª»ñµÃµÄ½Ç¶È.0,ÓëZÖáµÄ½Ç¶È;1,ÓëXÖáµÄ½Ç¶È;2,ÓëYÖáµÄ½Ç¶È.
-//·µ»ØÖµ:½Ç¶ÈÖµ.µ¥Î»0.1¡ã.
-float Acc_Get_Angle(float x,float y,float z,u8 dir)
-{
-	float temp;
- 	float res=0;
-	switch(dir)
-	{
-		case 0://Óë×ÔÈ»ZÖáµÄ½Ç¶È
- 			temp=sqrt((x*x+y*y))/z;
- 			res=atan(temp);
- 			break;
-		case 1://Óë×ÔÈ»XÖáµÄ½Ç¶È
- 			temp=x/sqrt((y*y+z*z));
- 			res=atan(temp);
- 			break;
- 		case 2://Óë×ÔÈ»YÖáµÄ½Ç¶È
- 			temp=y/sqrt((x*x+z*z));
- 			res=atan(temp);
- 			break;
- 	}
-	return res*180/3.14;
-}
-*/
-
- /*
-float *KalmanFileter(float angle_m,float gyro_m )
-{
-	u8 i,j,k;
-	//static float T=0.02; 
-  static float A[2][2]={ { 1, -0.01}, 
-                         { 0,     1} }; 
-  static float B[2]={ 0.01, 0 }; 
-  static float H[2]={1,0};
-  static float Q[2][2]={ {0.005, 0.005 }, 
-                         {0.005, 0.005 } }; 
-  static float R=0.056; 
-  static float X_optimal[2]={ 0, 0} ;
-  static float P_optimal[2][2]={ { 0.005, 0.005 }, 
-                                 { 0.005, 0.005 } } ;	
-  static float temp1[2],temp2[2],temp3[2][2],temp4[2][2],temp5[2],temp6,temp7[2],temp8,temp9[2],temp10[2][2],temp11[2][2];
-  static float X_estimate[2],P_estimate[2][2];
-  static float Kg[2];
-//µÚÒ»²½£º¼ÆËãÔ¤²âµÄÏÖÔÚ×´Ì¬X_estimate//  
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			{
-				temp1[i]+=A[i][j]*X_optimal[j];
-			}
-	for(i=0;i<2;i++)	temp2[i]=B[i]*gyro_m;
-	X_estimate[0]=temp1[0]+temp2[0];
-	X_estimate[1]=temp1[1]+temp2[1];
-//µÚ¶ş²½£º¼ÆËãX_estimateµÄĞ­·½²î//
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			{
-				for(k=0;k<2;k++)
-				temp3[i][j]+=A[i][k]*P_optimal[k][j];
-			}
+		Filter_sum_x += Filter_x[i];
+		Filter_sum_y += Filter_y[i];
+		Filter_sum_z += Filter_z[i];
+	}	
 	
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			{
-				for(k=0;k<2;k++)
-				temp4[i][j]+=temp3[i][k]*A[j][k];
-			}
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			P_estimate[i][j]=temp4[i][j]+Q[i][j];
-//µÚÈı²½£º¼ÆËãµÃ³ö¿¨¶ûÂüÔöÒæ//
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			temp5[i]+=H[j]*P_estimate[i][j];
-			temp6=temp5[0]*H[0] +temp5[1]*H[1]+R;
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			temp7[i]+= P_estimate[i][j] *H[j];
-			Kg[0]= temp7[0]/temp6;
-			Kg[1]= temp7[1]/temp6;
-//µÚËÄ²½£º¼ÆËã×îÓÅ×´Ì¬ÖµX_optimal//
-
-	temp8=angle_m-(H[0]*X_estimate[1]+ H[1]*X_estimate[0]);
-	temp9[0]=temp8*Kg[0];
-	temp9[1]=temp8*Kg[1];
-	X_optimal[0]=X_estimate[0]+temp9[0];
-	X_optimal[1]=X_estimate[1]+temp9[1];
-//µÚÎå²½£º×îÓÅÖµµÄĞ­·½²î//
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			temp10[i][j]=Kg[i]*H[j];
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			temp11[i][j]=1- temp10[i][j];
-
-	for(i=0;i<2;i++)
-		for(j=0;j<2;j++)
-			{
-				for(k=0;k<2;k++)
-				P_optimal[i][j]+=temp11[i][k]*P_estimate[k][j];
-			}
-	return X_optimal;
+	gyroOut->x = Filter_sum_x / Filter_Num;
+	gyroOut->y = Filter_sum_y / Filter_Num;
+	gyroOut->z = Filter_sum_z / Filter_Num;
+	
+	Filter_count++;
+	if(Filter_count == Filter_Num)
+		Filter_count=0;
 }
-****************************************************************/
 
+/******************************************************************************
+å‡½æ•°åŸå‹ï¼š	void Get_Radian(Gyro *gyroIn,Float *gyroOut)
+åŠŸ    èƒ½ï¼š	è§’é€Ÿåº¦ç”±åŸå§‹æ•°æ®è½¬ä¸ºå¼§åº¦
+*******************************************************************************/ 
+void Get_Radian(Gyro *gyroIn,Float *gyroOut)
+{
+	gyroOut->x = (float)(gyroIn->x * RawData_to_Radian);
+	gyroOut->y = (float)(gyroIn->y * RawData_to_Radian);
+	gyroOut->z = (float)(gyroIn->z * RawData_to_Radian);
+}
+
+// ==================================================================================
+// å‡½æ•°åŸå‹ï¼švoid IMUupdate(float gx, float gy, float gz, float ax, float ay, float az) 
+// åŠŸ        èƒ½ï¼šäº’è¡¥æ»¤æ³¢è¿›è¡Œå§¿æ€è§£ç®—
+// è¾“        å…¥ï¼šé™€èºä»ªæ•°æ®åŠåŠ é€Ÿåº¦è®¡æ•°æ®
+// ==================================================================================
+void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az) 
+{
+	float norm;
+	float vx, vy, vz;
+	float ex, ey, ez;
+	
+  //å››å…ƒæ•°ç§¯åˆ†ï¼Œæ±‚å¾—å½“å‰çš„å§¿æ€
+	float q0_last = q0;	
+	float q1_last = q1;	
+	float q2_last = q2;	
+	float q3_last = q3;	
+
+	//æŠŠåŠ é€Ÿåº¦è®¡çš„ä¸‰ç»´å‘é‡è½¬æˆå•ä½å‘é‡
+	norm = invSqrt(ax*ax + ay*ay + az*az);
+	ax = ax * norm;
+	ay = ay * norm;
+	az = az * norm;
+
+	//ä¼°è®¡é‡åŠ›åŠ é€Ÿåº¦æ–¹å‘åœ¨é£è¡Œå™¨åæ ‡ç³»ä¸­çš„è¡¨ç¤ºï¼Œä¸ºå››å…ƒæ•°è¡¨ç¤ºçš„æ—‹è½¬çŸ©é˜µçš„ç¬¬ä¸‰è¡Œ
+	vx = 2*(q1*q3 - q0*q2);
+	vy = 2*(q0*q1 + q2*q3);
+	vz = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+
+	//åŠ é€Ÿåº¦è®¡è¯»å–çš„æ–¹å‘ä¸é‡åŠ›åŠ é€Ÿåº¦æ–¹å‘çš„å·®å€¼ï¼Œç”¨å‘é‡å‰ä¹˜è®¡ç®—
+	ex = ay*vz - az*vy;
+	ey = az*vx - ax*vz;
+	ez = ax*vy - ay*vx;
+
+	//è¯¯å·®ç´¯ç§¯ï¼Œå·²ä¸ç§¯åˆ†å¸¸æ•°ç›¸ä¹˜
+	exInt = exInt + ex*Ki;
+	eyInt = eyInt + ey*Ki;
+	ezInt = ezInt + ez*Ki;
+
+	//ç”¨å‰ç§¯è¯¯å·®æ¥åšPIä¿®æ­£é™€èºé›¶åï¼Œå³æŠµæ¶ˆé™€èºè¯»æ•°ä¸­çš„åç§»é‡	
+	gx = gx + Kp*ex + exInt;
+	gy = gy + Kp*ey + eyInt;
+	gz = gz + Kp*ez + ezInt;
+
+
+	//ä¸€é˜¶è¿‘ä¼¼ç®—æ³•
+	q0 = q0_last + (-q1_last*gx - q2_last*gy - q3_last*gz)*halfT;
+	q1 = q1_last + ( q0_last*gx + q2_last*gz - q3_last*gy)*halfT;
+	q2 = q2_last + ( q0_last*gy - q1_last*gz + q3_last*gx)*halfT;
+	q3 = q3_last + ( q0_last*gz + q1_last*gy - q2_last*gx)*halfT; 
+
+//	//äºŒé˜¶è¿‘ä¼¼ç®—æ³•
+//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
+//	q0 = q0_last*(1-delta2/8) + (-q1_last*gx - q2_last*gy - q3_last*gz)*halfT;
+//	q1 = q1_last*(1-delta2/8) + ( q0_last*gx + q2_last*gz - q3_last*gy)*halfT;
+//	q2 = q2_last*(1-delta2/8) + ( q0_last*gy - q1_last*gz + q3_last*gx)*halfT;
+//	q3 = q3_last*(1-delta2/8) + ( q0_last*gz + q1_last*gy - q2_last*gx)*halfT;
+
+//	//ä¸‰é˜¶è¿‘ä¼¼ç®—æ³•
+//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
+//	q0 = q0_last*(1-delta2/8) + (-q1_last*gx - q2_last*gy - q3_last*gz)*T*(0.5 - delta2/48);
+//	q1 = q1_last*(1-delta2/8) + ( q0_last*gx + q2_last*gz - q3_last*gy)*T*(0.5 - delta2/48);
+//	q2 = q2_last*(1-delta2/8) + ( q0_last*gy - q1_last*gz + q3_last*gx)*T*(0.5 - delta2/48);
+//	q3 = q3_last*(1-delta2/8) + ( q0_last*gz + q1_last*gy - q2_last*gx)*T*(0.5 - delta2/48);
+
+//	//å››é˜¶è¿‘ä¼¼ç®—æ³•
+//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
+//	q0 = q0_last*(1 - delta2/8 + delta2*delta2/384) + (-q1_last*gx - q2_last*gy - q3_last*gz)*T*(0.5 - delta2/48);
+//	q1 = q1_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gx + q2_last*gz - q3_last*gy)*T*(0.5 - delta2/48);
+//	q2 = q2_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gy - q1_last*gz + q3_last*gx)*T*(0.5 - delta2/48);
+//	q3 = q3_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gz + q1_last*gy - q2_last*gx)*T*(0.5 - delta2/48);
+			
+	//å››å…ƒæ•°è§„èŒƒåŒ–
+	norm = invSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+	q0 = q0 * norm;
+	q1 = q1 * norm;
+	q2 = q2 * norm;
+	q3 = q3 * norm;
+	
+	angle.yaw  +=  filterGyro.z * RawData_to_Angle * 0.001f;
+}
+
+/******************************************************************************
+å‡½æ•°åŸå‹ï¼š	void Get_Eulerian_Angle(Angle *angle)
+åŠŸ    èƒ½ï¼š	å››å…ƒæ•°è½¬æ¬§æ‹‰è§’
+*******************************************************************************/ 
+void Get_Eulerian_Angle(Angle *angle)
+{	
+	angle->pitch = -atan2(2.0f*(q0*q1 + q2*q3),q0*q0 - q1*q1 - q2*q2 + q3*q3)*Radian_to_Angle;
+	angle->roll  =  asin (2.0f*(q0*q2 - q1*q3))*Radian_to_Angle;
+}
