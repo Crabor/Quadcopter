@@ -11,6 +11,8 @@ u8 testdatatosend[50];	//发送数据缓存
 /*******************************************************************************************************/
 
 /**********************************姿态解算相关数据******************************************************/
+extern uint8_t	gyroOffset;//不自动校正，用于零偏校准
+extern uint8_t	accOffset;
 extern Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
 extern Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
 extern Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
@@ -29,7 +31,7 @@ extern u32 TIM5CH1_CAPTURE_VAL; //输入捕获值
 static OS_STK Task_1_STK[TASK_1_STK_SIZE];
 
 static void Task_1(void *p_arg);
-void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u16 GYRO_Z);
+void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z);
 
 int main(void){
 	BSP_Init();
@@ -41,17 +43,23 @@ int main(void){
 
 
 static void Task_1(void *p_arg){
-	int16_t ACCEL_X=0,ACCEL_Y=0,ACCEL_Z=0,GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
-	offsetAcc.x=-330;
-	offsetAcc.y=40;
-	offsetAcc.z=40;
+//	int16_t ACCEL_X=0,ACCEL_Y=0,ACCEL_Z=0,GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
+
 //  while(1){
 //	  printf("Hello STM32!\n");
 //	  OSTimeDly(1000);
 //  }
-	
+	Open_Calib();//打开零偏校准
 	while(1){
 		OSTimeDly(10);
+		MPU6050_Read();
+		SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z);//发送传感器原始数据帧
+//		ACC_IIR_Filter(&acc,&filterAcc);//对acc做IIR滤波
+//		Gyro_Filter(&gyro,&filterGyro);//对gyro做窗口滤波
+//		Get_Radian(&filterGyro,&fGyro);//角速度数据转为弧度
+//		IMUupdate(fGyro.x,fGyro.y,fGyro.z,filterAcc.x,filterAcc.y,filterAcc.z);//姿态解算
+//		Get_Eulerian_Angle(&angle);
+
 		
 //		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H) / 16384.0;
 //		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H) / 16384.0;
@@ -60,19 +68,19 @@ static void Task_1(void *p_arg){
 //		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H)*0.001064;
 //		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H)*0.001064;
 		
-		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H)-offsetAcc.x;
-		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H)-offsetAcc.y;
-		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H)-offsetAcc.z;
-		GYRO_X=GetData_MPU6050(GYRO_XOUT_H);
-		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H);
-		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H);
+//		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H);
+//		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H);
+//		ACCEL_Z=GetData_MPU6050(ACCEL_ZOUT_H);
+//		GYRO_X=GetData_MPU6050(GYRO_XOUT_H);
+//		GYRO_Y=GetData_MPU6050(GYRO_YOUT_H);
+//		GYRO_Z=GetData_MPU6050(GYRO_ZOUT_H);
 
-		SendSenser(ACCEL_X,ACCEL_Y,ACCEL_Z,GYRO_X,GYRO_Y,GYRO_Z);
+//		SendSenser(ACCEL_X,ACCEL_Y,ACCEL_Z,GYRO_X,GYRO_Y,GYRO_Z);
 	}
 	
 }
 
-void SendSenser(u16 ACCEL_X, u16 ACCEL_Y, u16 ACCEL_Z,u16 GYRO_X, u16 GYRO_Y, u16 GYRO_Z)	//发送用户数据，这里有6个数据
+void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z)	//发送用户数据，这里有6个数据
 {
 	u8 _cnt=0;
 	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节

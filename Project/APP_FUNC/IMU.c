@@ -1,5 +1,7 @@
 #include "IMU.h"
 
+uint8_t	gyroOffset = 0;//不自动校正，用于零偏校准
+uint8_t	accOffset  = 0;
 Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
 Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
 Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
@@ -35,6 +37,105 @@ float invSqrt(float x)
   y = *(float*)&i;
   y = y * (1.5f - (halfx * y * y));
   return y;
+}
+
+/******************************************************************************
+函数原型：	void Open_Calib(void)
+功    能：	打开MPU6050零偏校正
+*******************************************************************************/ 
+void Open_Calib(void){
+    accOffset=1;
+    gyroOffset=1;
+}
+
+/******************************************************************************
+函数原型：	void MPU6050_Offset(void)
+功    能：	MPU6050零偏校正
+*******************************************************************************/ 
+void MPU6050_Offset(void)
+{
+	if(accOffset)
+	{
+		static int32_t ACC_X=0,ACC_Y=0,ACC_Z=0;
+		static uint8_t count_acc=0;
+		if(count_acc==0)
+		{
+			offsetAcc.x = 0;
+			offsetAcc.y = 0;
+			offsetAcc.z = 0;
+			ACC_X = 0;
+			ACC_Y = 0;
+			ACC_Z = 0;
+			count_acc = 1;
+			return;
+		}
+		else
+		{
+			count_acc++;
+			ACC_X += acc.x;
+			ACC_Y += acc.y;
+			ACC_Z += acc.z;
+		}
+		if(count_acc==251)
+		{
+			count_acc--;
+			offsetAcc.x = ACC_X / count_acc;
+			offsetAcc.y = ACC_Y / count_acc;
+			offsetAcc.z = ACC_Z / count_acc - 8192;//加速度量程±4G
+			count_acc = 0;
+			accOffset = 0;
+		}
+	}
+	
+	if(gyroOffset)
+	{
+		static int32_t GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
+		static uint8_t count_gyro=0;
+		if(count_gyro==0)
+		{
+			offsetGyro.x = 0;
+			offsetGyro.y  = 0;
+			offsetGyro.z   = 0;
+			GYRO_X = 0;
+			GYRO_Y = 0;
+			GYRO_Z = 0;
+			count_gyro = 1;
+			return;
+		}
+		else
+		{
+			count_gyro++;
+			GYRO_X += gyro.x;
+			GYRO_Y += gyro.y;
+			GYRO_Z += gyro.z;
+		}
+		if(count_gyro==251)
+		{
+			count_gyro--;
+			offsetGyro.x = GYRO_X / count_gyro;
+			offsetGyro.y = GYRO_Y / count_gyro;
+			offsetGyro.z = GYRO_Z / count_gyro;
+			count_gyro = 0;
+			gyroOffset = 0;
+		}
+	}
+}
+
+/******************************************************************************
+函数原型：	void MPU6050_Read(void)
+功    能：	读取MPU6050的16位数据
+*******************************************************************************/ 
+void MPU6050_Read(void)
+{
+	acc.x  = GetData_MPU6050(ACCEL_XOUT_H) - offsetAcc.x;	//减去零偏
+	acc.y  = GetData_MPU6050(ACCEL_YOUT_H) - offsetAcc.y;
+	acc.z  = GetData_MPU6050(ACCEL_ZOUT_H) - offsetAcc.z;
+
+	gyro.x = GetData_MPU6050(GYRO_XOUT_H) - offsetGyro.x;
+	gyro.y = GetData_MPU6050(GYRO_YOUT_H) - offsetGyro.y;
+	gyro.z = GetData_MPU6050(GYRO_ZOUT_H) - offsetGyro.z;
+	
+	MPU6050_Offset();
 }
 
 /******************************************************************************

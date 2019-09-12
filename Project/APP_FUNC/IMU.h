@@ -55,6 +55,9 @@ typedef struct
 
 
 float invSqrt(float x);
+void Open_Calib(void);
+void MPU6050_Offset(void);
+void MPU6050_Read(void);
 void Calculate_FilteringCoefficient(float Time, float cutOff);
 void ACC_IIR_Filter(Acc *accIn,Acc *accOut);
 void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);
