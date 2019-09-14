@@ -18,7 +18,7 @@ float ACC_IIR_FACTOR;
 // ==================================================================================
 #define Kp 	1.0f    // 比例常数
 #define Ki 	0.001f  // 积分常数
-#define halfT 0.0005f//半周期
+#define halfT 0.0005f//采样周期的一半
 #define T	0.001f  // 周期为1ms
 // ==================================================================================
 // 变量定义
@@ -290,4 +290,9 @@ void Get_Eulerian_Angle(Angle *angle)
 {	
 	angle->pitch = -atan2(2.0f*(q0*q1 + q2*q3),q0*q0 - q1*q1 - q2*q2 + q3*q3)*Radian_to_Angle;
 	angle->roll  =  asin (2.0f*(q0*q2 - q1*q3))*Radian_to_Angle;
+//  angle->yaw   =  atan2(2.0f*(q0*q3 + q1*q2),q0*q0 + q1*q1 - q2*q2 - q3*q3)*Radian_to_Angle;
+
+//	angle->pitch = -atan2(2.0f*(q0*q1 + q2*q3),q0*q0 - q1*q1 - q2*q2 + q3*q3);
+//	angle->roll  =  asin (2.0f*(q0*q2 - q1*q3));
+//	angle->yaw   =  atan2(2.0f*(q0*q3 + q1*q2),q0*q0 + q1*q1 - q2*q2 - q3*q3);
 }

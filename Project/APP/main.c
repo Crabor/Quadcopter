@@ -32,6 +32,7 @@ static OS_STK Task_1_STK[TASK_1_STK_SIZE];
 
 static void Task_1(void *p_arg);
 void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z);
+void SendAttitude(Angle angle);
 
 int main(void){
 	BSP_Init();
@@ -50,16 +51,22 @@ static void Task_1(void *p_arg){
 //	  OSTimeDly(1000);
 //  }
 	Open_Calib();//打开零偏校准
+//	while(1){
+//		OSTimeDly(1);
+//		MPU6050_Read();
+//		if(accOffset==0 && gyroOffset==0) break;
+//	}
 	while(1){
 		OSTimeDly(10);
 		MPU6050_Read();
 		SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z);//发送传感器原始数据帧
-//		ACC_IIR_Filter(&acc,&filterAcc);//对acc做IIR滤波
-//		Gyro_Filter(&gyro,&filterGyro);//对gyro做窗口滤波
-//		Get_Radian(&filterGyro,&fGyro);//角速度数据转为弧度
-//		IMUupdate(fGyro.x,fGyro.y,fGyro.z,filterAcc.x,filterAcc.y,filterAcc.z);//姿态解算
-//		Get_Eulerian_Angle(&angle);
-
+		ACC_IIR_Filter(&acc,&filterAcc);//对acc做IIR滤波
+		Gyro_Filter(&gyro,&filterGyro);//对gyro做窗口滤波
+		Get_Radian(&filterGyro,&fGyro);//角速度数据转为弧度
+		IMUupdate(fGyro.x,fGyro.y,fGyro.z,filterAcc.x,filterAcc.y,filterAcc.z);//姿态解算
+//		IMUupdate(gyro.x,gyro.y,gyro.z,acc.x,acc.y,acc.z);
+		Get_Eulerian_Angle(&angle);
+		SendAttitude(angle);
 		
 //		ACCEL_X=GetData_MPU6050(ACCEL_XOUT_H) / 16384.0;
 //		ACCEL_Y=GetData_MPU6050(ACCEL_YOUT_H) / 16384.0;
@@ -88,9 +95,9 @@ void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X
 	int16_t MAG_X=0,MAG_Y=0,MAG_Z=0;
 	
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
-	testdatatosend[_cnt++]=0x05;//0x00为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-	testdatatosend[_cnt++]=0x02;//0xF1，表示本帧为F1用户自定义帧，对应高级收码的F1功能帧
+	testdatatosend[_cnt++]=0x02;//0x02，表示本帧为传感器原始数据帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
  
 	testdatatosend[_cnt++]=BYTE1(ACCEL_X);//将要发送的数据放至发送缓冲区
@@ -130,7 +137,48 @@ void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X
  
 }
 
+void SendAttitude(Angle angle){
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	int32_t ALT_USE=0;
+	u8 FLY_MODEL=0,ARMED=0;
+	vs16 _temp;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=0x01;//0x01，表示本帧为姿态数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	_temp = (int)(angle.roll*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);//将要发送的数据放至发送缓冲区
+	testdatatosend[_cnt++]=BYTE0(_temp);
+	
+	_temp = (int)(angle.pitch*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);
+	testdatatosend[_cnt++]=BYTE0(_temp);
 
+	_temp = (int)(angle.yaw*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);
+	testdatatosend[_cnt++]=BYTE0(_temp);
+	
+	testdatatosend[_cnt++]=BYTE3(ALT_USE);//假数据，为了符合数据帧要求
+	testdatatosend[_cnt++]=BYTE2(ALT_USE);
+	testdatatosend[_cnt++]=BYTE1(ALT_USE);
+	testdatatosend[_cnt++]=BYTE0(ALT_USE);
+	
+	testdatatosend[_cnt++]=FLY_MODEL;
+	testdatatosend[_cnt++]=ARMED;
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+}
 
 //static void Task_1(void *p_arg){
 ////	uint32_t lowPulse=54;

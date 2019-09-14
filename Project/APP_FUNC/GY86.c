@@ -13,18 +13,21 @@ S_INT16_XYZ	 ACC_AVG;
  * 输出  ：无
  * 调用  ：外部调用
  *************************************/
-void MPU6050_Init(void)
+int MPU6050_Init(void)
 {
-	I2C_ByteWrite(MPU6050_SlaveAddress,PWR_MGMT_1,0x00);//解除休眠状态
+	if(I2C_ByteRead(MPU6050_SlaveAddress,WHO_AM_I)!=0x68){//检查MPU6050是否正常
+		return 0;
+	}
+	I2C_ByteWrite(MPU6050_SlaveAddress,PWR_MGMT_1,0x00);//解除休眠状态,使用内部8MHz振荡器
 	OSTimeDly(20);	
-	I2C_ByteWrite(MPU6050_SlaveAddress,SMPLRT_DIV,0x07);
+	I2C_ByteWrite(MPU6050_SlaveAddress,SMPLRT_DIV,0x00);//采样分频 (采样频率 = 陀螺仪输出频率 / (1+DIV)，采样频率1000hz）
 	OSTimeDly(20);	
-	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_CONFIG,0x06);
+	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_CONFIG,0x04);//设置陀螺的输出为1kHZ,DLPF=20Hz 
 	OSTimeDly(20);	
-	I2C_ByteWrite(MPU6050_SlaveAddress,GYRO_CONFIG,0x08);//+-500度/秒
+	I2C_ByteWrite(MPU6050_SlaveAddress,GYRO_CONFIG,0x18);//陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒 
 	OSTimeDly(20);	
-	I2C_ByteWrite(MPU6050_SlaveAddress,ACCEL_CONFIG,0x08);//+-4G
-
+	I2C_ByteWrite(MPU6050_SlaveAddress,ACCEL_CONFIG,0x08);//加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8196LSB/g )
+	return 1;
 }
 
 /*************************************
@@ -44,117 +47,117 @@ uint16_t GetData_MPU6050(uint8_t REG_Address)
 
 
 
-/*************************************
- * 函数名：Read_Filter_MPU6050
- * 描述  ：读MPU6050的加速度与角速度的值，
-					 如果是第一次调用该函数（开机），
-					 会计算零偏，其他时候不计算；
-					 滑动滤波；
- * 输入  ：无
- * 输出  ：无
- * 调用  ：外部调用
- ************************************/
-uint8_t Read_Filter_MPU6050(void)
-{
-	static uint8_t	GYRO_OFFSET_OK = 0;
-    //static uint8_t	ACC_OFFSET_OK  = 0;
-	static uint8_t filter_cnt= 0;
-  	static int16_t	ACC_X_BUF[MPU6050_FILTER_NUM],ACC_Y_BUF[MPU6050_FILTER_NUM],ACC_Z_BUF[MPU6050_FILTER_NUM];		
-	int32_t temp1=0,temp2=0,temp3=0;
-	uint8_t i;
+// /*************************************
+//  * 函数名：Read_Filter_MPU6050
+//  * 描述  ：读MPU6050的加速度与角速度的值，
+// 					 如果是第一次调用该函数（开机），
+// 					 会计算零偏，其他时候不计算；
+// 					 滑动滤波；
+//  * 输入  ：无
+//  * 输出  ：无
+//  * 调用  ：外部调用
+//  ************************************/
+// uint8_t Read_Filter_MPU6050(void)
+// {
+// 	static uint8_t	GYRO_OFFSET_OK = 0;
+//     //static uint8_t	ACC_OFFSET_OK  = 0;
+// 	static uint8_t filter_cnt= 0;
+//   	static int16_t	ACC_X_BUF[MPU6050_FILTER_NUM],ACC_Y_BUF[MPU6050_FILTER_NUM],ACC_Z_BUF[MPU6050_FILTER_NUM];		
+// 	int32_t temp1=0,temp2=0,temp3=0;
+// 	uint8_t i;
 	
-	ACC_OFFSET.X=-5;
-	ACC_OFFSET.Y=-160;
-	ACC_OFFSET.Z=0;
-	#if 0
-	GYRO_OFFSET.X=-150;
-	GYRO_OFFSET.Y=-33;
-	GYRO_OFFSET.Z=15;
-	#endif
+// 	ACC_OFFSET.X=-5;
+// 	ACC_OFFSET.Y=-160;
+// 	ACC_OFFSET.Z=0;
+// 	#if 0
+// 	GYRO_OFFSET.X=-150;
+// 	GYRO_OFFSET.Y=-33;
+// 	GYRO_OFFSET.Z=15;
+// 	#endif
 
-	MPU6050_ACC_LAST.X=GetData_MPU6050(ACCEL_XOUT_H)- ACC_OFFSET.X;
-	MPU6050_ACC_LAST.Y=GetData_MPU6050(ACCEL_YOUT_H)- ACC_OFFSET.Y;
-	MPU6050_ACC_LAST.Z=GetData_MPU6050(ACCEL_ZOUT_H)- ACC_OFFSET.Z;
+// 	MPU6050_ACC_LAST.X=GetData_MPU6050(ACCEL_XOUT_H)- ACC_OFFSET.X;
+// 	MPU6050_ACC_LAST.Y=GetData_MPU6050(ACCEL_YOUT_H)- ACC_OFFSET.Y;
+// 	MPU6050_ACC_LAST.Z=GetData_MPU6050(ACCEL_ZOUT_H)- ACC_OFFSET.Z;
 	
-	MPU6050_GYRO_LAST.X=GetData_MPU6050(GYRO_XOUT_H)- GYRO_OFFSET.X;
-	MPU6050_GYRO_LAST.Y=GetData_MPU6050(GYRO_YOUT_H)- GYRO_OFFSET.Y;
-	MPU6050_GYRO_LAST.Z=GetData_MPU6050(GYRO_ZOUT_H)- GYRO_OFFSET.Z;
-	if(!GYRO_OFFSET_OK)
-	{
-		static int32_t	tempgx=0,tempgy=0,tempgz=0;
-		static uint8_t cnt_g=0;
-		if(cnt_g==0)
-		{
-			GYRO_OFFSET.X=0;
-			GYRO_OFFSET.Y=0;
-			GYRO_OFFSET.Z=0;
-			tempgx = 0;
-			tempgy = 0;
-			tempgz = 0;
-			cnt_g = 1;
-			return 0;
-		}
-		tempgx+= MPU6050_GYRO_LAST.X;
-		tempgy+= MPU6050_GYRO_LAST.Y;
-		tempgz+= MPU6050_GYRO_LAST.Z;
-		if(cnt_g==200)
-		{
-			GYRO_OFFSET.X=tempgx/cnt_g;
-			GYRO_OFFSET.Y=tempgy/cnt_g;
-			GYRO_OFFSET.Z=tempgz/cnt_g;
-			cnt_g = 0;
-			GYRO_OFFSET_OK = 1;
-			return 1;
-		}
-		cnt_g++;
-		}
-	/*
-	if(!ACC_OFFSET_OK)
-	{
-		static int32_t	tempax=0,tempay=0,tempaz=0;
-		static uint8_t cnt_a=0;
-		if(cnt_a==0)
-		{
-			ACC_OFFSET.X = 0;
-			ACC_OFFSET.Y = 0;
-			ACC_OFFSET.Z = 0;
-			tempax = 0;
-			tempay = 0;
-			tempaz = 0;
-			cnt_a = 1;
-			return 0;
-		}
-		tempax+= MPU6050_ACC_LAST.X;
-		tempay+= MPU6050_ACC_LAST.Y;
-		tempaz+= MPU6050_ACC_LAST.Z;
-		if(cnt_a==200)
-		{
-			ACC_OFFSET.X=tempax/cnt_a;
-			ACC_OFFSET.Y=tempay/cnt_a;
-			ACC_OFFSET.Z=tempaz/cnt_a;
-			cnt_a = 0;
-			ACC_OFFSET_OK = 1;
-			return 1;
-		}
-		cnt_a++;		
-	}
-	*/    
-  	ACC_X_BUF[filter_cnt] = MPU6050_ACC_LAST.X;
-	ACC_Y_BUF[filter_cnt] = MPU6050_ACC_LAST.Y;
-	ACC_Z_BUF[filter_cnt] = MPU6050_ACC_LAST.Z;
-	for(i=0;i<MPU6050_FILTER_NUM;i++)
-	{
-		temp1 += ACC_X_BUF[i];
-		temp2 += ACC_Y_BUF[i];
-		temp3 += ACC_Z_BUF[i];
-	}
-	ACC_AVG.X = temp1 / MPU6050_FILTER_NUM;
-	ACC_AVG.Y = temp2 / MPU6050_FILTER_NUM;
-	ACC_AVG.Z = temp3 / MPU6050_FILTER_NUM;
-	filter_cnt++;
-	if(filter_cnt==MPU6050_FILTER_NUM)	filter_cnt=0;
-	return 1;
-}
+// 	MPU6050_GYRO_LAST.X=GetData_MPU6050(GYRO_XOUT_H)- GYRO_OFFSET.X;
+// 	MPU6050_GYRO_LAST.Y=GetData_MPU6050(GYRO_YOUT_H)- GYRO_OFFSET.Y;
+// 	MPU6050_GYRO_LAST.Z=GetData_MPU6050(GYRO_ZOUT_H)- GYRO_OFFSET.Z;
+// 	if(!GYRO_OFFSET_OK)
+// 	{
+// 		static int32_t	tempgx=0,tempgy=0,tempgz=0;
+// 		static uint8_t cnt_g=0;
+// 		if(cnt_g==0)
+// 		{
+// 			GYRO_OFFSET.X=0;
+// 			GYRO_OFFSET.Y=0;
+// 			GYRO_OFFSET.Z=0;
+// 			tempgx = 0;
+// 			tempgy = 0;
+// 			tempgz = 0;
+// 			cnt_g = 1;
+// 			return 0;
+// 		}
+// 		tempgx+= MPU6050_GYRO_LAST.X;
+// 		tempgy+= MPU6050_GYRO_LAST.Y;
+// 		tempgz+= MPU6050_GYRO_LAST.Z;
+// 		if(cnt_g==200)
+// 		{
+// 			GYRO_OFFSET.X=tempgx/cnt_g;
+// 			GYRO_OFFSET.Y=tempgy/cnt_g;
+// 			GYRO_OFFSET.Z=tempgz/cnt_g;
+// 			cnt_g = 0;
+// 			GYRO_OFFSET_OK = 1;
+// 			return 1;
+// 		}
+// 		cnt_g++;
+// 		}
+// 	/*
+// 	if(!ACC_OFFSET_OK)
+// 	{
+// 		static int32_t	tempax=0,tempay=0,tempaz=0;
+// 		static uint8_t cnt_a=0;
+// 		if(cnt_a==0)
+// 		{
+// 			ACC_OFFSET.X = 0;
+// 			ACC_OFFSET.Y = 0;
+// 			ACC_OFFSET.Z = 0;
+// 			tempax = 0;
+// 			tempay = 0;
+// 			tempaz = 0;
+// 			cnt_a = 1;
+// 			return 0;
+// 		}
+// 		tempax+= MPU6050_ACC_LAST.X;
+// 		tempay+= MPU6050_ACC_LAST.Y;
+// 		tempaz+= MPU6050_ACC_LAST.Z;
+// 		if(cnt_a==200)
+// 		{
+// 			ACC_OFFSET.X=tempax/cnt_a;
+// 			ACC_OFFSET.Y=tempay/cnt_a;
+// 			ACC_OFFSET.Z=tempaz/cnt_a;
+// 			cnt_a = 0;
+// 			ACC_OFFSET_OK = 1;
+// 			return 1;
+// 		}
+// 		cnt_a++;		
+// 	}
+// 	*/    
+//   	ACC_X_BUF[filter_cnt] = MPU6050_ACC_LAST.X;
+// 	ACC_Y_BUF[filter_cnt] = MPU6050_ACC_LAST.Y;
+// 	ACC_Z_BUF[filter_cnt] = MPU6050_ACC_LAST.Z;
+// 	for(i=0;i<MPU6050_FILTER_NUM;i++)
+// 	{
+// 		temp1 += ACC_X_BUF[i];
+// 		temp2 += ACC_Y_BUF[i];
+// 		temp3 += ACC_Z_BUF[i];
+// 	}
+// 	ACC_AVG.X = temp1 / MPU6050_FILTER_NUM;
+// 	ACC_AVG.Y = temp2 / MPU6050_FILTER_NUM;
+// 	ACC_AVG.Z = temp3 / MPU6050_FILTER_NUM;
+// 	filter_cnt++;
+// 	if(filter_cnt==MPU6050_FILTER_NUM)	filter_cnt=0;
+// 	return 1;
+// }
 
 /*************************************
  * 函数名：Cal_Offset_MPU6050

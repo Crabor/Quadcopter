@@ -5,7 +5,8 @@ void BSP_Init(void){
 	
 	uart6_init(84,115200);
 	I2C_Congiguration();
-	MPU6050_Init();
+	while(MPU6050_Init()!=1);//若MPU6050初始化不成功，则程序不向下运行
+	Calculate_FilteringCoefficient(0.001f,10.f);//计算IIR滤波器参数
 //	PWM_OUT_INIT();
 //	TIM5_CH1_Cap_Init();
 }

@@ -81,7 +81,7 @@ extern float P1,P2;
 
 
 /*--------º¯ÊýÉùÃ÷---------*/
-void 	MPU6050_Init(void); 
+int MPU6050_Init(void); 
 uint16_t GetData_MPU6050(uint8_t REG_Address);
 uint8_t Read_Filter_MPU6050(void);
 void Cal_Offset_MPU6050(void);
