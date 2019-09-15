@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : H:\file\sizhou\Four-Axis-Vehicle\PCB\PCB\pcb.PcbDoc
-Date     : 2019/8/6
-Time     : 21:50:42
+Date     : 2019/9/15
+Time     : 16:44:47
 
 Processing Rule : Clearance Constraint (Gap=0.5mm) (InPolygon),(All)
 Rule Violations :0
@@ -48,7 +48,7 @@ Rule Violations :0
 Processing Rule : Modified Polygon (Allow modified: No), (Allow shelved: No)
 Rule Violations :0
 
-Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (InNet('3V3_1'))
+Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (InNetClass('3V3'))
 Rule Violations :0
 
 Processing Rule : Width Constraint (Min=0.506mm) (Max=0.51mm) (Preferred=0.508mm) (InNetClass('5V'))
