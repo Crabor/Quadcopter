@@ -126,9 +126,12 @@ void MPU6050_Read(void)
 	gyro.y = GetData_MPU6050(GYRO_YOUT_H) - offsetGyro.y;
 	gyro.z = GetData_MPU6050(GYRO_ZOUT_H) - offsetGyro.z;
 
-	mag.x  = GetData_AK8975_MAG(MAG_XOUT_L);
-	mag.y  = GetData_AK8975_MAG(MAG_YOUT_L);
-	mag.z  = GetData_AK8975_MAG(MAG_ZOUT_L);
+	mag.x  = GetData_AK8975_MAG(MAG_XOUT_L)&0x1fff;
+	delay_ms(2);//在打开单次测量AK8975之后必须sleep一段时间，不然得不到有效的数据
+	mag.y  = GetData_AK8975_MAG(MAG_YOUT_L)&0x1fff;
+	delay_ms(2);
+	mag.z  = GetData_AK8975_MAG(MAG_ZOUT_L)&0x1fff;
+	delay_ms(2);
 	
 	MPU6050_Offset();
 }

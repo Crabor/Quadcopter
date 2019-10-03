@@ -25,8 +25,9 @@ void Usart6_Send ( unsigned char *DataToSend , u8 data_num );
 void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z,int16_t MAG_X,int16_t MAG_Y,int16_t MAG_Z);
 void SendAttitude(float roll,float pitch,float yaw);
 void ANO_DT_SendString(const char *str);
-void SendHalfWord(u16 *p);
-void SendWord(u32 *p);
+void SendByte(u8 frame,u8 *p);
+void SendHalfWord(u8 frame,u16 *p);
+void SendWord(u8 frame,u32 *p);
 //void SendPWMIN(u8 *STA,u8 *OVF,u32 *VAL_UP,u32 *VAL_DOWN,u32 *PW);
 void SendPWMIN(u8 frame,u8 *STA,u16 *OVF,u16 *VAL_UP,u16 *VAL_DOWN,u16 *PW);
 #endif

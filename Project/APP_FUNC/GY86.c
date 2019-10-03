@@ -15,6 +15,8 @@ S_INT16_XYZ	 ACC_AVG;
  *************************************/
 int MPU6050_Init(void)
 {
+//	u16 temp;
+//	u8 temp;
 	if(I2C_ByteRead(MPU6050_SlaveAddress,WHO_AM_I)!=0x68){//检查MPU6050是否正常
 		return 0;
 	}
@@ -23,16 +25,29 @@ int MPU6050_Init(void)
 	I2C_ByteWrite(MPU6050_SlaveAddress,SMPLRT_DIV,0x00);//采样分频 (采样频率 = 陀螺仪输出频率 / (1+DIV)，采样频率1000hz）
 	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_CONFIG,0x06);
 //	ANO_DT_SendString("ok");
+	I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
 	I2C_ByteWrite(MPU6050_SlaveAddress,0x6A,0x00);//close Master Mode
-//	I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
 //	ANO_DT_SendString("ok");
 	I2C_ByteWrite(MPU6050_SlaveAddress,GYRO_CONFIG,0x18);//陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒 
 	I2C_ByteWrite(MPU6050_SlaveAddress,ACCEL_CONFIG,0x08);//加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8196LSB/g )
 //	ANO_DT_SendString("ok");
-//	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x00);
+	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x00);
+	delay_ms(100);
+	
 //	ANO_DT_SendString("ok");
-//	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
 //	ANO_DT_SendString("ok");
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x00);
+//	temp=0;
+//	SendHalfWord(0xF1,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x00);
+//	SendByte(0xF1,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x01);
+//	SendByte(0xF2,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x02);
+//	SendByte(0xF3,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x09);
+//	SendByte(0xF4,&temp);
 	return 1;
 }
 
@@ -59,14 +74,38 @@ uint16_t GetData_MPU6050(uint8_t REG_Address)
  * 调用  ：外部调用
  ************************************/
 uint16_t GetData_AK8975_MAG(uint8_t REG_Address){
-   uint8_t H,L;
-	 I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
-   I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
-   L=I2C_ByteRead (MAG_ADDRESS,REG_Address);
-//	 I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
-   H=I2C_ByteRead (MAG_ADDRESS,REG_Address+1);
-	 I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x00);//turn off Bypass Mode 
-	 return (H<<8)|L;			       //合成
+	uint8_t H,L;
+//	u8 temp;
+	I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
+//	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x00);
+//	SendByte(0xF1,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x01);
+//	SendByte(0xF2,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x02);
+//	SendByte(0xF3,&temp);
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x09);
+//	SendByte(0xF4,&temp);
+//	
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x0A);
+//	SendHalfWord(0xF1,&temp);
+//	
+	L=I2C_ByteRead (MAG_ADDRESS,REG_Address);
+	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+//	
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x0A);
+//	SendHalfWord(0xF2,&temp);
+//	
+	//	 I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+	H=I2C_ByteRead (MAG_ADDRESS,REG_Address+1);
+	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+//	
+//	temp=I2C_ByteRead(MAG_ADDRESS,0x0A);
+//	SendHalfWord(0xF3,&temp);
+//	
+	I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x00);//turn off Bypass Mode 
+	return (H<<8)|L;			       //合成
 }
 
 

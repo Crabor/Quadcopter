@@ -2,7 +2,7 @@
 
 void BSP_Init(void){
   SysTick_Init();
-//	Delay_Config(84);
+	Delay_Config(84);
 	uart6_init(84,115200);
 //	ANO_DT_SendString("1");
 	I2C_Congiguration();

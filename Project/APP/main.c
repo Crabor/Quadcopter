@@ -90,6 +90,9 @@ int main(void){
 
 
  static void Task_1(void *p_arg){
+//	 u8 temp1=1;
+//	 u16 temp2=2;
+//	 u32 temp3=3;
 //	 u32 cnt=100;
  //	int16_t ACCEL_X=0,ACCEL_Y=0,ACCEL_Z=0,GYRO_X=0,GYRO_Y=0,GYRO_Z=0;
 //	ANO_DT_SendString("1");
@@ -112,6 +115,9 @@ int main(void){
 //		ANO_DT_SendString("2");
 //		SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
 		 SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
+//		 SendByte(0xF1,&temp1);
+//		 SendHalfWord(0xF2,&temp2);
+//		 SendWord(0xF3,&temp3);
 // 		ACC_IIR_Filter(&acc,&filterAcc);//对acc做IIR滤波
 // 		Gyro_Filter(&gyro,&filterGyro);//对gyro做窗口滤波
 // 		Get_Radian(&filterGyro,&fGyro);//角速度数据转为弧度

@@ -206,6 +206,22 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
+          <LineNumber>129</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134220982</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\APP_FUNC\IMU.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\exp4\APP_FUNC/IMU.c\129</Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
           <LineNumber>157</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
@@ -337,6 +353,16 @@
           <count>8</count>
           <WinNumber>2</WinNumber>
           <ItemText>mag</ItemText>
+        </Ww>
+        <Ww>
+          <count>9</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>temp</ItemText>
+        </Ww>
+        <Ww>
+          <count>10</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>(H&lt;&lt;8)|L</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
