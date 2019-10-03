@@ -1,15 +1,5 @@
 #include "IMU.h"
 
-uint8_t	gyroOffset = 0;//不自动校正，用于零偏校准
-uint8_t	accOffset  = 0;
-Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
-Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
-Mag mag;
-Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
-Angle angle;//姿态解算-角度值
-PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
-float ACC_IIR_FACTOR;
-
 // ==================================================================================
 // 描述:
 // 必须定义'halfT '为周期的一半，以及滤波器的参数Kp和Ki

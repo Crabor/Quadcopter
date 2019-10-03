@@ -12,7 +12,8 @@
 #define BYTE1(dwTemp)       ( *( (char *)(&dwTemp) + 1) )
 #define BYTE2(dwTemp)       ( *( (char *)(&dwTemp) + 2) )
 #define BYTE3(dwTemp)       ( *( (char *)(&dwTemp) + 3) )
-	
+
+extern u8 testdatatosend[50];	//·¢ËÍÊý¾Ý»º´æ
 /*******************************************************************************************************/
 extern u8 Rx_Buf[];
 
@@ -21,8 +22,7 @@ void uart6_init(u32 pclk2,u32 bound);
 
 void Usart6_IRQ ( void );
 void Usart6_Send ( unsigned char *DataToSend , u8 data_num );
-//void SendSenser(void);
-void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z);
+void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z,int16_t MAG_X,int16_t MAG_Y,int16_t MAG_Z);
 void SendAttitude(float roll,float pitch,float yaw);
 void ANO_DT_SendString(const char *str);
 void SendHalfWord(u16 *p);

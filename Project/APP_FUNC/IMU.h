@@ -61,6 +61,15 @@ typedef struct
 	float output;
 }PID;
 
+extern uint8_t	gyroOffset;//不自动校正，用于零偏校准
+extern uint8_t	accOffset;
+extern Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
+extern Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
+extern Mag mag;//原始数据
+extern Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
+extern Angle angle;//姿态解算-角度值
+extern PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
+extern float ACC_IIR_FACTOR;
 
 float invSqrt(float x);
 void Open_Calib(void);

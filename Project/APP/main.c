@@ -1,26 +1,27 @@
 #include "includes.h"
 
 /**********************************姿态解算相关数据******************************************************/
-extern uint8_t	gyroOffset;//不自动校正，用于零偏校准
-extern uint8_t	accOffset;
-extern Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
-extern Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
-extern Mag mag;//原始数据
-extern Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
-extern Angle angle;//姿态解算-角度值
-extern PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
+uint8_t	gyroOffset = 0;//不自动校正，用于零偏校准
+uint8_t	accOffset  = 0;
+Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
+Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
+Mag mag;
+Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
+Angle angle;//姿态解算-角度值
+PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
+float ACC_IIR_FACTOR;
 /*******************************************************************************************************/
 
 /*************************************串口中断发送***********************************************************/
-extern u8 testdatatosend[50];	//发送数据缓存
+u8 testdatatosend[50];	//发送数据缓存
 /*******************************************************************************************************/
 
 /***********************************PWM输入捕获******************************************************/
-extern u32 PWM_IN_CH[4];
+uint16_t PWMInCh1=0, PWMInCh2=0, PWMInCh3=0, PWMInCh4=0;
 /*******************************************************************************************************/
 
 /***********************************PWM输出比较*********************************************************/
-extern uint16_t PWMInCh1, PWMInCh2, PWMInCh3, PWMInCh4;
+
 /*******************************************************************************************************/
 
 /**********************************操作系统相关*********************************************************/
@@ -97,20 +98,20 @@ int main(void){
  //	  OSTimeDly(1000);
  //  }
 	 
-// 	Open_Calib();//打开零偏校准
+ 	Open_Calib();//打开零偏校准
  //	while(1){
  //		OSTimeDly(1);
  //		MPU6050_Read();
  //		if(accOffset==0 && gyroOffset==0) break;
  //	}
  	 while(1){
- 	   OSTimeDly(1000);
+ 	   OSTimeDly(10);
 //		 cnt++;
 //	   SendWord(&cnt);
-// 		MPU6050_Read();
+ 		MPU6050_Read();
 //		ANO_DT_SendString("2");
 //		SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
-		 SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z);//发送传感器原始数据帧
+		 SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
 // 		ACC_IIR_Filter(&acc,&filterAcc);//对acc做IIR滤波
 // 		Gyro_Filter(&gyro,&filterGyro);//对gyro做窗口滤波
 // 		Get_Radian(&filterGyro,&fGyro);//角速度数据转为弧度

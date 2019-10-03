@@ -213,7 +213,7 @@ uint16_t TIM5CH1_Rise, TIM5CH1_Fall,
 uint16_t TIM5_T;
 
 // Four-channel remote control initial value
-uint16_t PWMInCh1 = 0, PWMInCh2 = 0, PWMInCh3 = 0, PWMInCh4 = 0;
+extern uint16_t PWMInCh1, PWMInCh2 , PWMInCh3 , PWMInCh4 ;
 
 void TIM5_PWM_IN_IRQ(void){
 //	  static u32 cnt=0;
