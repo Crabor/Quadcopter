@@ -18,15 +18,21 @@ int MPU6050_Init(void)
 	if(I2C_ByteRead(MPU6050_SlaveAddress,WHO_AM_I)!=0x68){//检查MPU6050是否正常
 		return 0;
 	}
+//	ANO_DT_SendString("ok");
 	I2C_ByteWrite(MPU6050_SlaveAddress,PWR_MGMT_1,0x00);//解除休眠状态,使用内部8MHz振荡器
-	OSTimeDly(20);	
 	I2C_ByteWrite(MPU6050_SlaveAddress,SMPLRT_DIV,0x00);//采样分频 (采样频率 = 陀螺仪输出频率 / (1+DIV)，采样频率1000hz）
-	OSTimeDly(20);	
-	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_CONFIG,0x04);//设置陀螺的输出为1kHZ,DLPF=20Hz 
-	OSTimeDly(20);	
+	I2C_ByteWrite(MPU6050_SlaveAddress,MPU6050_CONFIG,0x06);
+//	ANO_DT_SendString("ok");
+	I2C_ByteWrite(MPU6050_SlaveAddress,0x6A,0x00);//close Master Mode
+//	I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
+//	ANO_DT_SendString("ok");
 	I2C_ByteWrite(MPU6050_SlaveAddress,GYRO_CONFIG,0x18);//陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒 
-	OSTimeDly(20);	
 	I2C_ByteWrite(MPU6050_SlaveAddress,ACCEL_CONFIG,0x08);//加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8196LSB/g )
+//	ANO_DT_SendString("ok");
+//	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x00);
+//	ANO_DT_SendString("ok");
+//	I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+//	ANO_DT_SendString("ok");
 	return 1;
 }
 
@@ -43,6 +49,24 @@ uint16_t GetData_MPU6050(uint8_t REG_Address)
 	H=I2C_ByteRead(MPU6050_SlaveAddress,REG_Address);
 	L=I2C_ByteRead(MPU6050_SlaveAddress,REG_Address+1);
 	return (H<<8)|L;   //合成数据
+}
+
+/*************************************
+ * 函数名：GetData_AK8975_MAG
+ * 描述  ：获得16位数据
+ * 输入  ：REG_Address 寄存器地址
+ * 输出  ：返回寄存器数据
+ * 调用  ：外部调用
+ ************************************/
+uint16_t GetData_AK8975_MAG(uint8_t REG_Address){
+   uint8_t H,L;
+	 I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x02);//turn on Bypass Mode 
+   I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+   L=I2C_ByteRead (MAG_ADDRESS,REG_Address);
+//	 I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+   H=I2C_ByteRead (MAG_ADDRESS,REG_Address+1);
+	 I2C_ByteWrite(MPU6050_SlaveAddress,0x37,0x00);//turn off Bypass Mode 
+	 return (H<<8)|L;			       //合成
 }
 
 

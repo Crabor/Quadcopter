@@ -538,6 +538,16 @@
               <FileType>5</FileType>
               <FilePath>.\APP_FUNC\IMU.h</FilePath>
             </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\delay.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

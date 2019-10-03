@@ -1,5 +1,7 @@
 #include "usart.h"
-							 
+
+
+u8 testdatatosend[50];	//发送数据缓存
 //初始化IO 串口2
 //pclk2:PCLK2时钟频率(Mhz)
 //bound:波特率 
@@ -57,7 +59,7 @@ void uart6_init(u32 pclk2,u32 bound)
     //使能接收中断
 //    USART6->CR1|=1<<2;    //串口接收使能
 //    USART6->CR1|=1<<5;      //接收缓冲区非空中断使能
-    MY_NVIC_Init(3,3,USART6_IRQn,2);//组2，最低优先级
+    MY_NVIC_Init(2,0,USART6_IRQn,2);//组2,抢占优先级2，响应优先级0
     USART6->CR1|=1<<13;    //串口使能
 }
 
@@ -90,3 +92,322 @@ void Usart6_Send ( u8 *DataToSend , u8 data_num ){
   }
 }
 /*********************https://blog.csdn.net/qq_35629563/article/details/80879819***********************/
+
+void ANO_DT_SendString(const char *str)
+{
+	u8 _cnt=0;
+	u8 i = 0;
+	u8 sum = 0;
+	
+	testdatatosend[_cnt++]=0xAA;
+	testdatatosend[_cnt++]=0x05;
+	testdatatosend[_cnt++]=0xAF;
+	testdatatosend[_cnt++]=0xA0;
+	testdatatosend[_cnt++]=0;
+	while(*(str+i) != '\0')
+	{
+		testdatatosend[_cnt++] = *(str+i);
+		i++;
+		if(_cnt > 50)
+			break;
+	}
+	
+	testdatatosend[4] = _cnt-5;
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;
+
+	Usart6_Send(testdatatosend, _cnt);
+}
+
+void SendHalfWord(u16 *p){
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=0xF1;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	testdatatosend[_cnt++]=BYTE1(*p);//将要发送的数据放至发送缓冲区
+	testdatatosend[_cnt++]=BYTE0(*p);
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+}
+
+void SendWord(u32 *p){
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=0xF2;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	testdatatosend[_cnt++]=BYTE3(*p);//将要发送的数据放至发送缓冲区
+	testdatatosend[_cnt++]=BYTE2(*p);
+	testdatatosend[_cnt++]=BYTE1(*p);
+	testdatatosend[_cnt++]=BYTE0(*p);
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+}
+
+//void SendSenser(void)	//发送用户数据，这里有6个数据
+//{
+////	u8 _cnt=0;
+////	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+////	int i;
+////	ACCEL_X=1;
+////	ACCEL_Y=2;
+////	ACCEL_Z=3;
+////	GYRO_X=4;
+////	GYRO_Y=5;
+////	GYRO_Z=6;
+////	MAG_X=7;
+////	MAG_Y=8;
+////	MAG_Z=9;
+////	
+////	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+////	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+////	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+////	testdatatosend[_cnt++]=0xF1;//0x02，表示本帧为传感器原始数据帧
+////	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+//// 
+////	testdatatosend[_cnt++]=BYTE1(ACCEL_X);//将要发送的数据放至发送缓冲区
+////	testdatatosend[_cnt++]=BYTE0(ACCEL_X);
+////	
+////	testdatatosend[_cnt++]=BYTE1(ACCEL_Y);
+////	testdatatosend[_cnt++]=BYTE0(ACCEL_Y);
+////	
+////	testdatatosend[_cnt++]=BYTE1(ACCEL_Z);
+////	testdatatosend[_cnt++]=BYTE0(ACCEL_Z);
+////	
+////	testdatatosend[_cnt++]=BYTE1(GYRO_X);
+////	testdatatosend[_cnt++]=BYTE0(GYRO_X);
+////	
+////	testdatatosend[_cnt++]=BYTE1(GYRO_Y);
+////	testdatatosend[_cnt++]=BYTE0(GYRO_Y);
+////	
+////	testdatatosend[_cnt++]=BYTE1(GYRO_Z);
+////	testdatatosend[_cnt++]=BYTE0(GYRO_Z);
+////	
+////	testdatatosend[_cnt++]=BYTE1(MAG_X);
+////	testdatatosend[_cnt++]=BYTE0(MAG_X);
+////	
+////	testdatatosend[_cnt++]=BYTE1(MAG_Y);
+////	testdatatosend[_cnt++]=BYTE0(MAG_Y);
+////	
+////	testdatatosend[_cnt++]=BYTE1(MAG_Z);
+////	testdatatosend[_cnt++]=BYTE0(MAG_Z);
+////	
+////	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+////	
+////	for(i=0;i<_cnt;i++)
+////		sum += testdatatosend[i];
+////	
+////	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+////	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+//	u8 _cnt=0;
+//	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+//	int i;
+//	
+//	int16_t ACCEL_X=1;
+//	int16_t ACCEL_Y=2;
+//	int16_t ACCEL_Z=3;
+//	int16_t GYRO_X=4;
+//	int16_t GYRO_Y=5;
+//	int16_t GYRO_Z=6;
+//	int16_t MAG_X=7;
+//	int16_t MAG_Y=8;
+//	int16_t MAG_Z=9;
+//	
+//	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+//	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+//	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+//	testdatatosend[_cnt++]=0xF1;//0x02，表示本帧为传感器原始数据帧
+//	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+// 
+//	testdatatosend[_cnt++]=BYTE1(ACCEL_X);//将要发送的数据放至发送缓冲区
+//	testdatatosend[_cnt++]=BYTE0(ACCEL_X);
+//	
+//	testdatatosend[_cnt++]=BYTE1(ACCEL_Y);
+//	testdatatosend[_cnt++]=BYTE0(ACCEL_Y);
+//	
+//	testdatatosend[_cnt++]=BYTE1(ACCEL_Z);
+//	testdatatosend[_cnt++]=BYTE0(ACCEL_Z);
+//	
+//	testdatatosend[_cnt++]=BYTE1(GYRO_X);
+//	testdatatosend[_cnt++]=BYTE0(GYRO_X);
+//	
+//	testdatatosend[_cnt++]=BYTE1(GYRO_Y);
+//	testdatatosend[_cnt++]=BYTE0(GYRO_Y);
+//	
+//	testdatatosend[_cnt++]=BYTE1(GYRO_Z);
+//	testdatatosend[_cnt++]=BYTE0(GYRO_Z);
+//	
+//	testdatatosend[_cnt++]=BYTE1(MAG_X);
+//	testdatatosend[_cnt++]=BYTE0(MAG_X);
+//	
+//	testdatatosend[_cnt++]=BYTE1(MAG_Y);
+//	testdatatosend[_cnt++]=BYTE0(MAG_Y);
+//	
+//	testdatatosend[_cnt++]=BYTE1(MAG_Z);
+//	testdatatosend[_cnt++]=BYTE0(MAG_Z);
+//	
+//	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+//	
+//	for(i=0;i<_cnt;i++)
+//		sum += testdatatosend[i];
+//	
+//	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+//	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+
+//}
+
+void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z)	//发送用户数据，这里有6个数据
+{
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	int16_t MAG_X=0,MAG_Y=0,MAG_Z=0;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=0x02;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	testdatatosend[_cnt++]=BYTE1(ACCEL_X);//将要发送的数据放至发送缓冲区
+	testdatatosend[_cnt++]=BYTE0(ACCEL_X);
+	
+	testdatatosend[_cnt++]=BYTE1(ACCEL_Y);
+	testdatatosend[_cnt++]=BYTE0(ACCEL_Y);
+	
+	testdatatosend[_cnt++]=BYTE1(ACCEL_Z);
+	testdatatosend[_cnt++]=BYTE0(ACCEL_Z);
+	
+	testdatatosend[_cnt++]=BYTE1(GYRO_X);
+	testdatatosend[_cnt++]=BYTE0(GYRO_X);
+	
+	testdatatosend[_cnt++]=BYTE1(GYRO_Y);
+	testdatatosend[_cnt++]=BYTE0(GYRO_Y);
+	
+	testdatatosend[_cnt++]=BYTE1(GYRO_Z);
+	testdatatosend[_cnt++]=BYTE0(GYRO_Z);
+	
+	testdatatosend[_cnt++]=BYTE1(MAG_X);//假数据，为了符合数据帧要求
+	testdatatosend[_cnt++]=BYTE0(MAG_X);
+	
+	testdatatosend[_cnt++]=BYTE1(MAG_Y);
+	testdatatosend[_cnt++]=BYTE0(MAG_Y);
+	
+	testdatatosend[_cnt++]=BYTE1(MAG_Z);
+	testdatatosend[_cnt++]=BYTE0(MAG_Z);
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+ 
+}
+
+void SendAttitude(float roll,float pitch,float yaw){
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	int32_t ALT_USE=0;
+	u8 FLY_MODEL=0,ARMED=0;
+	vs16 _temp;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=0x01;//0x01，表示本帧为姿态数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	_temp = (int)(roll*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);//将要发送的数据放至发送缓冲区
+	testdatatosend[_cnt++]=BYTE0(_temp);
+	
+	_temp = (int)(pitch*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);
+	testdatatosend[_cnt++]=BYTE0(_temp);
+
+	_temp = (int)(yaw*100); 
+	testdatatosend[_cnt++]=BYTE1(_temp);
+	testdatatosend[_cnt++]=BYTE0(_temp);
+	
+	testdatatosend[_cnt++]=BYTE3(ALT_USE);//假数据，为了符合数据帧要求
+	testdatatosend[_cnt++]=BYTE2(ALT_USE);
+	testdatatosend[_cnt++]=BYTE1(ALT_USE);
+	testdatatosend[_cnt++]=BYTE0(ALT_USE);
+	
+	testdatatosend[_cnt++]=FLY_MODEL;
+	testdatatosend[_cnt++]=ARMED;
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+}
+
+void SendPWMIN(u8 frame,u8 *STA,u16 *OVF,u16 *VAL_UP,u16 *VAL_DOWN,u16 *PW){
+	u8 _cnt=0;
+	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+	int i;
+	
+	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
+	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+	testdatatosend[_cnt++]=frame;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+ 
+	testdatatosend[_cnt++]=*STA;
+//	testdatatosend[_cnt++]=*OVF;
+	testdatatosend[_cnt++]=BYTE1(*OVF);
+	testdatatosend[_cnt++]=BYTE0(*OVF);
+//	testdatatosend[_cnt++]=BYTE3(*VAL_UP);
+//	testdatatosend[_cnt++]=BYTE2(*VAL_UP);
+	testdatatosend[_cnt++]=BYTE1(*VAL_UP);
+	testdatatosend[_cnt++]=BYTE0(*VAL_UP);
+//	testdatatosend[_cnt++]=BYTE3(*VAL_DOWN);
+//	testdatatosend[_cnt++]=BYTE2(*VAL_DOWN);
+	testdatatosend[_cnt++]=BYTE1(*VAL_DOWN);
+	testdatatosend[_cnt++]=BYTE0(*VAL_DOWN);
+//	testdatatosend[_cnt++]=BYTE3(*PW);
+//	testdatatosend[_cnt++]=BYTE2(*PW);
+	testdatatosend[_cnt++]=BYTE1(*PW);
+	testdatatosend[_cnt++]=BYTE0(*PW);
+	
+	testdatatosend[4] = _cnt-5;//_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+	
+	for(i=0;i<_cnt;i++)
+		sum += testdatatosend[i];
+	
+	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
+	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+}

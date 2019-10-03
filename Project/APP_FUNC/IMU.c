@@ -4,6 +4,7 @@ uint8_t	gyroOffset = 0;//不自动校正，用于零偏校准
 uint8_t	accOffset  = 0;
 Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
 Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏数据
+Mag mag;
 Float fAcc,fGyro;//加速度数据（m/s2）、角速度数据（rad）
 Angle angle;//姿态解算-角度值
 PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
@@ -16,7 +17,7 @@ float ACC_IIR_FACTOR;
 // 需要在每一个采样周期调用'IMUupdate()'函数
 // 陀螺仪数据单位是弧度/秒，加速度计的单位无关重要，因为会被规范化
 // ==================================================================================
-#define Kp 	1.0f    // 比例常数
+#define Kp 	3.0f    // 比例常数
 #define Ki 	0.001f  // 积分常数
 #define halfT 0.0005f//采样周期的一半
 #define T	0.001f  // 周期为1ms
@@ -134,6 +135,10 @@ void MPU6050_Read(void)
 	gyro.x = GetData_MPU6050(GYRO_XOUT_H) - offsetGyro.x;
 	gyro.y = GetData_MPU6050(GYRO_YOUT_H) - offsetGyro.y;
 	gyro.z = GetData_MPU6050(GYRO_ZOUT_H) - offsetGyro.z;
+
+	mag.x  = GetData_AK8975_MAG(MAG_XOUT_L);
+	mag.y  = GetData_AK8975_MAG(MAG_YOUT_L);
+	mag.z  = GetData_AK8975_MAG(MAG_ZOUT_L);
 	
 	MPU6050_Offset();
 }
@@ -202,84 +207,97 @@ void Get_Radian(Gyro *gyroIn,Float *gyroOut)
 }
 
 // ==================================================================================
-// 函数原型：void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az) 
+// 函数原型：void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz) 
 // 功        能：互补滤波进行姿态解算
-// 输        入：陀螺仪数据及加速度计数据
+// 输        入：陀螺仪数据及加速度计数据及磁力计数据
 // ==================================================================================
-void IMUupdate(float gx, float gy, float gz, float ax, float ay, float az) 
+void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 {
-	float norm;
-	float vx, vy, vz;
-	float ex, ey, ez;
+    float norm;
+    float hx, hy, hz, bz, by;
+    float vx, vy, vz, wx, wy, wz;
+    float ex, ey, ez;
+    float q0_last, q1_last, q2_last;
+
+    //auxiliary variables to reduce number of repeated operations
+    float q0q0 = q0*q0;
+    float q0q1 = q0*q1;
+    float q0q2 = q0*q2;
+    float q0q3 = q0*q3;
+    float q1q1 = q1*q1;
+    float q1q2 = q1*q2;
+    float q1q3 = q1*q3;
+    float q2q2 = q2*q2;
+    float q2q3 = q2*q3;
+    float q3q3 = q3*q3;
+
+    //normalise the measurements
+    norm = invSqrt(ax*ax + ay*ay + az*az);
+    ax = ax * norm;
+    ay = ay * norm;
+    az = az * norm;
+    norm = invSqrt(mx*mx + my*my + mz*mz);
+    mx = mx * norm;
+    my = my * norm;
+    mz = mz * norm;
+
+    //compute reference direction of flux
+    hx = 2*mx*(0.5f - q2q2 - q3q3) + 2*my*(q1q2 - q0q3) + 2*mz*(q1q3 + q0q2);
+    hy = 2*mx*(q1q2 + q0q3) + 2*my*(0.5f - q1q1 - q3q3) + 2*mz*(q2q3 - q0q1);
+    hz = 2*mx*(q1q3 - q0q2) + 2*my*(q2q3 + q0q1) + 2*mz*(0.5f - q1q1 - q2q2);
+
+    // bx = sqrtf((hx*hx) + (hy*hy));
+    by = sqrtf((hx*hx) + (hy*hy));
+    bz = hz;
+
+    // estimated direction of gravity and flux (v and w)
+    vx = 2*(q1q3 - q0q2);
+    vy = 2*(q0q1 + q2q3);
+    vz = q0q0 - q1q1 - q2q2 + q3q3;
+
+    wx = 2*by*(q1q2 + q0q3) + 2*bz*(q1q3 - q0q2);
+    wy = 2*by*(0.5f - q1q1 - q3q3) + 2*bz*(q0q1 + q2q3);
+    wz = 2*by*(q2q3 - q0q1) + 2*bz*(0.5f - q1q1 - q2q2);
+
+    // error is sum of cross product between reference direction of fields and direction measured by sensors
+    ex = (ay*vz - az*vy) + (my*wz - mz*wy);
+    ey = (az*vx - ax*vz) + (mz*wx - mx*wz);
+    ez = (ax*vy - ay*vx) + (mx*wy - my*wx);
+
+    // halfT = Get_AHRS_Time();
+
+    if(ex != 0.0f && ey != 0.0f && ez != 0.0f)
+    {
+        // integral error scaled integral gain
+        exInt = exInt + ex*Ki * halfT;
+        eyInt = eyInt + ey*Ki * halfT;
+        ezInt = ezInt + ez*Ki * halfT;
+
+        // adjusted gyroscope measurements
+        gx = gx + Kp*ex + exInt;
+        gy = gy + Kp*ey + eyInt;
+        gz = gz + Kp*ez + ezInt;
+    }
+
+    // save quaternion
+    q0_last = q0;
+    q1_last = q1;
+    q2_last = q2;
+    
+    // integrate quaternion rate and normalise (Picard first order)
+    q0 = q0_last + (-q1_last*gx - q2_last*gy - q3*gz) * halfT;
+    q1 = q1_last + ( q0_last*gx + q2_last*gz - q3*gy) * halfT;
+    q2 = q2_last + ( q0_last*gy - q1_last*gz + q3*gx) * halfT;
+    q3 = q3 + ( q0_last*gz + q1_last*gy - q2_last*gx) * halfT;
+
+    // normalise quaternion
+    norm = invSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+    q0 = q0 * norm;    //w
+    q1 = q1 * norm;    //x
+    q2 = q2 * norm;    //y
+    q3 = q3 * norm;    //z
 	
-  //四元数积分，求得当前的姿态
-	float q0_last = q0;	
-	float q1_last = q1;	
-	float q2_last = q2;	
-	float q3_last = q3;	
-
-	//把加速度计的三维向量转成单位向量
-	norm = invSqrt(ax*ax + ay*ay + az*az);
-	ax = ax * norm;
-	ay = ay * norm;
-	az = az * norm;
-
-	//估计重力加速度方向在飞行器坐标系中的表示，为四元数表示的旋转矩阵的第三行
-	vx = 2*(q1*q3 - q0*q2);
-	vy = 2*(q0*q1 + q2*q3);
-	vz = q0*q0 - q1*q1 - q2*q2 + q3*q3;
-
-	//加速度计读取的方向与重力加速度方向的差值，用向量叉乘计算
-	ex = ay*vz - az*vy;
-	ey = az*vx - ax*vz;
-	ez = ax*vy - ay*vx;
-
-	//误差累积，已与积分常数相乘
-	exInt = exInt + ex*Ki;
-	eyInt = eyInt + ey*Ki;
-	ezInt = ezInt + ez*Ki;
-
-	//用叉积误差来做PI修正陀螺零偏，即抵消陀螺读数中的偏移量	
-	gx = gx + Kp*ex + exInt;
-	gy = gy + Kp*ey + eyInt;
-	gz = gz + Kp*ez + ezInt;
-
-
-	//一阶近似算法
-	q0 = q0_last + (-q1_last*gx - q2_last*gy - q3_last*gz)*halfT;
-	q1 = q1_last + ( q0_last*gx + q2_last*gz - q3_last*gy)*halfT;
-	q2 = q2_last + ( q0_last*gy - q1_last*gz + q3_last*gx)*halfT;
-	q3 = q3_last + ( q0_last*gz + q1_last*gy - q2_last*gx)*halfT; 
-
-//	//二阶近似算法
-//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
-//	q0 = q0_last*(1-delta2/8) + (-q1_last*gx - q2_last*gy - q3_last*gz)*halfT;
-//	q1 = q1_last*(1-delta2/8) + ( q0_last*gx + q2_last*gz - q3_last*gy)*halfT;
-//	q2 = q2_last*(1-delta2/8) + ( q0_last*gy - q1_last*gz + q3_last*gx)*halfT;
-//	q3 = q3_last*(1-delta2/8) + ( q0_last*gz + q1_last*gy - q2_last*gx)*halfT;
-
-//	//三阶近似算法
-//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
-//	q0 = q0_last*(1-delta2/8) + (-q1_last*gx - q2_last*gy - q3_last*gz)*T*(0.5 - delta2/48);
-//	q1 = q1_last*(1-delta2/8) + ( q0_last*gx + q2_last*gz - q3_last*gy)*T*(0.5 - delta2/48);
-//	q2 = q2_last*(1-delta2/8) + ( q0_last*gy - q1_last*gz + q3_last*gx)*T*(0.5 - delta2/48);
-//	q3 = q3_last*(1-delta2/8) + ( q0_last*gz + q1_last*gy - q2_last*gx)*T*(0.5 - delta2/48);
-
-//	//四阶近似算法
-//	float delta2 = (gx*gx + gy*gy + gz*gz)*T*T;
-//	q0 = q0_last*(1 - delta2/8 + delta2*delta2/384) + (-q1_last*gx - q2_last*gy - q3_last*gz)*T*(0.5 - delta2/48);
-//	q1 = q1_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gx + q2_last*gz - q3_last*gy)*T*(0.5 - delta2/48);
-//	q2 = q2_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gy - q1_last*gz + q3_last*gx)*T*(0.5 - delta2/48);
-//	q3 = q3_last*(1 - delta2/8 + delta2*delta2/384) + ( q0_last*gz + q1_last*gy - q2_last*gx)*T*(0.5 - delta2/48);
-			
-	//四元数规范化
-	norm = invSqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
-	q0 = q0 * norm;
-	q1 = q1 * norm;
-	q2 = q2 * norm;
-	q3 = q3 * norm;
-	
-	angle.yaw  +=  filterGyro.z * RawData_to_Angle * 0.001f;
+//   angle.yaw  +=  filterGyro.z * RawData_to_Angle * 0.001f;
 }
 
 /******************************************************************************
@@ -290,9 +308,8 @@ void Get_Eulerian_Angle(Angle *angle)
 {	
 	angle->pitch = -atan2(2.0f*(q0*q1 + q2*q3),q0*q0 - q1*q1 - q2*q2 + q3*q3)*Radian_to_Angle;
 	angle->roll  =  asin (2.0f*(q0*q2 - q1*q3))*Radian_to_Angle;
-//  angle->yaw   =  atan2(2.0f*(q0*q3 + q1*q2),q0*q0 + q1*q1 - q2*q2 - q3*q3)*Radian_to_Angle;
-
-//	angle->pitch = -atan2(2.0f*(q0*q1 + q2*q3),q0*q0 - q1*q1 - q2*q2 + q3*q3);
-//	angle->roll  =  asin (2.0f*(q0*q2 - q1*q3));
-//	angle->yaw   =  atan2(2.0f*(q0*q3 + q1*q2),q0*q0 + q1*q1 - q2*q2 - q3*q3);
+	angle->yaw   =  atan2(2.0f*(q0*q3 + q1*q2),q0*q0 + q1*q1 - q2*q2 - q3*q3)*Radian_to_Angle;
+//	if((fGyro.z*Radian_to_Angle>2.0f)||(fGyro.z*Radian_to_Angle<-2.0f)){
+//		angle->yaw -= fGyro.z*Radian_to_Angle*0.01f;
+//	}
 }

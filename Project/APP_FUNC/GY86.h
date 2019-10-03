@@ -22,9 +22,17 @@
 #define	GYRO_YOUT_L						0x46
 #define	GYRO_ZOUT_H						0x47
 #define	GYRO_ZOUT_L						0x48
+#define MAG_XOUT_L						0x03
+#define MAG_XOUT_H						0x04
+#define MAG_YOUT_L						0x05
+#define MAG_YOUT_H						0x06
+#define MAG_ZOUT_L						0x07
+#define MAG_ZOUT_H						0x08
 #define	PWR_MGMT_1						0x6B	//电源管理，典型值：0x00(正常启用)
 #define	WHO_AM_I							0x75	//IIC地址寄存器(默认数值0x68，只读)
 #define	MPU6050_SlaveAddress	0xD0	//IIC写入时的地址字节数据
+#define MAG_ADDRESS    0x18   //磁场地址
+//#define MAG_ADDRESS    0x0c   //磁场地址
 
 /* HMC5883L Register Address ------------------------------------------------------------*/
 
@@ -83,6 +91,7 @@ extern float P1,P2;
 /*--------函数声明---------*/
 int MPU6050_Init(void); 
 uint16_t GetData_MPU6050(uint8_t REG_Address);
+uint16_t GetData_AK8975_MAG(uint8_t REG_Address);
 uint8_t Read_Filter_MPU6050(void);
 void Cal_Offset_MPU6050(void);
 //---------------------------------------------------//
