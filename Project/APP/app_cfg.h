@@ -42,11 +42,11 @@
 #endif
 
 #if I2C_EN
-	#include "IIC_Init.h"
+	#include "iic.h"
 #endif
 
 #if MPU9150_EN
-	#include "GY86.h"
+	#include "MPU9150.h"
 #endif
 
 #if IMU_EN

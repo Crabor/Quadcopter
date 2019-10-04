@@ -4,7 +4,7 @@
 //初始化IO 串口2
 //pclk2:PCLK2时钟频率(Mhz)
 //bound:波特率 
-void uart2_init(u32 pclk2,u32 bound)
+void USART2_Init(u32 pclk2,u32 bound)
 {  	 
 		float temp;
 		u16 mantissa;
@@ -36,7 +36,7 @@ void uart2_init(u32 pclk2,u32 bound)
 //初始化IO 串口6
 //pclk2:PCLK2时钟频率(Mhz)
 //bound:波特率
-void uart6_init(u32 pclk2,u32 bound)
+void USART6_Init(u32 pclk2,u32 bound)
 {   //PC6,PC7
     float temp;
     u16 mantissa;
@@ -66,7 +66,7 @@ void uart6_init(u32 pclk2,u32 bound)
 /****************************************串口中断发送方式**********************************************/
 u8 FLAG_TC=0;//定义全局变量
 
-void Usart6_IRQ ( void ){
+void USART6_IRQ ( void ){
  if (USART_GetITStatus(USART6, USART_IT_TC) != RESET)//发送完成中断,= SET
   {
     USART_ClearITPendingBit(USART6,USART_IT_TC);
@@ -76,7 +76,7 @@ void Usart6_IRQ ( void ){
 
 //DataToSend:发送数组
 //data_num:数组长度
-void Usart6_Send ( u8 *DataToSend , u8 data_num ){
+void USART6_Send ( u8 *DataToSend , u8 data_num ){
   u8 i=0;
   FLAG_TC=0;//提前准备一下
   for(i=0;i<data_num;i++)//检测字符串结束符
@@ -92,7 +92,8 @@ void Usart6_Send ( u8 *DataToSend , u8 data_num ){
 }
 /*********************https://blog.csdn.net/qq_35629563/article/details/80879819***********************/
 
-void ANO_DT_SendString(const char *str)
+
+void SendStr(const char *str)
 {
 	u8 _cnt=0;
 	u8 i = 0;
@@ -118,7 +119,7 @@ void ANO_DT_SendString(const char *str)
 	
 	testdatatosend[_cnt++]=sum;
 
-	Usart6_Send(testdatatosend, _cnt);
+	USART6_Send(testdatatosend, _cnt);
 }
 
 void SendByte(u8 frame,u8 *p){
@@ -129,7 +130,7 @@ void SendByte(u8 frame,u8 *p){
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
 	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-	testdatatosend[_cnt++]=frame;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=frame;//用户自定义数据帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
  
 	testdatatosend[_cnt++]=*p;//将要发送的数据放至发送缓冲区
@@ -140,7 +141,7 @@ void SendByte(u8 frame,u8 *p){
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }
 
 void SendHalfWord(u8 frame,u16 *p){
@@ -151,7 +152,7 @@ void SendHalfWord(u8 frame,u16 *p){
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
 	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-	testdatatosend[_cnt++]=frame;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=frame;//用户自定义数据帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
  
 	testdatatosend[_cnt++]=BYTE1(*p);//将要发送的数据放至发送缓冲区
@@ -163,7 +164,7 @@ void SendHalfWord(u8 frame,u16 *p){
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }
 
 void SendWord(u8 frame,u32 *p){
@@ -174,7 +175,7 @@ void SendWord(u8 frame,u32 *p){
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
 	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-	testdatatosend[_cnt++]=frame;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=frame;//用户自定义数据帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
  
 	testdatatosend[_cnt++]=BYTE3(*p);//将要发送的数据放至发送缓冲区
@@ -188,7 +189,7 @@ void SendWord(u8 frame,u32 *p){
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }
 
 void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z,int16_t MAG_X,int16_t MAG_Y,int16_t MAG_Z)	//发送用户数据，这里有6个数据
@@ -236,7 +237,7 @@ void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z,int16_t GYRO_X
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }
 
 
@@ -280,7 +281,7 @@ void SendAttitude(float roll,float pitch,float yaw){
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }
 
 void SendPWMIN(u8 frame,u8 *STA,u16 *OVF,u16 *VAL_UP,u16 *VAL_DOWN,u16 *PW){
@@ -291,23 +292,16 @@ void SendPWMIN(u8 frame,u8 *STA,u16 *OVF,u16 *VAL_UP,u16 *VAL_DOWN,u16 *PW){
 	testdatatosend[_cnt++]=0xAA;//0xAA为帧头
 	testdatatosend[_cnt++]=0x05;//0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
 	testdatatosend[_cnt++]=0xAF;//0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-	testdatatosend[_cnt++]=frame;//0x02，表示本帧为传感器原始数据帧
+	testdatatosend[_cnt++]=frame;//用户自定义数据帧
 	testdatatosend[_cnt++]=0;//本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
  
 	testdatatosend[_cnt++]=*STA;
-//	testdatatosend[_cnt++]=*OVF;
 	testdatatosend[_cnt++]=BYTE1(*OVF);
 	testdatatosend[_cnt++]=BYTE0(*OVF);
-//	testdatatosend[_cnt++]=BYTE3(*VAL_UP);
-//	testdatatosend[_cnt++]=BYTE2(*VAL_UP);
 	testdatatosend[_cnt++]=BYTE1(*VAL_UP);
 	testdatatosend[_cnt++]=BYTE0(*VAL_UP);
-//	testdatatosend[_cnt++]=BYTE3(*VAL_DOWN);
-//	testdatatosend[_cnt++]=BYTE2(*VAL_DOWN);
 	testdatatosend[_cnt++]=BYTE1(*VAL_DOWN);
 	testdatatosend[_cnt++]=BYTE0(*VAL_DOWN);
-//	testdatatosend[_cnt++]=BYTE3(*PW);
-//	testdatatosend[_cnt++]=BYTE2(*PW);
 	testdatatosend[_cnt++]=BYTE1(*PW);
 	testdatatosend[_cnt++]=BYTE0(*PW);
 	
@@ -317,5 +311,5 @@ void SendPWMIN(u8 frame,u8 *STA,u16 *OVF,u16 *VAL_UP,u16 *VAL_DOWN,u16 *PW){
 		sum += testdatatosend[i];
 	
 	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 }

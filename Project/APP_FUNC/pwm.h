@@ -1,10 +1,5 @@
 #ifndef PWM_H
 #define PWM_H
-//#include "stm32f4xx_gpio.h"
-//#include "stm32f4xx_rcc.h"
-//#include "stm32f4xx_tim.h"
-//#include "gpio.h"
-//#include "nvic.h"
 #include "includes.h"
 
 //输入捕获定时器（TIM5）频率为 1MHz ,即 1/1M 秒计数器加1，
@@ -15,8 +10,8 @@
 //于是 x * PWM_IN_TO_OUT = 1000D => PWM_IN_TO_OUT = 1000D * 54.27 / 1000000D = 0.05427
 #define PWM_IN_TO_OUT 0.05427f
 
-void PWM_IN_INIT(void);
-void PWM_OUT_INIT(void);
+void PWM_IN_Init(void);
+void PWM_OUT_Init(void);
 void TIM5_PWM_IN_IRQ(void);
 
 #endif

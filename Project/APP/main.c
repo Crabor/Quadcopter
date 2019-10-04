@@ -111,7 +111,7 @@ int main(void){
  	   OSTimeDly(10);
 //		 cnt++;
 //	   SendWord(&cnt);
- 		MPU6050_Read();
+ 		MPU9150_Read();
 //		ANO_DT_SendString("2");
 //		SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
 		 SendSenser(acc.x,acc.y,acc.z,gyro.x,gyro.y,gyro.z,mag.x,mag.y,mag.z);//发送传感器原始数据帧
@@ -184,7 +184,7 @@ int main(void){
 ////		sum += testdatatosend[i];
 ////	
 ////	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-////	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+////	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 //	u8 _cnt=0;
 //	u8 sum = 0;	//以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
 //	int i;
@@ -238,7 +238,7 @@ int main(void){
 //		sum += testdatatosend[i];
 //	
 //	testdatatosend[_cnt++]=sum;	//将sum校验数据放置最后一字节
-//	Usart6_Send(testdatatosend, _cnt);	//调用发送数据函数
+//	USART6_Send(testdatatosend, _cnt);	//调用发送数据函数
 
 //}
 

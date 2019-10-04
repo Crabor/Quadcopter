@@ -1,8 +1,9 @@
 #ifndef IMU_H
 #define IMU_H
-
 #include "includes.h"
 #include "math.h"
+//吴勇等编著——《四轴飞行器DIY——基于STM32微控制器》
+//程序源码——https://pan.baidu.com/share/init?surl=o7sVC8a，密码：bpcd
 
 #define Pi	3.1415927f
 #define Radian_to_Angle	   57.2957795f
@@ -10,6 +11,7 @@
 #define RawData_to_Radian	0.0010653f
 #define Filter_Num 2
 
+//Struct typedef
 /* MPU6050--加速度计结构体 */
 typedef struct
 {
@@ -61,6 +63,7 @@ typedef struct
 	float output;
 }PID;
 
+//Variable declaration
 extern uint8_t	gyroOffset;//不自动校正，用于零偏校准
 extern uint8_t	accOffset;
 extern Acc acc,filterAcc,offsetAcc;//原始数据、滤波后数据、零偏数据
@@ -71,10 +74,11 @@ extern Angle angle;//姿态解算-角度值
 extern PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
 extern float ACC_IIR_FACTOR;
 
+// Functions definition
 float invSqrt(float x);
 void Open_Calib(void);
-void MPU6050_Offset(void);
-void MPU6050_Read(void);
+void MPU9150_Offset(void);
+void MPU9150_Read(void);
 void Calculate_FilteringCoefficient(float Time, float cutOff);
 void ACC_IIR_Filter(Acc *accIn,Acc *accOut);
 void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);

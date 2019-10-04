@@ -40,10 +40,10 @@ void Open_Calib(void){
 }
 
 /******************************************************************************
-函数原型：	void MPU6050_Offset(void)
+函数原型：	void MPU9150_Offset(void)
 功    能：	MPU6050零偏校正
 *******************************************************************************/ 
-void MPU6050_Offset(void)
+void MPU9150_Offset(void)
 {
 	if(accOffset)
 	{
@@ -113,28 +113,28 @@ void MPU6050_Offset(void)
 }
 
 /******************************************************************************
-函数原型：	void MPU6050_Read(void)
+函数原型：	void MPU9150_Read(void)
 功    能：	读取MPU6050的16位数据
 *******************************************************************************/ 
-void MPU6050_Read(void)
+void MPU9150_Read(void)
 {
-	acc.x  = GetData_MPU6050(ACCEL_XOUT_H) - offsetAcc.x;	//减去零偏
-	acc.y  = GetData_MPU6050(ACCEL_YOUT_H) - offsetAcc.y;
-	acc.z  = GetData_MPU6050(ACCEL_ZOUT_H) - offsetAcc.z;
+	acc.x  = GetData_MPU6050(MPU6050_ACCEL_XOUT_H) - offsetAcc.x;	//减去零偏
+	acc.y  = GetData_MPU6050(MPU6050_ACCEL_YOUT_H) - offsetAcc.y;
+	acc.z  = GetData_MPU6050(MPU6050_ACCEL_ZOUT_H) - offsetAcc.z;
 
-	gyro.x = GetData_MPU6050(GYRO_XOUT_H) - offsetGyro.x;
-	gyro.y = GetData_MPU6050(GYRO_YOUT_H) - offsetGyro.y;
-	gyro.z = GetData_MPU6050(GYRO_ZOUT_H) - offsetGyro.z;
+	gyro.x = GetData_MPU6050(MPU6050_GYRO_XOUT_H) - offsetGyro.x;
+	gyro.y = GetData_MPU6050(MPU6050_GYRO_YOUT_H) - offsetGyro.y;
+	gyro.z = GetData_MPU6050(MPU6050_GYRO_ZOUT_H) - offsetGyro.z;
 
-	mag.x  = GetData_AK8975_MAG(MAG_XOUT_L)&0x1fff;
-	delay_ms(2);//在打开单次测量AK8975之后必须sleep一段时间，不然得不到有效的数据
-	mag.y  = GetData_AK8975_MAG(MAG_YOUT_L)&0x1fff;
-	delay_ms(2);
-	mag.z  = GetData_AK8975_MAG(MAG_ZOUT_L)&0x1fff;
-	delay_ms(2);
+	mag.x  = GetData_AK8975(AK8975_MAG_XOUT_L);
+	delay_ms(10);//在打开单次测量AK8975之后必须sleep一段时间，不然得不到有效的数据
+	mag.y  = GetData_AK8975(AK8975_MAG_YOUT_L);
+	delay_ms(10);
+	mag.z  = GetData_AK8975(AK8975_MAG_ZOUT_L);
 	
-	MPU6050_Offset();
+	MPU9150_Offset();
 }
+
 
 /******************************************************************************
 函数原型：	void Calculate_FilteringCoefficient(float Time, float cutOff)

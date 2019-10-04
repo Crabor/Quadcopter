@@ -1,7 +1,6 @@
-
-//确定使用哪些外设驱动
 #ifndef RTE_COMPONENTS_H
 #define RTE_COMPONENTS_H
+//确定使用哪些外设驱动
 
 //#define RTE_DEVICE_STARTUP_STM32F4xx    /* Device Startup for STM32F4 */
 //以下外设所有f4板子通用

@@ -4,7 +4,7 @@ static u8  fac_us = 0;
 static u16 fac_ms = 0;
 
 // Delay configuration. SYSCLK means current clock frequency (MHZ)
-void Delay_Config(u8 SYSCLK)
+void DELAY_Init(u8 SYSCLK)
 {
 // If define OS_CRITICAL_METHOD then use ucosII
 #ifdef OS_CRITICAL_METHOD

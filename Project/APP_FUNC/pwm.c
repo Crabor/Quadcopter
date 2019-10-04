@@ -1,6 +1,6 @@
 #include "pwm.h"
 
-void PWM_OUT_INIT(void){
+void PWM_OUT_Init(void){
 	//TODO 是否要保持定时器PWM输出频率和遥控器接收器PWM输出频率一致？
 		uint16_t arr = 1000-1;
 		uint16_t psc = 1548-1;//54.27hz 的 PWM
@@ -61,7 +61,7 @@ void PWM_OUT_INIT(void){
 	TIM3->CR1|=1<<0; //使能定时器 3
 }
 
-void PWM_IN_INIT(void){
+void PWM_IN_Init(void){
 //	uint32_t arr = 0xffff;
 //	uint16_t psc = 84-1;//以1Mhz的频率计数，每0xffffus发生一次计数器更新中断
 //	
