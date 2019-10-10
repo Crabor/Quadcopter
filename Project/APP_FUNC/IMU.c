@@ -7,7 +7,7 @@
 // 需要在每一个采样周期调用'IMUupdate()'函数
 // 陀螺仪数据单位是弧度/秒，加速度计的单位无关重要，因为会被规范化
 // ==================================================================================
-#define Kp 	4.0f    // 比例常数
+#define Kp 	40.0f    // 比例常数
 #define Ki 	0.001f  // 积分常数
 #define halfT 0.0005f//采样周期的一半
 #define T	0.001f  // 周期为1ms
@@ -203,16 +203,6 @@ void Get_Radian(Gyro *gyroIn,Float *gyroOut)
 	gyroOut->x = (float)(gyroIn->x * RawData_to_Radian);
 	gyroOut->y = (float)(gyroIn->y * RawData_to_Radian);
 	gyroOut->z = (float)(gyroIn->z * RawData_to_Radian);
-}
-
-/******************************************************************************
-函数原型：	void Get_Gauss(Mag *magIn,Float *magOut)
-功    能：	磁场强度由原始数据转为高斯
-*******************************************************************************/ 
-void Get_Gauss(Mag *magIn,Float *magOut){
-	magOut->x = (float)(magIn->x * RawData_to_Gauss);
-	magOut->y = (float)(magIn->y * RawData_to_Gauss);
-	magOut->z = (float)(magIn->z * RawData_to_Gauss);
 }
 
 // ==================================================================================

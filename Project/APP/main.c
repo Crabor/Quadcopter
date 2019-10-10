@@ -99,7 +99,6 @@ static void Task_1(void* p_arg)
             ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
             Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
             Get_Radian(&filterGyro, &fGyro); //角速度数据转为弧度
-            Get_Gauss(&mag, &fMag); //磁场强度数据转为高斯
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
             Get_Eulerian_Angle(&angle);
             SendAttitude(angle.roll, angle.pitch, angle.yaw);

@@ -10,8 +10,7 @@
 #define Radian_to_Angle 57.2957795f
 #define RawData_to_Angle 0.0610351f //以下参数对应±2000°/s
 #define RawData_to_Radian 0.0010653f
-//磁场强度单位相关转换
-#define RawData_to_Gauss 0.003f //对应±12Gs
+
 #define Filter_Num 2
 
 //Struct typedef
@@ -87,7 +86,6 @@ void Calculate_FilteringCoefficient(float Time, float cutOff);
 void ACC_IIR_Filter(Acc *accIn,Acc *accOut);
 void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);
 void Get_Radian(Gyro *gyroIn,Float *gyroOut);
-void Get_Gauss(Mag *magIn,Float *magOut);
 void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 void Get_Eulerian_Angle(Angle *angle);
 
