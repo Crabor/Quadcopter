@@ -7,7 +7,7 @@
 // 需要在每一个采样周期调用'IMUupdate()'函数
 // 陀螺仪数据单位是弧度/秒，加速度计的单位无关重要，因为会被规范化
 // ==================================================================================
-#define Kp 	3.0f    // 比例常数
+#define Kp 	4.0f    // 比例常数
 #define Ki 	0.001f  // 积分常数
 #define halfT 0.0005f//采样周期的一半
 #define T	0.001f  // 周期为1ms
@@ -37,6 +37,14 @@ float invSqrt(float x)
 void Open_Calib(void){
     accOffset=1;
     gyroOffset=1;
+}
+
+/******************************************************************************
+函数原型：	u8 Calib_Status(void)
+功    能：	检查MPU6050零偏校正状态
+*******************************************************************************/ 
+u8 Calib_Status(void){
+	return accOffset | gyroOffset;
 }
 
 /******************************************************************************
@@ -127,9 +135,7 @@ void MPU9150_Read(void)
 	gyro.z = GetData_MPU6050(MPU6050_GYRO_ZOUT_H) - offsetGyro.z;
 
 	mag.x  = GetData_AK8975(AK8975_MAG_XOUT_L);
-	delay_ms(10);//在打开单次测量AK8975之后必须sleep一段时间，不然得不到有效的数据
 	mag.y  = GetData_AK8975(AK8975_MAG_YOUT_L);
-	delay_ms(10);
 	mag.z  = GetData_AK8975(AK8975_MAG_ZOUT_L);
 	
 	MPU9150_Offset();
@@ -197,6 +203,16 @@ void Get_Radian(Gyro *gyroIn,Float *gyroOut)
 	gyroOut->x = (float)(gyroIn->x * RawData_to_Radian);
 	gyroOut->y = (float)(gyroIn->y * RawData_to_Radian);
 	gyroOut->z = (float)(gyroIn->z * RawData_to_Radian);
+}
+
+/******************************************************************************
+函数原型：	void Get_Gauss(Mag *magIn,Float *magOut)
+功    能：	磁场强度由原始数据转为高斯
+*******************************************************************************/ 
+void Get_Gauss(Mag *magIn,Float *magOut){
+	magOut->x = (float)(magIn->x * RawData_to_Gauss);
+	magOut->y = (float)(magIn->y * RawData_to_Gauss);
+	magOut->z = (float)(magIn->z * RawData_to_Gauss);
 }
 
 // ==================================================================================
