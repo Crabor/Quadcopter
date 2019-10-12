@@ -49,8 +49,8 @@ static void Task_1(void *p_arg){
 	TIM3->CCR4 = 54;
 	OSTimeDly(5000);
 	while(1){
-		OSTimeDly(1000);
-		SendStr("nihao");
+//		OSTimeDly(1000);
+//		SendStr("nihao");
 //			TIM3->CCR1=PWMInCh3*0.054;//PWM输出
 //			TIM3->CCR2=PWMInCh3*0.054;//PWM输出
 //			TIM3->CCR3=PWMInCh3*0.054;//PWM输出
