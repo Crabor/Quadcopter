@@ -10,8 +10,11 @@
 //于是 x * PWM_IN_TO_OUT = 1000D => PWM_IN_TO_OUT = 1000D * 54.27 / 1000000D = 0.05427
 #define PWM_IN_TO_OUT 0.05427f
 
+extern int16_t motor1, motor2, motor3, motor4; //四个电机速度
+
 void PWM_IN_Init(void);
 void PWM_OUT_Init(void);
 void TIM5_PWM_IN_IRQ(void);
+void PWM_OUT(void);
 
 #endif

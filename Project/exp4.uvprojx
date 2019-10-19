@@ -518,6 +518,16 @@
               <FileType>1</FileType>
               <FilePath>.\APP_FUNC\IMU.c</FilePath>
             </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\pid.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

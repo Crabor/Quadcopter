@@ -54,16 +54,6 @@ typedef struct
 	float pitch;
 }Angle;
 
-/* pid变量 */
-typedef struct
-{
-	float kp;
-	float ki;
-	float kd;
-	float integral;
-	
-	float output;
-}PID;
 
 //Variable declaration
 extern uint8_t	gyroOffset;//不自动校正，用于零偏校准
@@ -73,7 +63,6 @@ extern Gyro gyro,filterGyro,offsetGyro;//原始数据、滤波后数据、零偏
 extern Mag mag;//原始数据
 extern Float fAcc,fGyro,fMag;//加速度数据（m/s2）、角速度数据（rad）、磁场强度数据（Gs）
 extern Angle angle;//姿态解算-角度值
-extern PID pitch,roll,gyroPitch,gyroRoll,gyroYaw;
 extern float ACC_IIR_FACTOR;
 
 // Functions definition
@@ -88,5 +77,6 @@ void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);
 void Get_Radian(Gyro *gyroIn,Float *gyroOut);
 void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
 void Get_Eulerian_Angle(Angle *angle);
-
+void AHRS_Time_Init(void);
+float Get_AHRS_Time(void);
 #endif

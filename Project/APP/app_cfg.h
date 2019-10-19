@@ -12,6 +12,7 @@
 #define MPU9150_EN 1u
 #define IMU_EN 1u
 #define DELAY_EN 1u
+#define PID_EN 1u
 
 #if LED_EN
 	#include "led.h"
@@ -55,6 +56,10 @@
 
 #if DELAY_EN
 	#include "delay.h"
+#endif
+
+#if PID_EN
+	#include "pid.h"
 #endif
 
 #endif
