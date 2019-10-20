@@ -54,7 +54,7 @@ static void Task_PID(void* p_arg);
 
 int main(void)
 {
-    BSP_Init();
+	  BSP_Init();
     OSInit();
     OSTaskCreate(Task_Startup, (void*)0, &Task_Startup_STK[TASK_STARTUP_STK_SIZE - 1], TASK_STARTUP_PRIO);
     OSStart();
@@ -67,8 +67,6 @@ static void Task_Startup(void* p_arg)
 #if (OS_TASK_STAT_EN > 0)
     OSStatInit();
 #endif
-
-    //startup
     //最低占空比启动电机
     TIM3->CCR1 = 54;
     TIM3->CCR2 = 54;
@@ -90,14 +88,14 @@ static void Task_Angel(void* p_arg)
 {
     while (1) {
         MPU9150_Read();
-//        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
         if (!Calib_Status()) {
             ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
             Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
             Get_Radian(&filterGyro, &fGyro); //角速度数据转为弧度
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
             Get_Eulerian_Angle(&angle);
-//            SendAttitude(angle.roll, angle.pitch, angle.yaw);
+            SendAttitude(angle.roll, angle.pitch, angle.yaw);
         }
         OSTimeDly(1);
     }
@@ -107,49 +105,32 @@ static void Task_Angel(void* p_arg)
 static void Task_PID(void* p_arg)
 {
     while (1) {
-        // Remote control value processing
-        Motor_Exp_Calculate(PWMInCh1, PWMInCh2, PWMInCh3, PWMInCh4);
-        // Motor PID calculation
-        Motor_Calculate();
-        // Output PWM to motors
-        PWM_OUT();
+				if (!Calib_Status()){
+						// Remote control value processing
+						Motor_Exp_Calculate(PWMInCh1, PWMInCh2, PWMInCh3, PWMInCh4);
+						// Motor PID calculation
+						Motor_Calculate();
+						// Output PWM to motors
+						PWM_OUT();
+				}
         // OS time delay 5 ticks
         OSTimeDly(5);
     }
 }
 
-// static void Task_1(void* p_arg)
-// {
+//static void Task_Startup(void* p_arg)
+//{
+//		 u16 temp;
 //     //最低占空比启动电机
 //     TIM3->CCR1 = 54;
 //     TIM3->CCR2 = 54;
 //     TIM3->CCR3 = 54;
 //     TIM3->CCR4 = 54;
 //     OSTimeDly(5000);
-//     while (1) {
-//         //		OSTimeDly(1000);
-//         //		SendStr("nihao");
-//         //			TIM3->CCR1=PWMInCh3*0.054;//PWM输出
-//         //			TIM3->CCR2=PWMInCh3*0.054;//PWM输出
-//         //			TIM3->CCR3=PWMInCh3*0.054;//PWM输出
-//         //			TIM3->CCR4=PWMInCh3*0.054;//PWM输出
-//     }
-// }
-
-// static void Task_1(void* p_arg)
-// {
-//     Open_Calib(); //打开零偏校准
-//     while (1) {
-//         OSTimeDly(1);
-//         MPU9150_Read();
-//         //        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-//         if (!Calib_Status()) {
-//             ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
-//             Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
-//             Get_Radian(&filterGyro, &fGyro); //角速度数据转为弧度
-//             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
-//             Get_Eulerian_Angle(&angle);
-//             SendAttitude(angle.roll, angle.pitch, angle.yaw);
-//         }
-//     }
-// }
+//		 temp=60;
+//	   TIM3->CCR1=temp;//PWM输出
+//     TIM3->CCR2=temp;//PWM输出
+//     TIM3->CCR3=temp;//PWM输出
+//     TIM3->CCR4=temp;//PWM输出
+//     while (1);
+//}
