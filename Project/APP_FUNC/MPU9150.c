@@ -69,12 +69,33 @@ uint16_t GetData_AK8975(uint8_t REG_Address)
     //	}
     I2C_ByteWrite(AK8975_I2C_ADDR, AK8975_CNTL, 0x01);
     //	while(I2C_ByteRead (AK8975_I2C_ADDR,AK8975_ST1)==0x00);
-    delay_ms(8);
+    delay_ms(10);
     L = I2C_ByteRead(AK8975_I2C_ADDR, REG_Address);
     err = I2C_ByteRead(AK8975_I2C_ADDR, AK8975_ST2) & 0x04;
     if (err)
         L = I2C_ByteRead(AK8975_I2C_ADDR, REG_Address);
     H = I2C_ByteRead(AK8975_I2C_ADDR, REG_Address + 1);
+
+
+//	  L=I2C_ByteRead (AK8975_I2C_ADDR,REG_Address);
+//	  I2C_ByteWrite(AK8975_I2C_ADDR,0x0A,0x01);
+////	
+////	temp=I2C_ByteRead(MAG_ADDRESS,0x0A);
+////	SendHalfWord(0xF2,&temp);
+////	
+//	//	 I2C_ByteWrite(MAG_ADDRESS,0x0A,0x01);
+//  	H=I2C_ByteRead (AK8975_I2C_ADDR,REG_Address+1);
+//	  I2C_ByteWrite(AK8975_I2C_ADDR,0x0A,0x01);
+
+//	if(I2C_ByteRead (AK8975_I2C_ADDR,AK8975_ST1)==0x01){//判断数据状态
+//		L=I2C_ByteRead (AK8975_I2C_ADDR,REG_Address);
+//		I2C_ByteWrite(AK8975_I2C_ADDR,AK8975_CNTL,0x01);//此处非常关键，
+//    //因为日本公司的数据手册上说，在单次测量模式下，每读取一次，
+//    //会自动回归power down mode ,所以这里重新设置为单次测量模式
+//		//https://blog.csdn.net/meker1/article/details/44342161
+//		H=I2C_ByteRead (AK8975_I2C_ADDR,REG_Address+1);
+//		I2C_ByteWrite(AK8975_I2C_ADDR,AK8975_CNTL,0x01);
+//	}
 
     I2C_ByteWrite(MPU6050_SlaveAddress, MPU6050_INT_PIN_CFG, 0x00); //turn off Bypass Mode
     return (H << 8) | L; //合成

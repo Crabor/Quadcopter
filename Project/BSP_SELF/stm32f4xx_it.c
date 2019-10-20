@@ -124,24 +124,21 @@ void DebugMon_Handler(void)
 }
 
 /**
-  * @brief  This function handles PendSVC exception.
-  * @param  None
-  * @retval None
-  */
-void PendSV_Handler(void)
-{
-}
-
-/**
   * @brief  This function handles SysTick Handler.
   * @param  None
   * @retval None
   */
 void SysTick_Handler(void)
 {
-	OSIntEnter();
-	OSTimeTick();
-	OSIntExit();
+    OS_CPU_SR  cpu_sr;
+
+    OS_ENTER_CRITICAL();                         /* Tell uC/OS-II that we are starting an ISR          */
+    OSIntNesting++;
+    OS_EXIT_CRITICAL();
+
+    OSTimeTick();                                /* Call uC/OS-II's OSTimeTick()                       */
+
+    OSIntExit();                                 /* Tell uC/OS-II that we are leaving the ISR          */
 }
 
 /******************************************************************************/

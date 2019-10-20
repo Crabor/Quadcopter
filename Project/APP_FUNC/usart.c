@@ -95,30 +95,34 @@ void USART6_Send(u8* DataToSend, u8 data_num)
 
 void SendStr(const char* str)
 {
-    u8 _cnt = 0;
-    u8 i = 0;
-    u8 sum = 0;
+	
+	//TODO
+	    while(USART_GetFlagStatus(USART6, USART_FLAG_TC) == RESET);
+    USART_SendData(USART2, *str);
+//    u8 _cnt = 0;
+//    u8 i = 0;
+//    u8 sum = 0;
 
-    sendBuf[_cnt++] = 0xAA;
-    sendBuf[_cnt++] = 0x05;
-    sendBuf[_cnt++] = 0xAF;
-    sendBuf[_cnt++] = 0xA0;
-    sendBuf[_cnt++] = 0;
-    while (*(str + i) != '\0') {
-        sendBuf[_cnt++] = *(str + i);
-        i++;
-        if (_cnt > 50)
-            break;
-    }
+//    sendBuf[_cnt++] = 0xAA;
+//    sendBuf[_cnt++] = 0x05;
+//    sendBuf[_cnt++] = 0xAF;
+//    sendBuf[_cnt++] = 0xA0;
+//    sendBuf[_cnt++] = 0;
+//    while (*(str + i) != '\0') {
+//        sendBuf[_cnt++] = *(str + i);
+//        i++;
+//        if (_cnt > 50)
+//            break;
+//    }
 
-    sendBuf[4] = _cnt - 5;
+//    sendBuf[4] = _cnt - 5;
 
-    for (i = 0; i < _cnt; i++)
-        sum += sendBuf[i];
+//    for (i = 0; i < _cnt; i++)
+//        sum += sendBuf[i];
 
-    sendBuf[_cnt++] = sum;
+//    sendBuf[_cnt++] = sum;
 
-    USART6_Send(sendBuf, _cnt);
+//    USART6_Send(sendBuf, _cnt);
 }
 
 void SendByte(u8 frame, u8* p)

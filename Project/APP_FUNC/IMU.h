@@ -71,6 +71,7 @@ void Open_Calib(void);
 u8 Calib_Status(void);
 void MPU9150_Offset(void);
 void MPU9150_Read(void);
+int16_t f( int16_t x);
 void Calculate_FilteringCoefficient(float Time, float cutOff);
 void ACC_IIR_Filter(Acc *accIn,Acc *accOut);
 void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut);

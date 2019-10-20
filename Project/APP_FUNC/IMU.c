@@ -127,11 +127,27 @@ void MPU9150_Read(void)
     gyro.z = GetData_MPU6050(MPU6050_GYRO_ZOUT_H) - offsetGyro.z;
 
     mag.x = GetData_AK8975(AK8975_MAG_XOUT_L);
-    mag.y = GetData_AK8975(AK8975_MAG_YOUT_L);
+//	delay_ms(8);
+    mag.y = GetData_AK8975(AK8975_MAG_YOUT_L)-168;
+//	delay_ms(8);
     mag.z = GetData_AK8975(AK8975_MAG_ZOUT_L);
+//	delay_ms(8);
+//		mag.z=f(mag.z);
 
     MPU9150_Offset();
 }
+
+int16_t f( int16_t x) 
+{
+//		if ( x > -127 )
+//			return (-x-127);
+//		else 
+//			return (-x-382);
+	if(x>-127)
+		return (x-127);
+	else
+		return (x+127);
+} 
 
 /******************************************************************************
 函数原型：	void Calculate_FilteringCoefficient(float Time, float cutOff)
@@ -206,6 +222,7 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     float vx, vy, vz, wx, wy, wz;
     float ex, ey, ez;
     float q0_last, q1_last, q2_last;
+//	u32 fmx=(int32_t)mx,fmy=(int32_t)my,fmz=(int32_t)mz;
 
     //auxiliary variables to reduce number of repeated operations
     float q0q0 = q0 * q0;
@@ -228,6 +245,9 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     mx = mx * norm;
     my = my * norm;
     mz = mz * norm;
+//		SendWord(0xF1,&fmx);
+//		SendWord(0xF2,&fmy);
+//		SendWord(0xF3,&fmz);
 
     //compute reference direction of flux
     hx = 2 * mx * (0.5f - q2q2 - q3q3) + 2 * my * (q1q2 - q0q3) + 2 * mz * (q1q3 + q0q2);
