@@ -1,6 +1,12 @@
 #ifndef APP_CFG_H
 #define APP_CFG_H
 
+//选择编译开关
+//AK8975还是HMC388L
+#define AK8975_EN 0
+//串口发送是否采用中断形式
+#define USART_IT_EN 0
+
 #define LED_EN 0u
 #define TIM_LED_EN 0u
 #define PWM_LED_EN 0u

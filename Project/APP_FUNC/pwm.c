@@ -198,175 +198,175 @@ void PWM_IN_Init(void)
     //     TIM5->CR1 |= 0x01; //使能定时器 5
 }
 
-//TIM5_CAPTURE_STA[i]:0,还没捕获到高电平;1,已经捕获到高电平了.
-//TIM5_CAPTURE_OVF[i]:0,未溢出;1,溢出.
-//TIM5_CAPTURE_VAL[i][0]:上升沿对应计数器值
-//TIM5_CAPTURE_VAL[i][1]:下降沿对应计数器值
-//PWM_IN_CH[i]:通道i+1的输入PWM位宽
-// u8 TIM5_CAPTURE_STA[4];
-// u16 TIM5_CAPTURE_OVF[4];
-// u16 TIM5_CAPTURE_VAL[4][2];
-// u16 PWM_IN_CH[4];
-// void TIM5_PWM_IN_IRQ(void)
-// {
-//     u8 i;
-//     //通道i+1中断
-//     for (i = 0; i < 4; i++) {
-//         if (TIM5->SR & (1 << (i + 1))) {
-//             TIM5->SR &= ~((0x0001 << (i + 1))); //清除中断标志
-//             if (TIM5_CAPTURE_STA[i]) { //已捕获到高电平，说明此时捕获到下降沿
-//                 TIM5_CAPTURE_STA[i] = 0; //更改捕获状态
-//                 TIM5_CAPTURE_VAL[i][1] = *(&(TIM5->CCR1) + i); //读取下降沿对应计数器值
-//                 PWM_IN_CH[i] = TIM5_CAPTURE_VAL[i][1] - TIM5_CAPTURE_VAL[i][0] + TIM5_CAPTURE_OVF[i] * 0xffff; //计算脉冲宽度
-//                 TIM5_CAPTURE_OVF[i] = 0; //溢出次数清零
-//                 TIM5->CCER &= ~(0x0001 << (1 + 4 * i)); //CCxP=00 通道上升沿捕获
-//             } else { //捕获到上升沿
-//                 TIM5_CAPTURE_STA[i] = 1; //更改捕获状态
-//                 TIM5_CAPTURE_VAL[i][0] = *(&(TIM5->CCR1) + i); //读取上升沿对应计数器值
-//                 TIM5->CCER |= (0x0001 << (1 + 4 * i)); //CCxP=01 通道下降沿捕获
-//             }
-//         }
-//     }
-//     i = 2;
-// //    SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
-// }
-
-// Capture status of channels
-unsigned char TIM5CH1_CAPTURE_STA = 1;
-unsigned char TIM5CH2_CAPTURE_STA = 1;
-unsigned char TIM5CH3_CAPTURE_STA = 1;
-unsigned char TIM5CH4_CAPTURE_STA = 1;
-
-// Rising edge/falling edge data
-uint16_t TIM5CH1_Rise, TIM5CH1_Fall,
-    TIM5CH2_Rise, TIM5CH2_Fall,
-    TIM5CH3_Rise, TIM5CH3_Fall,
-    TIM5CH4_Rise, TIM5CH4_Fall;
-
-// Overflow processing variable
-uint16_t TIM5_T;
-
-// Four-channel remote control initial value
-extern uint16_t PWMInCh1, PWMInCh2, PWMInCh3, PWMInCh4;
-
+// TIM5_CAPTURE_STA[i]:0,还没捕获到高电平;1,已经捕获到高电平了.
+// TIM5_CAPTURE_OVF[i]:0,未溢出;1,溢出.
+// TIM5_CAPTURE_VAL[i][0]:上升沿对应计数器值
+// TIM5_CAPTURE_VAL[i][1]:下降沿对应计数器值
+// PWM_IN_CH[i]:通道i+1的输入PWM位宽
+u8 TIM5_CAPTURE_STA[4];
+u16 TIM5_CAPTURE_OVF[4];
+u16 TIM5_CAPTURE_VAL[4][2];
+u16 PWM_IN_CH[4];
 void TIM5_PWM_IN_IRQ(void)
 {
-	SendStr("r");
-    //	  static u32 cnt=0;
-    //		cnt++;
-    //		SendWord(&cnt);
-    // CH1 - AIL - Roll
-    // Capture the interrupt
-    if (TIM_GetITStatus(TIM5, TIM_IT_CC1) != RESET) {
-        // Clear interrupt flag
-        TIM_ClearITPendingBit(TIM5, TIM_IT_CC1);
-        // Capture the rising edge
-        if (TIM5CH1_CAPTURE_STA == 1) {
-            // Get the data of rising edge
-            TIM5CH1_Rise = TIM_GetCapture1(TIM5);
-            // Change capture status to falling edge
-            TIM5CH1_CAPTURE_STA = 0;
-            // Set to capture on falling edge
-            TIM_OC1PolarityConfig(TIM5, TIM_ICPolarity_Falling);
-        }
-        // Capture the falling edge
-        else {
-            // Get the data of falling edge
-            TIM5CH1_Fall = TIM_GetCapture1(TIM5);
-            // Change capture status to rising edge
-            TIM5CH1_CAPTURE_STA = 1;
-
-            // Overflow processing
-            if (TIM5CH1_Fall < TIM5CH1_Rise) {
-                TIM5_T = 65535;
-            } else {
-                TIM5_T = 0;
+    u8 i;
+    //通道i+1中断
+    for (i = 0; i < 4; i++) {
+        if (TIM5->SR & (1 << (i + 1))) {
+            TIM5->SR &= ~((0x0001 << (i + 1))); //清除中断标志
+            if (TIM5_CAPTURE_STA[i]) { //已捕获到高电平，说明此时捕获到下降沿
+                TIM5_CAPTURE_STA[i] = 0; //更改捕获状态
+                TIM5_CAPTURE_VAL[i][1] = *(&(TIM5->CCR1) + i); //读取下降沿对应计数器值
+                PWM_IN_CH[i] = TIM5_CAPTURE_VAL[i][1] - TIM5_CAPTURE_VAL[i][0] + TIM5_CAPTURE_OVF[i] * 0xffff; //计算脉冲宽度
+                TIM5_CAPTURE_OVF[i] = 0; //溢出次数清零
+                TIM5->CCER &= ~(0x0001 << (1 + 4 * i)); //CCxP=00 通道上升沿捕获
+            } else { //捕获到上升沿
+                TIM5_CAPTURE_STA[i] = 1; //更改捕获状态
+                TIM5_CAPTURE_VAL[i][0] = *(&(TIM5->CCR1) + i); //读取上升沿对应计数器值
+                TIM5->CCER |= (0x0001 << (1 + 4 * i)); //CCxP=01 通道下降沿捕获
             }
-
-            // Falling edge time minus rising edge time to get high-level time
-            PWMInCh1 = TIM5CH1_Fall - TIM5CH1_Rise + TIM5_T;
-            // Set to capture on rising edge
-            TIM_OC1PolarityConfig(TIM5, TIM_ICPolarity_Rising);
         }
     }
-
-    // CH2 - ELE - Pitch
-    if (TIM_GetITStatus(TIM5, TIM_IT_CC2) != RESET) {
-        TIM_ClearITPendingBit(TIM5, TIM_IT_CC2);
-
-        if (TIM5CH2_CAPTURE_STA == 1) {
-            TIM5CH2_Rise = TIM_GetCapture2(TIM5);
-            TIM5CH2_CAPTURE_STA = 0;
-            TIM_OC2PolarityConfig(TIM5, TIM_ICPolarity_Falling);
-        } else {
-            TIM5CH2_Fall = TIM_GetCapture2(TIM5);
-            TIM5CH2_CAPTURE_STA = 1;
-            if (TIM5CH2_Fall < TIM5CH2_Rise) {
-                TIM5_T = 65535;
-            } else {
-                TIM5_T = 0;
-            }
-            PWMInCh2 = TIM5CH2_Fall - TIM5CH2_Rise + TIM5_T;
-            TIM_OC2PolarityConfig(TIM5, TIM_ICPolarity_Rising);
-        }
-    }
-
-    // CH3 - THR - Acc
-    if (TIM_GetITStatus(TIM5, TIM_IT_CC3) != RESET) {
-        //        SendStr("ok1");
-        TIM_ClearITPendingBit(TIM5, TIM_IT_CC3);
-        if (TIM5CH3_CAPTURE_STA == 1) {
-            TIM5CH3_Rise = TIM_GetCapture3(TIM5);
-            TIM5CH3_CAPTURE_STA = 0;
-            TIM_OC3PolarityConfig(TIM5, TIM_ICPolarity_Falling);
-        } else {
-            TIM5CH3_Fall = TIM_GetCapture3(TIM5);
-            TIM5CH3_CAPTURE_STA = 1;
-            if (TIM5CH3_Fall < TIM5CH3_Rise) {
-                TIM5_T = 65535;
-            } else {
-                TIM5_T = 0;
-            }
-            PWMInCh3 = TIM5CH3_Fall - TIM5CH3_Rise + TIM5_T;
-            TIM_OC3PolarityConfig(TIM5, TIM_ICPolarity_Rising);
-        }
-    }
-
-    // CH4 - RUD -Yaw
-    if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET) {
-        TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
-
-        if (TIM5CH4_CAPTURE_STA == 1) {
-            TIM5CH4_Rise = TIM_GetCapture4(TIM5);
-            TIM5CH4_CAPTURE_STA = 0;
-            TIM_OC4PolarityConfig(TIM5, TIM_ICPolarity_Falling);
-        } else {
-            TIM5CH4_Fall = TIM_GetCapture4(TIM5);
-            TIM5CH4_CAPTURE_STA = 1;
-            if (TIM5CH4_Fall < TIM5CH4_Rise) {
-                TIM5_T = 65535;
-            } else {
-                TIM5_T = 0;
-            }
-            PWMInCh4 = TIM5CH4_Fall - TIM5CH4_Rise + TIM5_T;
-            TIM_OC4PolarityConfig(TIM5, TIM_ICPolarity_Rising);
-        }
-    }
-    //		TIM3->CCR1=PWMInCh1*0.054;//PWM输出
-    //		TIM3->CCR2=PWMInCh2*0.054;//PWM输出
-    //		TIM3->CCR3=PWMInCh3*0.054;//PWM输出
-    //		TIM3->CCR4=PWMInCh4*0.054;//PWM输出
-
-    //			TIM3->CCR1=PWMInCh1*0.054;//PWM输出
-    //			TIM3->CCR2=PWMInCh3*0.054;//PWM输出
-    //			TIM3->CCR3=PWMInCh3*0.054;//PWM输出
-    //			TIM3->CCR4=PWMInCh3*0.054;//PWM输出
-
-//    SendPWMIN(0xF1, &TIM5CH1_CAPTURE_STA, &TIM5_T, &TIM5CH1_Rise, &TIM5CH1_Fall, &PWMInCh1);
-//    SendPWMIN(0xF2, &TIM5CH2_CAPTURE_STA, &TIM5_T, &TIM5CH2_Rise, &TIM5CH2_Fall, &PWMInCh2);
-    // SendPWMIN(0xF3, &TIM5CH3_CAPTURE_STA, &TIM5_T, &TIM5CH3_Rise, &TIM5CH3_Fall, &PWMInCh3);
-//    SendPWMIN(0xF4, &TIM5CH4_CAPTURE_STA, &TIM5_T, &TIM5CH4_Rise, &TIM5CH4_Fall, &PWMInCh4);
+    i = 2;
+//    SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
 }
+
+// // Capture status of channels
+// unsigned char TIM5CH1_CAPTURE_STA = 1;
+// unsigned char TIM5CH2_CAPTURE_STA = 1;
+// unsigned char TIM5CH3_CAPTURE_STA = 1;
+// unsigned char TIM5CH4_CAPTURE_STA = 1;
+
+// // Rising edge/falling edge data
+// uint16_t TIM5CH1_Rise, TIM5CH1_Fall,
+//     TIM5CH2_Rise, TIM5CH2_Fall,
+//     TIM5CH3_Rise, TIM5CH3_Fall,
+//     TIM5CH4_Rise, TIM5CH4_Fall;
+
+// // Overflow processing variable
+// uint16_t TIM5_T;
+
+// // Four-channel remote control initial value
+// extern uint16_t PWMInCh1, PWMInCh2, PWMInCh3, PWMInCh4;
+
+// void TIM5_PWM_IN_IRQ(void)
+// {
+// 	SendStr("r");
+//     //	  static u32 cnt=0;
+//     //		cnt++;
+//     //		SendWord(&cnt);
+//     // CH1 - AIL - Roll
+//     // Capture the interrupt
+//     if (TIM_GetITStatus(TIM5, TIM_IT_CC1) != RESET) {
+//         // Clear interrupt flag
+//         TIM_ClearITPendingBit(TIM5, TIM_IT_CC1);
+//         // Capture the rising edge
+//         if (TIM5CH1_CAPTURE_STA == 1) {
+//             // Get the data of rising edge
+//             TIM5CH1_Rise = TIM_GetCapture1(TIM5);
+//             // Change capture status to falling edge
+//             TIM5CH1_CAPTURE_STA = 0;
+//             // Set to capture on falling edge
+//             TIM_OC1PolarityConfig(TIM5, TIM_ICPolarity_Falling);
+//         }
+//         // Capture the falling edge
+//         else {
+//             // Get the data of falling edge
+//             TIM5CH1_Fall = TIM_GetCapture1(TIM5);
+//             // Change capture status to rising edge
+//             TIM5CH1_CAPTURE_STA = 1;
+
+//             // Overflow processing
+//             if (TIM5CH1_Fall < TIM5CH1_Rise) {
+//                 TIM5_T = 65535;
+//             } else {
+//                 TIM5_T = 0;
+//             }
+
+//             // Falling edge time minus rising edge time to get high-level time
+//             PWMInCh1 = TIM5CH1_Fall - TIM5CH1_Rise + TIM5_T;
+//             // Set to capture on rising edge
+//             TIM_OC1PolarityConfig(TIM5, TIM_ICPolarity_Rising);
+//         }
+//     }
+
+//     // CH2 - ELE - Pitch
+//     if (TIM_GetITStatus(TIM5, TIM_IT_CC2) != RESET) {
+//         TIM_ClearITPendingBit(TIM5, TIM_IT_CC2);
+
+//         if (TIM5CH2_CAPTURE_STA == 1) {
+//             TIM5CH2_Rise = TIM_GetCapture2(TIM5);
+//             TIM5CH2_CAPTURE_STA = 0;
+//             TIM_OC2PolarityConfig(TIM5, TIM_ICPolarity_Falling);
+//         } else {
+//             TIM5CH2_Fall = TIM_GetCapture2(TIM5);
+//             TIM5CH2_CAPTURE_STA = 1;
+//             if (TIM5CH2_Fall < TIM5CH2_Rise) {
+//                 TIM5_T = 65535;
+//             } else {
+//                 TIM5_T = 0;
+//             }
+//             PWMInCh2 = TIM5CH2_Fall - TIM5CH2_Rise + TIM5_T;
+//             TIM_OC2PolarityConfig(TIM5, TIM_ICPolarity_Rising);
+//         }
+//     }
+
+//     // CH3 - THR - Acc
+//     if (TIM_GetITStatus(TIM5, TIM_IT_CC3) != RESET) {
+//         //        SendStr("ok1");
+//         TIM_ClearITPendingBit(TIM5, TIM_IT_CC3);
+//         if (TIM5CH3_CAPTURE_STA == 1) {
+//             TIM5CH3_Rise = TIM_GetCapture3(TIM5);
+//             TIM5CH3_CAPTURE_STA = 0;
+//             TIM_OC3PolarityConfig(TIM5, TIM_ICPolarity_Falling);
+//         } else {
+//             TIM5CH3_Fall = TIM_GetCapture3(TIM5);
+//             TIM5CH3_CAPTURE_STA = 1;
+//             if (TIM5CH3_Fall < TIM5CH3_Rise) {
+//                 TIM5_T = 65535;
+//             } else {
+//                 TIM5_T = 0;
+//             }
+//             PWMInCh3 = TIM5CH3_Fall - TIM5CH3_Rise + TIM5_T;
+//             TIM_OC3PolarityConfig(TIM5, TIM_ICPolarity_Rising);
+//         }
+//     }
+
+//     // CH4 - RUD -Yaw
+//     if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET) {
+//         TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
+
+//         if (TIM5CH4_CAPTURE_STA == 1) {
+//             TIM5CH4_Rise = TIM_GetCapture4(TIM5);
+//             TIM5CH4_CAPTURE_STA = 0;
+//             TIM_OC4PolarityConfig(TIM5, TIM_ICPolarity_Falling);
+//         } else {
+//             TIM5CH4_Fall = TIM_GetCapture4(TIM5);
+//             TIM5CH4_CAPTURE_STA = 1;
+//             if (TIM5CH4_Fall < TIM5CH4_Rise) {
+//                 TIM5_T = 65535;
+//             } else {
+//                 TIM5_T = 0;
+//             }
+//             PWMInCh4 = TIM5CH4_Fall - TIM5CH4_Rise + TIM5_T;
+//             TIM_OC4PolarityConfig(TIM5, TIM_ICPolarity_Rising);
+//         }
+//     }
+//     //		TIM3->CCR1=PWMInCh1*0.054;//PWM输出
+//     //		TIM3->CCR2=PWMInCh2*0.054;//PWM输出
+//     //		TIM3->CCR3=PWMInCh3*0.054;//PWM输出
+//     //		TIM3->CCR4=PWMInCh4*0.054;//PWM输出
+
+//     //			TIM3->CCR1=PWMInCh1*0.054;//PWM输出
+//     //			TIM3->CCR2=PWMInCh3*0.054;//PWM输出
+//     //			TIM3->CCR3=PWMInCh3*0.054;//PWM输出
+//     //			TIM3->CCR4=PWMInCh3*0.054;//PWM输出
+
+// //    SendPWMIN(0xF1, &TIM5CH1_CAPTURE_STA, &TIM5_T, &TIM5CH1_Rise, &TIM5CH1_Fall, &PWMInCh1);
+// //    SendPWMIN(0xF2, &TIM5CH2_CAPTURE_STA, &TIM5_T, &TIM5CH2_Rise, &TIM5CH2_Fall, &PWMInCh2);
+//     // SendPWMIN(0xF3, &TIM5CH3_CAPTURE_STA, &TIM5_T, &TIM5CH3_Rise, &TIM5CH3_Fall, &PWMInCh3);
+// //    SendPWMIN(0xF4, &TIM5CH4_CAPTURE_STA, &TIM5_T, &TIM5CH4_Rise, &TIM5CH4_Fall, &PWMInCh4);
+// }
 
 void PWM_OUT(void)
 {

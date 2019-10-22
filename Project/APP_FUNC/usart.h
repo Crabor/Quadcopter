@@ -14,10 +14,11 @@
 extern u8 sendBuf[50]; //·¢ËÍÊý¾Ý»º´æ
 
 //Functions definition
-void USART2_Init(u32 pclk2, u32 bound);
+// void USART2_Init(u32 pclk2, u32 bound);
 void USART6_Init(u32 pclk2, u32 bound);
 void USART6_IRQ(void);
-void USART6_Send(unsigned char* DataToSend, u8 data_num);
+void USART6_ItSend(unsigned char* DataToSend, u8 data_num);
+void USART6_NItSend(unsigned char* DataToSend, u8 data_num);
 void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z, int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z, int16_t MAG_X, int16_t MAG_Y, int16_t MAG_Z);
 void SendAttitude(float roll, float pitch, float yaw);
 void SendStr(const char* str);

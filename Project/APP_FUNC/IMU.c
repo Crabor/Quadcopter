@@ -50,10 +50,10 @@ u8 Calib_Status(void)
 }
 
 /******************************************************************************
-函数原型：	void MPU9150_Offset(void)
+函数原型：	void MPU6050_Offset(void)
 功    能：	MPU6050零偏校正
 *******************************************************************************/
-void MPU9150_Offset(void)
+void MPU6050_Offset(void)
 {
     if (accOffset) {
         static int32_t ACC_X = 0, ACC_Y = 0, ACC_Z = 0;
@@ -126,28 +126,28 @@ void MPU9150_Read(void)
     gyro.y = GetData_MPU6050(MPU6050_GYRO_YOUT_H) - offsetGyro.y;
     gyro.z = GetData_MPU6050(MPU6050_GYRO_ZOUT_H) - offsetGyro.z;
 
+#if AK8975_EN
     mag.x = GetData_AK8975(AK8975_MAG_XOUT_L);
-//	delay_ms(8);
-    mag.y = GetData_AK8975(AK8975_MAG_YOUT_L)-168;
-//	delay_ms(8);
+    mag.y = GetData_AK8975(AK8975_MAG_YOUT_L);
     mag.z = GetData_AK8975(AK8975_MAG_ZOUT_L);
-//	delay_ms(8);
-//		mag.z=f(mag.z);
+#else
+    mag.x = GetData_HMC5883L(HMC5883L_XOUT_MSB);
+    mag.y = GetData_HMC5883L(HMC5883L_YOUT_MSB);
+    mag.z = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
 
-    MPU9150_Offset();
+    // Complement processing and unit conversion
+    if (mag.x > 0x7fff)
+        mag.x -= 0xffff;
+    if (mag.y > 0x7fff)
+        mag.y -= 0xffff;
+    if (mag.z > 0x7fff)
+        mag.z -= 0xffff;
+    mag.x /= 1090.0f;
+    mag.y /= 1090.0f;
+    mag.z /= 1090.0f;
+#endif
+    MPU6050_Offset();
 }
-
-int16_t f( int16_t x) 
-{
-//		if ( x > -127 )
-//			return (-x-127);
-//		else 
-//			return (-x-382);
-	if(x>-127)
-		return (x-127);
-	else
-		return (x+127);
-} 
 
 /******************************************************************************
 函数原型：	void Calculate_FilteringCoefficient(float Time, float cutOff)
@@ -210,6 +210,46 @@ void Get_Radian(Gyro* gyroIn, Float* gyroOut)
     gyroOut->z = (float)(gyroIn->z * RawData_to_Radian);
 }
 
+// Quaternion initialization
+void Quat_Init(void)
+{
+    int16_t init_mx,init_my,init_mz;
+    float init_Yaw, init_Pitch, init_Roll;
+    
+#if AK8975_EN
+    init_mx = GetData_AK8975(AK8975_MAG_XOUT_L);
+    init_my = GetData_AK8975(AK8975_MAG_YOUT_L);
+    init_mz = GetData_AK8975(AK8975_MAG_ZOUT_L);
+#else
+    init_mx = GetData_HMC5883L(HMC5883L_XOUT_MSB);
+    init_my = GetData_HMC5883L(HMC5883L_YOUT_MSB);
+    init_mz = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+
+    // Complement processing and unit conversion
+    if (init_mx > 0x7fff)
+        init_mx -= 0xffff;
+    if (init_my > 0x7fff)
+        init_my -= 0xffff;
+    if (init_mz > 0x7fff)
+        init_mz -= 0xffff;
+    init_mx /= 1090.0f;
+    init_my /= 1090.0f;
+    init_mz /= 1090.0f;
+#endif
+
+    // Initial value of euler angles when Y axis forward
+    init_Roll  = 0.0f;
+    init_Pitch = 0.0f;
+    init_Yaw   = atan2(init_mx*cos(init_Roll) + init_my*sin(init_Roll)*sin(init_Pitch) + init_mz*sin(init_Roll)*cos(init_Pitch),
+                        init_my*cos(init_Pitch) - init_mz*sin(init_Pitch));
+
+    // Quaternion calculation
+    q0 = cos(0.5*init_Roll)*cos(0.5*init_Pitch)*cos(0.5*init_Yaw) + sin(0.5*init_Roll)*sin(0.5*init_Pitch)*sin(0.5*init_Yaw);  //w
+    q1 = cos(0.5*init_Roll)*sin(0.5*init_Pitch)*cos(0.5*init_Yaw) - sin(0.5*init_Roll)*cos(0.5*init_Pitch)*sin(0.5*init_Yaw);  //x Pitch
+    q2 = sin(0.5*init_Roll)*cos(0.5*init_Pitch)*cos(0.5*init_Yaw) + cos(0.5*init_Roll)*sin(0.5*init_Pitch)*sin(0.5*init_Yaw);  //y Roll
+    q3 = cos(0.5*init_Roll)*cos(0.5*init_Pitch)*sin(0.5*init_Yaw) - sin(0.5*init_Roll)*sin(0.5*init_Pitch)*cos(0.5*init_Yaw);  //z Yaw
+}
+
 // ==================================================================================
 // 函数原型：void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 // 功        能：互补滤波进行姿态解算
@@ -222,7 +262,6 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     float vx, vy, vz, wx, wy, wz;
     float ex, ey, ez;
     float q0_last, q1_last, q2_last;
-//	u32 fmx=(int32_t)mx,fmy=(int32_t)my,fmz=(int32_t)mz;
 
     //auxiliary variables to reduce number of repeated operations
     float q0q0 = q0 * q0;
@@ -245,9 +284,9 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     mx = mx * norm;
     my = my * norm;
     mz = mz * norm;
-//		SendWord(0xF1,&fmx);
-//		SendWord(0xF2,&fmy);
-//		SendWord(0xF3,&fmz);
+    //		SendWord(0xF1,&fmx);
+    //		SendWord(0xF2,&fmy);
+    //		SendWord(0xF3,&fmz);
 
     //compute reference direction of flux
     hx = 2 * mx * (0.5f - q2q2 - q3q3) + 2 * my * (q1q2 - q0q3) + 2 * mz * (q1q3 + q0q2);

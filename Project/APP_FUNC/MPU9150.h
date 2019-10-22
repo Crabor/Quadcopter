@@ -49,56 +49,76 @@ The MPU-9150 includes the following additional features:
 				
 
 /* MPU6050 Register Address ------------------------------------------------------------*/
-#define	MPU6050_SlaveAddress					0xD0	//IIC写入时的地址字节数据
-#define MPU6050_Device_ID					    0x68
+#define	MPU6050_SlaveAddress                    0xD0	//IIC写入时的地址字节数据
+#define MPU6050_Device_ID                       0x68
 
-#define	MPU6050_SMPLRT_DIV						0x19	//陀螺仪采样率，典型值：0x07(125Hz)
-#define	MPU6050_CONFIG							0x1A	//低通滤波频率，典型值：0x06(5Hz)
-#define	MPU6050_GYRO_CONFIG						0x1B	//陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
-#define	MPU6050_ACCEL_CONFIG					0x1C	//加速计自检、测量范围及高通滤波频率，典型值：0x01(不自检，2G，5Hz)
-#define MPU6050_INT_PIN_CFG						0x37
-#define	MPU6050_ACCEL_XOUT_H					0x3B
-#define	MPU6050_ACCEL_XOUT_L					0x3C
-#define	MPU6050_ACCEL_YOUT_H					0x3D
-#define	MPU6050_ACCEL_YOUT_L					0x3E
-#define	MPU6050_ACCEL_ZOUT_H					0x3F
-#define	MPU6050_ACCEL_ZOUT_L					0x40
-#define	MPU6050_TEMP_OUT_H						0x41
-#define	MPU6050_TEMP_OUT_L						0x42
-#define	MPU6050_GYRO_XOUT_H						0x43
-#define	MPU6050_GYRO_XOUT_L						0x44	
-#define	MPU6050_GYRO_YOUT_H						0x45
-#define	MPU6050_GYRO_YOUT_L						0x46
-#define	MPU6050_GYRO_ZOUT_H						0x47
-#define	MPU6050_GYRO_ZOUT_L						0x48
+#define	MPU6050_SMPLRT_DIV                      0x19	//陀螺仪采样率，典型值：0x07(125Hz)
+#define	MPU6050_CONFIG                          0x1A	//低通滤波频率，典型值：0x06(5Hz)
+#define	MPU6050_GYRO_CONFIG                     0x1B	//陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
+#define	MPU6050_ACCEL_CONFIG                    0x1C	//加速计自检、测量范围及高通滤波频率，典型值：0x01(不自检，2G，5Hz)
+#define MPU6050_INT_PIN_CFG                     0x37
+#define	MPU6050_ACCEL_XOUT_H                    0x3B
+#define	MPU6050_ACCEL_XOUT_L                    0x3C
+#define	MPU6050_ACCEL_YOUT_H                    0x3D
+#define	MPU6050_ACCEL_YOUT_L                    0x3E
+#define	MPU6050_ACCEL_ZOUT_H                    0x3F
+#define	MPU6050_ACCEL_ZOUT_L                    0x40
+#define	MPU6050_TEMP_OUT_H                      0x41
+#define	MPU6050_TEMP_OUT_L                      0x42
+#define	MPU6050_GYRO_XOUT_H                     0x43
+#define	MPU6050_GYRO_XOUT_L                     0x44	
+#define	MPU6050_GYRO_YOUT_H                     0x45
+#define	MPU6050_GYRO_YOUT_L                     0x46
+#define	MPU6050_GYRO_ZOUT_H                     0x47
+#define	MPU6050_GYRO_ZOUT_L                     0x48
 #define MPU6050_USER_CTRL                       0x6A
-#define	MPU6050_PWR_MGMT_1						0x6B	//电源管理，典型值：0x00(正常启用)
+#define	MPU6050_PWR_MGMT_1                      0x6B	//电源管理，典型值：0x00(正常启用)
 #define	MPU6050_WHO_AM_I                        0x75	//IIC地址寄存器(默认数值0x68，只读)
 
 /* AK8975 Register Address ------------------------------------------------------------*/
-#define AK8975_I2C_ADDR     					0x18
-#define AK8975_Device_ID   						0x48
+#define AK8975_I2C_ADDR                         0x18
+#define AK8975_Device_ID                        0x48
 
-#define	AK8975_WIA          					0x00
-#define	AK8975_INFO         					0x01
-#define	AK8975_ST1          					0x02
+#define	AK8975_WIA                              0x00
+#define	AK8975_INFO                             0x01
+#define	AK8975_ST1                              0x02
 #define	AK8975_MAG_XOUT_L                       0x03
 #define	AK8975_MAG_XOUT_H                       0x04
 #define	AK8975_MAG_YOUT_L                       0x05
 #define	AK8975_MAG_YOUT_H                       0x06
 #define	AK8975_MAG_ZOUT_L                       0x07
 #define	AK8975_MAG_ZOUT_H                       0x08
-#define	AK8975_ST2          					0x09
-#define	AK8975_CNTL         					0x0A
-#define	AK8975_ASTC         					0x0C
-#define	AK8975_I2CDIS       					0x0F
-#define	AK8975_ASAX         					0x10
-#define	AK8975_ASAY         					0x11
-#define	AK8975_ASAZ         					0x12
+#define	AK8975_ST2                              0x09
+#define	AK8975_CNTL                             0x0A
+#define	AK8975_ASTC                             0x0C
+#define	AK8975_I2CDIS                           0x0F
+#define	AK8975_ASAX                             0x10
+#define	AK8975_ASAY                             0x11
+#define	AK8975_ASAZ                             0x12
+
+/* HMC5883L Register Address ------------------------------------------------------------*/
+#define	HMC5883L_Addr                           0x3C
+#define	HMC5883L_Addr2                          0x1E
+
+#define HMC5883L_ConfigurationRegisterA         0x00
+#define HMC5883L_ConfigurationRegisterB         0x01
+#define HMC5883L_ModeRegister                   0x02
+#define HMC5883L_XOUT_MSB                       0x03
+#define HMC5883L_XOUT_LSB                       0x04
+#define HMC5883L_ZOUT_MSB                       0x05
+#define HMC5883L_ZOUT_LSB                       0x06
+#define HMC5883L_YOUT_MSB                       0x07
+#define HMC5883L_YOUT_LSB                       0x08
+#define HMC5883L_StatusRegister                 0x09
+#define HMC5883L_ID_A                           0x0A
+#define HMC5883L_ID_B                           0x0B
+#define HMC5883L_ID_C                           0x0C
 
 //Functions definition
 int MPU6050_Init(void); 
+void HMC5883L_Init(void);
 uint16_t GetData_MPU6050(uint8_t REG_Address);
+uint16_t GetData_HMC5883L(uint8_t REG_Address);
 uint16_t GetData_AK8975(uint8_t REG_Address);
 
 #endif

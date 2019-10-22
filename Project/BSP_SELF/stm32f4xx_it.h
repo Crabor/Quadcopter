@@ -30,12 +30,12 @@
 #define __STM32F4xx_IT_H
 
 #ifdef __cplusplus
- extern "C" {
-#endif 
+extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx.h"
 #include "includes.h"
+#include "stm32f4xx.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -59,7 +59,7 @@ void TIM5_IRQHandler(void);
 void USART2_IRQHandler(void);
 void USART6_IRQHandler(void);
 
-//void USART6_Send( unsigned char *DataToSend , u8 data_num );
+//void USART6_ItSend( unsigned char *DataToSend , u8 data_num );
 
 #ifdef __cplusplus
 }
