@@ -119,6 +119,7 @@ void MPU6050_Offset(void)
 void MPU9150_Read(void)
 {
 #if !AK8975_EN
+    uint8_t data_write[14];
     u8 temp;
 #endif
     acc.x = GetData_MPU6050(MPU6050_ACCEL_XOUT_H) - offsetAcc.x; //减去零偏
@@ -134,21 +135,32 @@ void MPU9150_Read(void)
     mag.y = GetData_AK8975(AK8975_MAG_YOUT_L);
     mag.z = GetData_AK8975(AK8975_MAG_ZOUT_L);
 #else
-    temp = GetData_HMC5883L(HMC5883L_ConfigurationRegisterA);//这一位实时清0否则无法工作
-    temp &= ~(1 << 7);
-    I2C_ByteWrite(HMC5883L_Addr, HMC5883L_ConfigurationRegisterA, 0);
-    temp = I2C_ByteRead(HMC5883L_Addr, HMC5883L_StatusRegister);//查看HMC5883L数据存放状态
-    if (temp & 0x01) {
-        mag.x = GetData_HMC5883L(HMC5883L_XOUT_MSB);
-        mag.y = GetData_HMC5883L(HMC5883L_YOUT_MSB);
-        mag.z = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+    // temp = GetData_HMC5883L(HMC5883L_ConfigurationRegisterA);//这一位实时清0否则无法工作
+    // temp &= ~(1 << 7);
+    // I2C_WriteByte(HMC5883L_Addr, HMC5883L_ConfigurationRegisterA, 0);
+    // temp = I2C_ReadByte(HMC5883L_Addr, HMC5883L_StatusRegister);//查看HMC5883L数据存放状态
+    // if (temp & 0x01) {
+    //     mag.x = GetData_HMC5883L(HMC5883L_XOUT_MSB);
+    //     mag.y = GetData_HMC5883L(HMC5883L_YOUT_MSB);
+    //     mag.z = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+    //     // Complement processing and unit conversion
+    //     if (mag.x > 0x7fff)
+    //         mag.x -= 0xffff;
+    //     if (mag.y > 0x7fff)
+    //         mag.y -= 0xffff;
+    //     if (mag.z > 0x7fff)
+    //         mag.z -= 0xffff;
+    // }
+    if(!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, data_write))
+    {    
+        mag.x = (data_write[0] << 8) | data_write[1];
+        mag.y = (data_write[4] << 8) | data_write[5];
+        mag.z = (data_write[2] << 8) | data_write[3];
+
         // Complement processing and unit conversion
-        if (mag.x > 0x7fff)
-            mag.x -= 0xffff;
-        if (mag.y > 0x7fff)
-            mag.y -= 0xffff;
-        if (mag.z > 0x7fff)
-            mag.z -= 0xffff;
+        if(mag.x > 0x7fff) mag.x-=0xffff;
+        if(mag.y > 0x7fff) mag.y-=0xffff;
+        if(mag.z > 0x7fff) mag.z-=0xffff;
     }
 #endif
     MPU6050_Offset();
@@ -221,26 +233,22 @@ void Quat_Init(void)
     int16_t init_mx, init_my, init_mz;
     float init_Yaw, init_Pitch, init_Roll;
     u8 temp;
+    uint8_t data_write[14];
 #if AK8975_EN
     init_mx = GetData_AK8975(AK8975_MAG_XOUT_L);
     init_my = GetData_AK8975(AK8975_MAG_YOUT_L);
     init_mz = GetData_AK8975(AK8975_MAG_ZOUT_L);
 #else
-    temp = GetData_HMC5883L(HMC5883L_ConfigurationRegisterA);//这一位实时清0否则无法工作
-    temp &= ~(1 << 7);
-    I2C_ByteWrite(HMC5883L_Addr, HMC5883L_ConfigurationRegisterA, 0);
-    temp = I2C_ByteRead(HMC5883L_Addr, HMC5883L_StatusRegister);//查看HMC5883L数据存放状态
-    if (temp & 0x01) {
-        init_mx = GetData_HMC5883L(HMC5883L_XOUT_MSB);
-        init_my = GetData_HMC5883L(HMC5883L_YOUT_MSB);
-        init_mz = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+    if(!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, data_write))
+    {    
+        init_mx = (data_write[0] << 8) | data_write[1];
+        init_my = (data_write[4] << 8) | data_write[5];
+        init_mz = (data_write[2] << 8) | data_write[3];
+
         // Complement processing and unit conversion
-        if (init_mx > 0x7fff)
-            init_mx -= 0xffff;
-        if (init_my > 0x7fff)
-            init_my -= 0xffff;
-        if (init_mz > 0x7fff)
-            init_mz -= 0xffff;
+        if(init_mx > 0x7fff) init_mx-=0xffff;
+        if(init_my > 0x7fff) init_my-=0xffff;
+        if(init_mz > 0x7fff) init_mz-=0xffff;
     }
 #endif
 
