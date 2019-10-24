@@ -206,7 +206,6 @@ void PWM_IN_Init(void)
 u8 TIM5_CAPTURE_STA[4];
 u16 TIM5_CAPTURE_OVF[4];
 u16 TIM5_CAPTURE_VAL[4][2];
-u16 PWM_IN_CH[4];
 void TIM5_PWM_IN_IRQ(void)
 {
     u8 i;
@@ -227,10 +226,12 @@ void TIM5_PWM_IN_IRQ(void)
             }
         }
     }
-    i = 2;
-    SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
+    // i = 2;
+    // SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
 }
 
+
+//库函数版定时器中断
 // // Capture status of channels
 // unsigned char TIM5CH1_CAPTURE_STA = 1;
 // unsigned char TIM5CH2_CAPTURE_STA = 1;
@@ -251,10 +252,6 @@ void TIM5_PWM_IN_IRQ(void)
 
 // void TIM5_PWM_IN_IRQ(void)
 // {
-// 	SendStr("r");
-//     //	  static u32 cnt=0;
-//     //		cnt++;
-//     //		SendWord(&cnt);
 //     // CH1 - AIL - Roll
 //     // Capture the interrupt
 //     if (TIM_GetITStatus(TIM5, TIM_IT_CC1) != RESET) {
@@ -364,14 +361,14 @@ void TIM5_PWM_IN_IRQ(void)
 
 // //    SendPWMIN(0xF1, &TIM5CH1_CAPTURE_STA, &TIM5_T, &TIM5CH1_Rise, &TIM5CH1_Fall, &PWMInCh1);
 // //    SendPWMIN(0xF2, &TIM5CH2_CAPTURE_STA, &TIM5_T, &TIM5CH2_Rise, &TIM5CH2_Fall, &PWMInCh2);
-//     // SendPWMIN(0xF3, &TIM5CH3_CAPTURE_STA, &TIM5_T, &TIM5CH3_Rise, &TIM5CH3_Fall, &PWMInCh3);
+// //    SendPWMIN(0xF3, &TIM5CH3_CAPTURE_STA, &TIM5_T, &TIM5CH3_Rise, &TIM5CH3_Fall, &PWMInCh3);
 // //    SendPWMIN(0xF4, &TIM5CH4_CAPTURE_STA, &TIM5_T, &TIM5CH4_Rise, &TIM5CH4_Fall, &PWMInCh4);
 // }
 
 void PWM_OUT(void)
 {
-    TIM3->CCR1 = motor2*0.054;
-    TIM3->CCR2 = motor4*0.054;
-    TIM3->CCR3 = motor3*0.054;
-    TIM3->CCR4 = motor1*0.054;
+    TIM3->CCR1 = motor2*PWM_IN_TO_OUT;
+    TIM3->CCR2 = motor4*PWM_IN_TO_OUT;
+    TIM3->CCR3 = motor3*PWM_IN_TO_OUT;
+    TIM3->CCR4 = motor1*PWM_IN_TO_OUT;
 }

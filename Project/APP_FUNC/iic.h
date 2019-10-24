@@ -2,32 +2,32 @@
 #define __IIC_H_
 #include "includes.h"
 
-// I2C SCL/SDA macro definition
+// I2C SCL/SDA 引脚定义
 #define I2C_SCL            GPIO_Pin_6
 #define I2C_SDA            GPIO_Pin_7
 
-// I2C SCL/SDA set low/high macro definition
+// I2C SCL/SDA 设置高低电平
 #define I2C_SCL_L          GPIO_ResetBits(GPIOB, I2C_SCL)
 #define I2C_SCL_H          GPIO_SetBits(GPIOB, I2C_SCL)
 #define I2C_SDA_L          GPIO_ResetBits(GPIOB, I2C_SDA)
 #define I2C_SDA_H          GPIO_SetBits(GPIOB, I2C_SDA)
 
-// I2C SDA state macro definition
+// I2C SDA 状态
 #define I2C_SDA_STATE      GPIO_ReadInputDataBit(GPIOB, I2C_SDA)
 
-// I2C state macro definition
+// I2C 状态
 #define I2C_READY          0x00
 #define I2C_BUS_BUSY       0x01	
 #define I2C_BUS_ERROR      0x02
 
-// I2C ACK/NACK macro definition
+// I2C ACK/NACK 
 #define I2C_NACK           0x00 
 #define I2C_ACK            0x01
 
-// I2C nop macro definition
+// I2C nop （空操作，用以延时）
 #define I2C_NOP            delay_us(1)
 
-// Functions definition
+// 函数定义
 void IIC_Init(void);
 
 void I2C_WriteByte(uint8_t DeviceAddr, uint8_t address, uint8_t data);

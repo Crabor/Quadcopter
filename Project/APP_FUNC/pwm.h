@@ -11,6 +11,7 @@
 #define PWM_IN_TO_OUT 0.05427f
 
 extern int16_t motor1, motor2, motor3, motor4; //四个电机速度
+extern u16 PWM_IN_CH[4];
 
 void PWM_IN_Init(void);
 void PWM_OUT_Init(void);

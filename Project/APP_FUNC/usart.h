@@ -13,7 +13,7 @@
 //Variable declaration
 extern u8 sendBuf[50]; //发送数据缓存
 
-//Functions definition
+//函数定义
 // void USART2_Init(u32 pclk2, u32 bound);
 void USART6_Init(u32 pclk2, u32 bound);
 void USART6_IRQ(void);

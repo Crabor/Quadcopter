@@ -1,5 +1,6 @@
 #include "pid.h"
 
+//因为结构体变量引用不能放在.h文件中，所以放这
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
 
@@ -21,6 +22,10 @@ float yawCoreKp = 1.0f;
 float yawCoreTi = 0.0f;
 float yawCoreTd = 0.0f;
 
+/******************************************************************************
+函数原型：	void PID_Init(void)
+功    能：	PID初始化
+*******************************************************************************/
 void PID_Init(void)
 {
     rollShell.Kp = rollShellKp;
@@ -40,53 +45,66 @@ void PID_Init(void)
     yawCore.Td = yawCoreTd;
 }
 
-int16_t PID_Calculate(float angleErr, float gyro, PID shell, PID core)
+/******************************************************************************
+函数原型：	int16_t PID_Calc(float angleErr, float gyro, PID *shell, PID *core)
+功    能：	PID计算
+输    入：  angleErr，角度偏差
+            gyro，对应轴角速度
+            shell,外环
+            core，内环
+返    回：  内环输出
+*******************************************************************************/
+int16_t PID_Calc(float angleErr, float gyro, PID *shell, PID *core)
 {
     float shellOutput, coreOutput;
     float shellKi, coreKi, coreKd;
 
-    shellKi = pidT / shell.Ti;
-    coreKi = pidT / core.Ti;
-    coreKd = core.Td / pidT;
+    shellKi = pidT / shell->Ti;
+    coreKi = pidT / core->Ti;
+    coreKd = core->Td / pidT;
 
-    shell.eK = angleErr;
+    shell->eK = angleErr;
     //积分限幅
-    if (shell.eSum > 300)
-        shell.eSum = 300;
-    else if (shell.eSum < -300)
-        shell.eSum = -300;
+    if (shell->eSum > 300)
+        shell->eSum = 300;
+    else if (shell->eSum < -300)
+        shell->eSum = -300;
     else
-        shell.eSum += angleErr;
+        shell->eSum += angleErr;
 
-    shellOutput = shell.Kp * (shell.eK + shell.eSum * shellKi);
+    shellOutput = shell->Kp * (shell->eK + shell->eSum * shellKi);
 
     //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
-    core.eK = shellOutput - gyro;
+    core->eK = shellOutput - gyro;
 
     //内环积分限幅
-    if (core.eSum > 500)
-        core.eSum = 500;
-    else if (core.eSum < -500)
-        core.eSum = -500;
+    if (core->eSum > 500)
+        core->eSum = 500;
+    else if (core->eSum < -500)
+        core->eSum = -500;
     else
-        core.eSum += core.eK;
+        core->eSum += core->eK;
 
-    coreOutput = core.Kp * (core.eK + core.eSum * coreKi + (core.eK - core.eK_1) * coreKd);
-    core.eK_1 = core.eK;
+    coreOutput = core->Kp * (core->eK + core->eSum * coreKi + (core->eK - core->eK_1) * coreKd);
+    core->eK_1 = core->eK;
 
     return (int16_t)coreOutput;
 }
 
-void Motor_Calculate(void)
+/******************************************************************************
+函数原型：	void Motor_Calc(void)
+功    能：	计算输出速度（PWM）给四个电机
+*******************************************************************************/
+void Motor_Calc(void)
 {
     //计算采样周期
-    pidT=Get_PID_Time();
+    pidT = Get_PID_Time();
 
     //计算PID
     //TODO:注意正负
-    pidRoll = PID_Calculate(expRoll - angle.roll, fGyro.y, rollShell, rollCore);
-    pidPitch = PID_Calculate(expPitch - angle.pitch, fGyro.x, pitchShell, pitchCore);
-    pidYaw = PID_Calculate(expYaw - angle.yaw, fGyro.z, yawShell, yawCore);
+    pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y, &rollShell, &rollCore);
+    pidPitch = PID_Calc(expPitch - angle.pitch, fGyro.x, &pitchShell, &pitchCore);
+    pidYaw = PID_Calc(expYaw - angle.yaw, fGyro.z, &yawShell, &yawCore);
 
     //PWM限幅
     motor1 = Limit_PWM(expThr - pidPitch - pidRoll - pidYaw, 1000, 2000);
@@ -103,24 +121,37 @@ void Motor_Calculate(void)
     }
 }
 
+/******************************************************************************
+函数原型：	int16_t Limit_PWM(int16_t pwm, int16_t min, int16_t max)
+功    能：	PWM限幅
+输    入：  pwm，输入pwm值
+            min，最小值
+            max，最大值
+返    回：  限幅后的pwm
+*******************************************************************************/
 int16_t Limit_PWM(int16_t pwm, int16_t min, int16_t max)
 {
     return pwm < min ? min : (pwm > max ? max : pwm);
 }
 
-void Motor_Exp_Calculate(uint16_t ch1, uint16_t ch2, uint16_t ch3, uint16_t ch4)
+/******************************************************************************
+函数原型：	void Motor_Exp_Calc(void)
+功    能：	计算遥控器的期望值
+*******************************************************************************/
+void Motor_Exp_Calc(void)
 {
+    int16_t PWMInCh1,PWMInCh2,PWMInCh3,PWMInCh4;
     //限幅
-    ch1 = Limit_PWM(ch1, 1000, 2000);
-    ch2 = Limit_PWM(ch2, 1000, 2000);
-    ch3 = Limit_PWM(ch3, 1000, 2000);
-    ch4 = Limit_PWM(ch4, 1000, 2000);
+    PWMInCh1 = Limit_PWM(PWM_IN_CH[0], 1000, 2000);
+    PWMInCh2 = Limit_PWM(PWM_IN_CH[1], 1000, 2000);
+    PWMInCh3 = Limit_PWM(PWM_IN_CH[2], 1000, 2000);
+    PWMInCh4 = Limit_PWM(PWM_IN_CH[3], 1000, 2000);
 
     //转化为期望值
-    expRoll = (float)((ch4 - 1500) * 0.06); //最大倾角30°
-    expPitch = (float)((ch2 - 1500) * 0.06);
-    expYaw = (float)((ch1 - 1500) * 0.06);
-    expThr = (float)ch3;
+    expRoll = (float)((PWMInCh4 - 1500) * 0.06f); //最大倾角30°
+    expPitch = (float)((PWMInCh2 - 1500) * 0.06f);
+    expYaw = (float)((PWMInCh1 - 1500) * 0.06f);
+    expThr = (float)PWMInCh3;
 }
 
 //用于求pid采样时间

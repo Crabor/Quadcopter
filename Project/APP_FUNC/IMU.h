@@ -5,15 +5,14 @@
 //吴勇等编著——《四轴飞行器DIY——基于STM32微控制器》
 //程序源码——https://pan.baidu.com/share/init?surl=o7sVC8a，密码：bpcd
 
-#define Pi 3.1415927f
+#define PI 3.1415927f
 //角度单位相关转换
-#define Radian_to_Angle 57.2957795f
-#define RawData_to_Angle 0.0610351f //以下参数对应±2000°/s
-#define RawData_to_Radian 0.0010653f
+#define RAD_TO_ANGLE 57.2957795f //弧度转角度
+#define RAW_TO_ANGLE 0.0610351f //原始数据转角度，对应±2000°/s
+#define RAW_TO_RAD 0.0010653f //原始数据转弧度，对应±2000°/s
 
-#define Filter_Num 2
+#define FILTER_NUM 2
 
-//Struct typedef
 /* MPU6050--加速度计结构体 */
 typedef struct
 {
@@ -30,6 +29,7 @@ typedef struct
     int16_t z;
 } Gyro;
 
+/* HMC5883L--磁力计结构体 */
 typedef struct
 {
     int16_t x;
@@ -53,7 +53,7 @@ typedef struct
     float pitch;
 } Angle;
 
-//Variable declaration
+//变量定义
 extern uint8_t gyroOffset; //不自动校正，用于零偏校准
 extern uint8_t accOffset;
 extern Acc acc, filterAcc, offsetAcc; //原始数据、滤波后数据、零偏数据
@@ -61,21 +61,21 @@ extern Gyro gyro, filterGyro, offsetGyro; //原始数据、滤波后数据、零
 extern Mag mag; //原始数据
 extern Float fAcc, fGyro, fMag; //加速度数据（m/s2）、角速度数据（rad）、磁场强度数据（Gs）
 extern Angle angle; //姿态解算-角度值
-extern float ACC_IIR_FACTOR;
+// extern float ACC_IIR_FACTOR;
 
-// Functions definition
+// 函数声明
 float invSqrt(float x);
 void Open_Calib(void);
 u8 Calib_Status(void);
 void MPU6050_Offset(void);
 void MPU9150_Read(void);
-void Calculate_FilteringCoefficient(float Time, float cutOff);
-void ACC_IIR_Filter(Acc* accIn, Acc* accOut);
-void Gyro_Filter(Gyro* gyroIn, Gyro* gyroOut);
-void Get_Radian(Gyro* gyroIn, Float* gyroOut);
+// void Calculate_FilteringCoefficient(float Time, float cutOff);
+// void ACC_IIR_Filter(Acc* accIn, Acc* accOut);
+// void Gyro_Filter(Gyro* gyroIn, Gyro* gyroOut);
+void Get_Rad(Gyro* gyroIn, Float* gyroOut);
 void Quat_Init(void);
 void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-void Get_Eulerian_Angle(Angle* angle);
+void Get_Euler(Angle* angle);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
 #endif

@@ -16,11 +16,12 @@ extern float pidT; //采样周期
 extern int16_t pidRoll, pidPitch, pidYaw; //pid输出
 extern float expRoll, expPitch, expYaw, expThr; //期望值
 extern int16_t motor1, motor2, motor3, motor4; //四个电机速度
+extern u16 PWM_IN_CH[4];//定时器5四轴通道捕获PWM带宽值
 
 void PID_Init(void);
-int16_t PID_Calculate(float angleErr, float gyro, PID shell, PID core);
-void Motor_Calculate(void);
-void Motor_Exp_Calculate(uint16_t ch1, uint16_t ch2, uint16_t ch3, uint16_t ch4);
+int16_t PID_Calc(float angleErr, float gyro, PID *shell, PID *core);
+void Motor_Calc(void);
+void Motor_Exp_Calc(void);
 int16_t Limit_PWM(int16_t pwm, int16_t min, int16_t max);
 void PID_Time_Init(void);
 float Get_PID_Time(void);

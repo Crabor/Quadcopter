@@ -5,10 +5,10 @@ void IIC_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    // Enable GPIOB clock
+    // 使能GPIOB时钟
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 
-    // GPIO configuration, Open-drain output
+    // 开漏输出Open-drain output
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
@@ -158,9 +158,9 @@ u8 I2C_ReceiveByte_WithACK(void)
     return i2c_data;
 }
 
-// I2C write one byte
+// I2C写一个字节
 void I2C_WriteByte(uint8_t DeviceAddr, uint8_t address, uint8_t data)
-{
+{//注意DeviceAddr为原始地址左移一位后的地址
     I2C_START();
     I2C_SendByte(DeviceAddr);
     I2C_SendByte(address);
@@ -168,18 +168,18 @@ void I2C_WriteByte(uint8_t DeviceAddr, uint8_t address, uint8_t data)
     I2C_STOP();
 }
 
-// I2C write one byte without address
+// I2C写一个字节（不带片内地址）
 void I2C_NoAddr_WriteByte(uint8_t DeviceAddr, uint8_t data)
-{
+{//注意DeviceAddr为原始地址左移一位后的地址
     I2C_START();
     I2C_SendByte(DeviceAddr);
     I2C_SendByte(data);
     I2C_STOP();
 }
 
-// I2C read one byte
+// I2C读一个字节
 uint8_t I2C_ReadByte(uint8_t DeviceAddr, uint8_t address)
-{
+{//注意DeviceAddr为原始地址左移一位后的地址
     uint8_t i;
     I2C_START();
     I2C_SendByte(DeviceAddr);
@@ -191,9 +191,9 @@ uint8_t I2C_ReadByte(uint8_t DeviceAddr, uint8_t address)
     return i;
 }
 
-// I2C read two bytes
+// I2C读两个字节
 uint16_t I2C_Read_2Bytes(uint8_t DeviceAddr, uint8_t address)
-{
+{//注意DeviceAddr为原始地址左移一位后的地址
     uint8_t data_temp1, data_temp2;
     uint16_t data_16;
 
@@ -210,9 +210,9 @@ uint16_t I2C_Read_2Bytes(uint8_t DeviceAddr, uint8_t address)
     return data_16;
 }
 
-// I2C read three bytes
+// I2C读三个字节
 uint32_t I2C_Read_3Bytes(uint8_t DeviceAddr, uint8_t address)
-{
+{//注意DeviceAddr为原始地址左移一位后的地址
     uint8_t data_temp1, data_temp2, data_temp3;
     uint32_t data_32;
 
@@ -230,9 +230,9 @@ uint32_t I2C_Read_3Bytes(uint8_t DeviceAddr, uint8_t address)
     return data_32;
 }
 
-// I2C write multiple bytes
+// I2C写多个字节
 u8 i2cwrite(u8 dev_addr, u8 reg_addr, u8 i2c_len, u8* i2c_data_buf)
-{
+{//注意dev_addr为原始规定数据，未左移
     u8 i;
     I2C_START();
     I2C_SendByte(dev_addr << 1 | I2C_Direction_Transmitter);
@@ -244,9 +244,9 @@ u8 i2cwrite(u8 dev_addr, u8 reg_addr, u8 i2c_len, u8* i2c_data_buf)
     return 0x00;
 }
 
-// I2C read multiple bytes
+// I2C读多个字节
 u8 i2cread(u8 dev_addr, u8 reg_addr, u8 i2c_len, u8* i2c_data_buf)
-{
+{//注意dev_addr为原始规定数据，未左移
     I2C_START();
     I2C_SendByte(dev_addr << 1 | I2C_Direction_Transmitter);
     I2C_SendByte(reg_addr);
