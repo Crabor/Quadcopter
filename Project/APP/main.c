@@ -124,31 +124,43 @@ static void Task_Startup(void* p_arg)
 {
     u16 temp;
     //最低占空比启动电机
-    TIM3->CCR1 = 54;
-    TIM3->CCR2 = 54;
-    TIM3->CCR3 = 54;
-    TIM3->CCR4 = 54;
-    OSTimeDly(5000);
+    // TIM3->CCR1 = 54;
+    // TIM3->CCR2 = 54;
+    // TIM3->CCR3 = 54;
+    // TIM3->CCR4 = 54;
+    // OSTimeDly(5000);
     Open_Calib();
     while (1) {
-			SendStr("n");
-//        MPU9150_Read();
-//        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-//        if (!Calib_Status()) {
-//            //            ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
-//            //            Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
-//            //            Get_Radian(&filterGyro, &fGyro); //角速度数据转为弧度
-//            //            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
-//            Get_Radian(&gyro, &fGyro); //角速度数据转为弧度
-//            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-//            Get_Eulerian_Angle(&angle);
-//            SendAttitude(-angle.roll, angle.pitch, angle.yaw);
-//            
-////            TIM3->CCR1 = PWMInCh3*0.054;
-////            TIM3->CCR2 = PWMInCh3*0.054;
-////            TIM3->CCR3 = PWMInCh3*0.054;
-////            TIM3->CCR4 = PWMInCh3*0.054;
-//        }
+    //     MPU9150_Read();
+    //     SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+    //     // if (!Calib_Status()) {
+        //     //            ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
+        //     //            Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
+        //     //            Get_Radian(&filterGyro, &fGyro); //角速度数据转为弧度
+        //     //            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
+        //     Get_Radian(&gyro, &fGyro); //角速度数据转为弧度
+        //     IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+        //     Get_Eulerian_Angle(&angle);
+        //     SendAttitude(-angle.roll, angle.pitch, angle.yaw);
+        //     //
+        //     ////            TIM3->CCR1 = PWMInCh3*0.054;
+        //     ////            TIM3->CCR2 = PWMInCh3*0.054;
+        //     ////            TIM3->CCR3 = PWMInCh3*0.054;
+        //     ////            TIM3->CCR4 = PWMInCh3*0.054;
+        //     //        }
         OSTimeDly(1);
+        // }
+        //    u8 uu8=0;
+        //    u16 uu16=0;
+        //    u32 uu32=0;
+        //    while(1){
+        //        OSTimeDly(10);
+        //        uu8++;
+        //        uu16++;
+        //        uu32++;
+        //        SendByte(0xF1,&uu8);
+        //        SendHalfWord(0xF2,&uu16);
+        //        SendWord(0xF3,&uu32);
+        //        SendStr("nihao");
     }
 }

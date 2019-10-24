@@ -228,7 +228,7 @@ void TIM5_PWM_IN_IRQ(void)
         }
     }
     i = 2;
-//    SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
+    SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
 }
 
 // // Capture status of channels

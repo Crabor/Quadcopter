@@ -49,7 +49,7 @@ The MPU-9150 includes the following additional features:
 				
 
 /* MPU6050 Register Address ------------------------------------------------------------*/
-#define	MPU6050_SlaveAddress                    0xD0	//IIC写入时的地址字节数据
+#define	MPU6050_SlaveAddress                    0xD0	//IIC写入时的地址字节数据，0x68左移一位
 #define MPU6050_Device_ID                       0x68
 
 #define	MPU6050_SMPLRT_DIV                      0x19	//陀螺仪采样率，典型值：0x07(125Hz)
@@ -98,7 +98,7 @@ The MPU-9150 includes the following additional features:
 
 /* HMC5883L Register Address ------------------------------------------------------------*/
 #define	HMC5883L_Addr                           0x3C
-#define	HMC5883L_Addr2                          0x1E
+#define	HMC5883L_Addr_Real                      0x1E//注意，此地址位原始地址，但是硬件iic在传输时会传输左移一位的地址，所以使用时应该用HMC5883L_Addr
 
 #define HMC5883L_ConfigurationRegisterA         0x00
 #define HMC5883L_ConfigurationRegisterB         0x01

@@ -118,6 +118,9 @@ void MPU6050_Offset(void)
 *******************************************************************************/
 void MPU9150_Read(void)
 {
+#if !AK8975_EN
+    u8 temp;
+#endif
     acc.x = GetData_MPU6050(MPU6050_ACCEL_XOUT_H) - offsetAcc.x; //减去零偏
     acc.y = GetData_MPU6050(MPU6050_ACCEL_YOUT_H) - offsetAcc.y;
     acc.z = GetData_MPU6050(MPU6050_ACCEL_ZOUT_H) - offsetAcc.z;
@@ -131,20 +134,22 @@ void MPU9150_Read(void)
     mag.y = GetData_AK8975(AK8975_MAG_YOUT_L);
     mag.z = GetData_AK8975(AK8975_MAG_ZOUT_L);
 #else
-    mag.x = GetData_HMC5883L(HMC5883L_XOUT_MSB);
-    mag.y = GetData_HMC5883L(HMC5883L_YOUT_MSB);
-    mag.z = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
-
-    // Complement processing and unit conversion
-    if (mag.x > 0x7fff)
-        mag.x -= 0xffff;
-    if (mag.y > 0x7fff)
-        mag.y -= 0xffff;
-    if (mag.z > 0x7fff)
-        mag.z -= 0xffff;
-    mag.x /= 1090.0f;
-    mag.y /= 1090.0f;
-    mag.z /= 1090.0f;
+    temp = GetData_HMC5883L(HMC5883L_ConfigurationRegisterA);//这一位实时清0否则无法工作
+    temp &= ~(1 << 7);
+    I2C_ByteWrite(HMC5883L_Addr, HMC5883L_ConfigurationRegisterA, 0);
+    temp = I2C_ByteRead(HMC5883L_Addr, HMC5883L_StatusRegister);//查看HMC5883L数据存放状态
+    if (temp & 0x01) {
+        mag.x = GetData_HMC5883L(HMC5883L_XOUT_MSB);
+        mag.y = GetData_HMC5883L(HMC5883L_YOUT_MSB);
+        mag.z = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+        // Complement processing and unit conversion
+        if (mag.x > 0x7fff)
+            mag.x -= 0xffff;
+        if (mag.y > 0x7fff)
+            mag.y -= 0xffff;
+        if (mag.z > 0x7fff)
+            mag.z -= 0xffff;
+    }
 #endif
     MPU6050_Offset();
 }
@@ -213,41 +218,43 @@ void Get_Radian(Gyro* gyroIn, Float* gyroOut)
 // Quaternion initialization
 void Quat_Init(void)
 {
-    int16_t init_mx,init_my,init_mz;
+    int16_t init_mx, init_my, init_mz;
     float init_Yaw, init_Pitch, init_Roll;
-    
+    u8 temp;
 #if AK8975_EN
     init_mx = GetData_AK8975(AK8975_MAG_XOUT_L);
     init_my = GetData_AK8975(AK8975_MAG_YOUT_L);
     init_mz = GetData_AK8975(AK8975_MAG_ZOUT_L);
 #else
-    init_mx = GetData_HMC5883L(HMC5883L_XOUT_MSB);
-    init_my = GetData_HMC5883L(HMC5883L_YOUT_MSB);
-    init_mz = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
-
-    // Complement processing and unit conversion
-    if (init_mx > 0x7fff)
-        init_mx -= 0xffff;
-    if (init_my > 0x7fff)
-        init_my -= 0xffff;
-    if (init_mz > 0x7fff)
-        init_mz -= 0xffff;
-    init_mx /= 1090.0f;
-    init_my /= 1090.0f;
-    init_mz /= 1090.0f;
+    temp = GetData_HMC5883L(HMC5883L_ConfigurationRegisterA);//这一位实时清0否则无法工作
+    temp &= ~(1 << 7);
+    I2C_ByteWrite(HMC5883L_Addr, HMC5883L_ConfigurationRegisterA, 0);
+    temp = I2C_ByteRead(HMC5883L_Addr, HMC5883L_StatusRegister);//查看HMC5883L数据存放状态
+    if (temp & 0x01) {
+        init_mx = GetData_HMC5883L(HMC5883L_XOUT_MSB);
+        init_my = GetData_HMC5883L(HMC5883L_YOUT_MSB);
+        init_mz = GetData_HMC5883L(HMC5883L_ZOUT_MSB);
+        // Complement processing and unit conversion
+        if (init_mx > 0x7fff)
+            init_mx -= 0xffff;
+        if (init_my > 0x7fff)
+            init_my -= 0xffff;
+        if (init_mz > 0x7fff)
+            init_mz -= 0xffff;
+    }
 #endif
 
     // Initial value of euler angles when Y axis forward
-    init_Roll  = 0.0f;
+    init_Roll = 0.0f;
     init_Pitch = 0.0f;
-    init_Yaw   = atan2(init_mx*cos(init_Roll) + init_my*sin(init_Roll)*sin(init_Pitch) + init_mz*sin(init_Roll)*cos(init_Pitch),
-                        init_my*cos(init_Pitch) - init_mz*sin(init_Pitch));
+    init_Yaw = atan2(init_mx * cos(init_Roll) + init_my * sin(init_Roll) * sin(init_Pitch) + init_mz * sin(init_Roll) * cos(init_Pitch),
+        init_my * cos(init_Pitch) - init_mz * sin(init_Pitch));
 
     // Quaternion calculation
-    q0 = cos(0.5*init_Roll)*cos(0.5*init_Pitch)*cos(0.5*init_Yaw) + sin(0.5*init_Roll)*sin(0.5*init_Pitch)*sin(0.5*init_Yaw);  //w
-    q1 = cos(0.5*init_Roll)*sin(0.5*init_Pitch)*cos(0.5*init_Yaw) - sin(0.5*init_Roll)*cos(0.5*init_Pitch)*sin(0.5*init_Yaw);  //x Pitch
-    q2 = sin(0.5*init_Roll)*cos(0.5*init_Pitch)*cos(0.5*init_Yaw) + cos(0.5*init_Roll)*sin(0.5*init_Pitch)*sin(0.5*init_Yaw);  //y Roll
-    q3 = cos(0.5*init_Roll)*cos(0.5*init_Pitch)*sin(0.5*init_Yaw) - sin(0.5*init_Roll)*sin(0.5*init_Pitch)*cos(0.5*init_Yaw);  //z Yaw
+    q0 = cos(0.5f * init_Roll) * cos(0.5f * init_Pitch) * cos(0.5f * init_Yaw) + sin(0.5f * init_Roll) * sin(0.5f * init_Pitch) * sin(0.5f * init_Yaw); //w
+    q1 = cos(0.5f * init_Roll) * sin(0.5f * init_Pitch) * cos(0.5f * init_Yaw) - sin(0.5f * init_Roll) * cos(0.5f * init_Pitch) * sin(0.5f * init_Yaw); //x Pitch
+    q2 = sin(0.5f * init_Roll) * cos(0.5f * init_Pitch) * cos(0.5f * init_Yaw) + cos(0.5f * init_Roll) * sin(0.5f * init_Pitch) * sin(0.5f * init_Yaw); //y Roll
+    q3 = cos(0.5f * init_Roll) * cos(0.5f * init_Pitch) * sin(0.5f * init_Yaw) - sin(0.5f * init_Roll) * sin(0.5f * init_Pitch) * cos(0.5f * init_Yaw); //z Yaw
 }
 
 // ==================================================================================

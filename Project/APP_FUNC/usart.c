@@ -106,7 +106,7 @@ void USART6_NItSend(unsigned char* DataToSend, u8 data_num)
     for (i = 0; i < data_num; i++) {
         while (USART_GetFlagStatus(USART6, USART_FLAG_TC) == RESET)
             ;//初始化终串口发送使能时STM32会自动发送一个空闲帧，导致TC位置1
-        USART_SendData(USART2, DataToSend[i]);
+        USART_SendData(USART6, DataToSend[i]);
     }
 }
 /******************************************************************************************************/
