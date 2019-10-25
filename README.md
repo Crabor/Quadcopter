@@ -27,8 +27,8 @@ README [English](README_EN.md) | [中文](README.md)
 | 螺旋桨        | 乾丰1045                   |
 | 电池           | 格氏航模电池（2200mAh 25C） |
 | 开发板        | STM32F401RE（最高频84MHz） |
-| 加速度计、陀螺仪 | MPU6050（集成在GY-86） |
-| 电子罗盘     | HMC5883L（集成在GY-86） |
+| 加速度计、陀螺仪 | MPU6050（集成在GY-86/MPU-9150） |
+| 电子罗盘     | HMC5883L（集成在GY-86） 或者 AK8975（集成在MPU-9150） |
 | 遥控器        | RadioLink T4EU-6（6通道） |
 | 遥控接收器  | RadioLink R7EH-S（6通道） |
 | 蓝牙           | HM-10 * 2                    |
