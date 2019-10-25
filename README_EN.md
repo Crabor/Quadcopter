@@ -44,7 +44,7 @@ Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`L
 
 ## Project Structure
 
-```gnu
+```txt
 ├── PCB
 │   ├── IntLib
 │   └── PCB
@@ -127,7 +127,7 @@ Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`L
 
 Head files relationship:
 
-```gnu
+```txt
 includes.h
 ├── BSP.h
 ├── core_cm4.h

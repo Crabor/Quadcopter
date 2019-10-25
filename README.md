@@ -44,7 +44,7 @@ IDE：`Keil v5`
 
 ## 工程结构
 
-```gnu
+```txt
 ├── PCB
 │   ├── IntLib
 │   └── PCB
@@ -127,7 +127,7 @@ IDE：`Keil v5`
 
 头文件包含关系：
 
-```gnu
+```txt
 includes.h
 ├── BSP.h
 ├── core_cm4.h
