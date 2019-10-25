@@ -34,15 +34,15 @@ int16_t motor1, motor2, motor3, motor4; //四个电机速度:左前顺时针，�
 /*******************************************************************************************************/
 
 /**********************************操作系统相关*********************************************************/
-// Tasks priority definition
+// 任务优先级定义
 #define TASK_STARTUP_PRIO 4
 #define TASK_ANGEL_PRIO 5
 #define TASK_PID_PRIO 6
-// Tasks stack size definition
+// 任务栈大小定义
 #define TASK_STARTUP_STK_SIZE 1024
 #define TASK_ANGEL_STK_SIZE 512
 #define TASK_PID_STK_SIZE 512
-// Stack allocation
+// 栈内存分配
 static OS_STK Task_Startup_STK[TASK_STARTUP_STK_SIZE];
 static OS_STK Task_Angel_STK[TASK_ANGEL_STK_SIZE];
 static OS_STK Task_PID_STK[TASK_PID_STK_SIZE];
