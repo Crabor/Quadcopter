@@ -1,6 +1,6 @@
 #include "iic.h"
 
-// I2C initialization. Use analog I2C
+// I2C 初始化，软件模拟iic
 void IIC_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;

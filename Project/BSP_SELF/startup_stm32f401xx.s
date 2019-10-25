@@ -78,7 +78,7 @@ __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     SVC_Handler                ; SVCall Handler
                 DCD     DebugMon_Handler           ; Debug Monitor Handler
                 DCD     0                          ; Reserved
-                DCD     OS_CPU_PendSVHandler       ; PendSV Handler
+                DCD     OS_CPU_PendSVHandler       ; PendSV Handler;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                 DCD     SysTick_Handler            ; SysTick Handler
 
                 ; External Interrupts
@@ -176,15 +176,15 @@ __Vectors_Size  EQU  __Vectors_End - __Vectors
 
 ; Reset handler
 Reset_Handler    PROC
-                 EXPORT  Reset_Handler             [WEAK]
+                EXPORT  Reset_Handler             [WEAK]
         IMPORT  SystemInit
         IMPORT  __main
 
-                 LDR     R0, =SystemInit
-                 BLX     R0
-                 LDR     R0, =__main
-                 BX      R0
-                 ENDP
+                LDR     R0, =SystemInit
+                BLX     R0
+                LDR     R0, =__main
+                BX      R0
+                ENDP
 
 ; Dummy Exception Handlers (infinite loops which can be modified)
 

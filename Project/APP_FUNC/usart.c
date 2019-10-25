@@ -1,38 +1,5 @@
 #include "usart.h"
 
-//未使用
-//extern u8 sendBuf[50];	//发送数据缓存
-//初始化IO 串口2
-//pclk2:PCLK2时钟频率(Mhz)
-//bound:波特率
-// void USART2_Init(u32 pclk2, u32 bound)
-// {
-//     float temp;
-//     u16 mantissa;
-//     u16 fraction;
-//     temp = (float)(pclk2 * 1000000) / (bound * 16); //得到USARTDIV@OVER8=0
-//     mantissa = temp; //得到整数部分
-//     fraction = (temp - mantissa) * 16; //得到小数部分@OVER8=0
-//     mantissa <<= 4;
-//     mantissa += fraction;
-//     RCC->AHB1ENR |= 1 << 0; //使能PORTA口时钟
-//     RCC->APB1ENR |= 1 << 17; //使能串口2时钟
-//     GPIO_Set(GPIOA, GPIO_Pin_2 | GPIO_Pin_3, GPIO_Mode_AF, GPIO_OType_PP, GPIO_Speed_50MHz, GPIO_PuPd_UP); //PA2,PA3,复用功能,上拉输出
-//     GPIO_AF_Set(GPIOA, 2, 7); //PA2,AF7
-//     GPIO_AF_Set(GPIOA, 3, 7); //PA3,AF7
-//     //波特率设置
-//     USART2->BRR = mantissa; //波特率设置
-//     USART2->CR1 &= ~(1 << 15); //设置OVER8=0
-//     USART2->CR1 |= 1 << 3; //串口发送使能
-// #if EN_USART2_RX //如果使能了接收
-//     //使能接收中断
-//     USART2->CR1 |= 1 << 2; //串口接收使能
-//     USART2->CR1 |= 1 << 5; //接收缓冲区非空中断使能
-//     MY_NVIC_Init(3, 0, USART2_IRQn, 2); //组2，最低优先级
-// #endif
-//     USART2->CR1 |= 1 << 13; //串口使能
-// }
-
 //初始化IO 串口6
 //pclk2:PCLK2时钟频率(Mhz)
 //bound:波特率
