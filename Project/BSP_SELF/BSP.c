@@ -10,9 +10,9 @@ void BSP_Init(void){
 	HMC5883L_Init();
 #endif
 	Quat_Init();
-//	Calculate_FilteringCoefficient(0.001f,10.0f);//¼ÆËãIIRÂË²¨Æ÷²ÎÊý
 	PWM_OUT_Init();
 	PWM_IN_Init();
+	PID_Init();
 	PID_Time_Init();
 	AHRS_Time_Init();
 }

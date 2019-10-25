@@ -1,17 +1,17 @@
 #include "includes.h"
 
-//为了方便各函数调用全局变量方便以及如果把全局变量放到各子文件会出现种种bug,
+//为了各函数调用全局变量方便以及如果把全局变量放到各子文件会出现种种bug,
 //所以将大部分全局变量统一定义在主文件，其他子文件要用时用extern引用
 
 /**********************************姿态解算相关******************************************************/
-uint8_t gyroOffset = 0; //不自动校正，用于零偏校准
+uint8_t gyroOffset = 0; //用于零偏校准
 uint8_t accOffset = 0;
-Acc acc, filterAcc, offsetAcc; //原始数据、滤波后数据、零偏数据
-Gyro gyro, filterGyro, offsetGyro; //原始数据、滤波后数据、零偏数据
-Mag mag;
-Float fAcc, fGyro, fMag; //加速度数据（m/s2）、角速度数据（rad）、磁场强度数据（Gs）
+Acc acc, offsetAcc; //原始数据、零偏数据
+Gyro gyro, offsetGyro; //原始数据、零偏数据
+Mag mag;//原始数据
+Float fGyro; //角速度数据（rad）
 Angle angle; //姿态解算-角度值
-float ACC_IIR_FACTOR;
+// float ACC_IIR_FACTOR;
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
@@ -26,7 +26,7 @@ u8 sendBuf[50]; //发送数据缓存
 /*******************************************************************************************************/
 
 /***********************************PWM输入捕获******************************************************/
-u16 PWM_IN_CH[4];
+u16 PWM_IN_CH[4];//PWM输入通道带宽
 /*******************************************************************************************************/
 
 /***********************************PWM输出比较*********************************************************/
@@ -83,39 +83,29 @@ int main(void)
 //    OSTaskDel(OS_PRIO_SELF);
 //}
 
-// Function entry of AHRS task
+// 姿态解算任务
 static void Task_Angel(void* p_arg)
 {
     while (1) {
-        MPU9150_Read();
+        MPU9150_Read();//读取九轴数据
         SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        if (!Calib_Status()) {
-            //            ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
-            //            Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
-            //            Get_Rad(&filterGyro, &fGyro); //角速度数据转为弧度
-            //            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
-            Get_Rad(&gyro, &fGyro); //角速度数据转为弧度
+        if (!Calib_Status()) {//零偏校准结束
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            Get_Euler(&angle);
-            SendAttitude(-angle.roll, angle.pitch, angle.yaw);
+            SendAttitude(angle.roll, angle.pitch, angle.yaw);//发送姿态数据帧
         }
         OSTimeDly(1);
     }
 }
 
-// Function entry of PID control task
+// PID任务
 static void Task_PID(void* p_arg)
 {
     while (1) {
-        if (!Calib_Status()) {
-            // Remote control value processing
-            Motor_Exp_Calc();
-            // Motor PID calculation
-            Motor_Calc();
-            // Output PWM to motors
-            PWM_OUT();
+        if (!Calib_Status()) {//零偏校准结束
+            Motor_Exp_Calc();// 计算遥控器的期望值
+            Motor_Calc();// 计算PID以及要输出的电机速度
+            PWM_OUT();// 输出电机速度
         }
-        // OS time delay 5 ticks
         OSTimeDly(5);
     }
 }
@@ -133,20 +123,14 @@ static void Task_Startup(void* p_arg)
     while (1) {
         OSTimeDly(1);
         MPU9150_Read();
-        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); 
         if (!Calib_Status()) {
-            //            ACC_IIR_Filter(&acc, &filterAcc); //对acc做IIR滤波
-            //            Gyro_Filter(&gyro, &filterGyro); //对gyro做窗口滤波
-            //            Get_Rad(&filterGyro, &fGyro); //角速度数据转为弧度
-            //            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, filterAcc.x, filterAcc.y, filterAcc.z, mag.x, mag.y, mag.z); //姿态解算
-            Get_Rad(&gyro, &fGyro); //角速度数据转为弧度
-            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            Get_Euler(&angle);
+            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);
             SendAttitude(angle.roll, -angle.pitch, -angle.yaw);
-            TIM3->CCR1 = PWM_IN_CH[2] * 0.054;
-            TIM3->CCR2 = PWM_IN_CH[2] * 0.054;
-            TIM3->CCR3 = PWM_IN_CH[2] * 0.054;
-            TIM3->CCR4 = PWM_IN_CH[2] * 0.054;
+            TIM3->CCR1 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
+            TIM3->CCR2 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
+            TIM3->CCR3 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
+            TIM3->CCR4 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
         }
     }
 }

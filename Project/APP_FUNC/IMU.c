@@ -147,6 +147,11 @@ void MPU9150_Read(void)
         gyro.x = ((((int16_t)dataBuf[8]) << 8) | dataBuf[9]) - offsetGyro.x;
         gyro.y = ((((int16_t)dataBuf[10]) << 8) | dataBuf[11]) - offsetGyro.y;
         gyro.z = ((((int16_t)dataBuf[12]) << 8) | dataBuf[13]) - offsetGyro.z;
+
+        //角速度单位转换，加速度无需转换单位
+        fGyro.x = (float)(gyro.x * RAW_TO_RAD);
+        fGyro.y = (float)(gyro.y * RAW_TO_RAD);
+        fGyro.z = (float)(gyro.z * RAW_TO_RAD);
     }
 
     MPU6050_Offset();
@@ -205,17 +210,6 @@ void MPU9150_Read(void)
 // }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/******************************************************************************
-函数原型：	void Get_Rad(Gyro *gyroIn,Float *gyroOut)
-功    能：	角速度由原始数据转为弧度
-*******************************************************************************/
-void Get_Rad(Gyro* gyroIn, Float* gyroOut)
-{
-    gyroOut->x = (float)(gyroIn->x * RAW_TO_RAD);
-    gyroOut->y = (float)(gyroIn->y * RAW_TO_RAD);
-    gyroOut->z = (float)(gyroIn->z * RAW_TO_RAD);
-}
 
 // 四元数初始化
 void Quat_Init(void)
@@ -347,17 +341,11 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     q1 = q1 * norm; //x
     q2 = q2 * norm; //y
     q3 = q3 * norm; //z
-}
 
-/******************************************************************************
-函数原型：	void Get_Euler(Angle *angle)
-功    能：	四元数转欧拉角
-*******************************************************************************/
-void Get_Euler(Angle* angle)
-{
-    angle->pitch = -atan2(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * RAD_TO_ANGLE;
-    angle->roll = asin(2.0f * (q0 * q2 - q1 * q3)) * RAD_TO_ANGLE;
-    angle->yaw = atan2(2.0f * (q0 * q3 + q1 * q2), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD_TO_ANGLE;
+    //四元数转欧拉角
+    angle.roll = asin(2.0f * (q0 * q2 - q1 * q3)) * RAD_TO_ANGLE;
+    angle.pitch = -atan2(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * RAD_TO_ANGLE;
+    angle.yaw = atan2(2.0f * (q0 * q3 + q1 * q2), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD_TO_ANGLE;
 }
 
 //用于获取姿态解算采样时间
