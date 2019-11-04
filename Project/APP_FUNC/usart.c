@@ -72,7 +72,7 @@ void USART6_NItSend(unsigned char* DataToSend, u8 data_num)
     int i;
     for (i = 0; i < data_num; i++) {
         while (USART_GetFlagStatus(USART6, USART_FLAG_TC) == RESET)
-            ;//初始化终串口发送使能时STM32会自动发送一个空闲帧，导致TC位置1
+            ; //初始化终串口发送使能时STM32会自动发送一个空闲帧，导致TC位置1
         USART_SendData(USART6, DataToSend[i]);
     }
 }
@@ -285,6 +285,63 @@ void SendAttitude(float roll, float pitch, float yaw)
 
     sendBuf[_cnt++] = FLY_MODEL;
     sendBuf[_cnt++] = ARMED;
+
+    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+
+    for (i = 0; i < _cnt; i++)
+        sum += sendBuf[i];
+
+    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
+
+#if USART_IT_EN
+    USART6_ItSend(sendBuf, _cnt);
+#else
+    USART6_NItSend(sendBuf, _cnt);
+#endif
+}
+
+void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4)
+{
+    u8 _cnt = 0;
+    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+    int i;
+    int16_t AUX = 0;
+
+    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
+    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+    sendBuf[_cnt++] = 0x03; //0x03，表示本帧为接收机、电机速度数据帧
+    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+
+    sendBuf[_cnt++] = BYTE1(THR); //将要发送的数据放至发送缓冲区
+    sendBuf[_cnt++] = BYTE0(THR);
+
+    sendBuf[_cnt++] = BYTE1(YAW);
+    sendBuf[_cnt++] = BYTE0(YAW);
+
+    sendBuf[_cnt++] = BYTE1(ROLL);
+    sendBuf[_cnt++] = BYTE0(ROLL);
+
+    sendBuf[_cnt++] = BYTE1(PITCH);
+    sendBuf[_cnt++] = BYTE0(PITCH);
+
+    sendBuf[_cnt++] = BYTE1(motor1);
+    sendBuf[_cnt++] = BYTE0(motor1);
+
+    sendBuf[_cnt++] = BYTE1(motor2);
+    sendBuf[_cnt++] = BYTE0(motor2);
+
+    sendBuf[_cnt++] = BYTE1(motor3);
+    sendBuf[_cnt++] = BYTE0(motor3);
+
+    sendBuf[_cnt++] = BYTE1(motor4);
+    sendBuf[_cnt++] = BYTE0(motor4);
+
+    sendBuf[_cnt++] = BYTE1(AUX);
+    sendBuf[_cnt++] = BYTE0(AUX);
+
+    sendBuf[_cnt++] = BYTE1(AUX);
+    sendBuf[_cnt++] = BYTE0(AUX);
 
     sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
 

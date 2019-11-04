@@ -21,6 +21,7 @@ void USART6_ItSend(unsigned char* DataToSend, u8 data_num);
 void USART6_NItSend(unsigned char* DataToSend, u8 data_num);
 void SendSenser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z, int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z, int16_t MAG_X, int16_t MAG_Y, int16_t MAG_Z);
 void SendAttitude(float roll, float pitch, float yaw);
+void Send_RCData_Motor(int16_t THR,int16_t YAW,int16_t ROLL,int16_t PITCH,int16_t motor1,int16_t motor2,int16_t motor3,int16_t motor4);
 void SendStr(const char* str);
 void SendByte(u8 frame, u8* p);
 void SendHalfWord(u8 frame, u16* p);

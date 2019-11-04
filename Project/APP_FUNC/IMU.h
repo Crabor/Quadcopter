@@ -74,6 +74,7 @@ void MPU9150_Read(void);
 // void Gyro_Filter(Gyro* gyroIn, Gyro* gyroOut);
 void Quat_Init(void);
 void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+void IMUUpdateOnlyGyro(float gx, float gy, float gz);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
 #endif

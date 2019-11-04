@@ -103,14 +103,14 @@ void Motor_Calc(void)
     //计算PID
     //TODO:注意正负
     pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y, &rollShell, &rollCore);
-    pidPitch = PID_Calc(expPitch - angle.pitch, fGyro.x, &pitchShell, &pitchCore);
+    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore);//
     pidYaw = PID_Calc(expYaw - angle.yaw, fGyro.z, &yawShell, &yawCore);
 
     //PWM限幅
-    motor1 = Limit_PWM(expThr - pidPitch - pidRoll - pidYaw, 1000, 2000);
-    motor2 = Limit_PWM(expThr - pidPitch + pidRoll + pidYaw, 1000, 2000);
-    motor3 = Limit_PWM(expThr + pidPitch - pidRoll + pidYaw, 1000, 2000);
-    motor4 = Limit_PWM(expThr + pidPitch + pidRoll - pidYaw, 1000, 2000);
+    motor1 = Limit_PWM(expThr - pidPitch + pidRoll - pidYaw, 1000, 2000);
+    motor2 = Limit_PWM(expThr - pidPitch - pidRoll + pidYaw, 1000, 2000);
+    motor3 = Limit_PWM(expThr + pidPitch + pidRoll + pidYaw, 1000, 2000);
+    motor4 = Limit_PWM(expThr + pidPitch - pidRoll - pidYaw, 1000, 2000);
 
     //如果油门过小，则停止飞行
     if (expThr <= 1050) {

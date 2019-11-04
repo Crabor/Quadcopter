@@ -61,27 +61,27 @@ int main(void)
     return 0;
 }
 
-//static void Task_Startup(void* p_arg)
-//{
-//// etect OS task current capacity
-//#if (OS_TASK_STAT_EN > 0)
-//    OSStatInit();
-//#endif
-//    //最低占空比启动电机
-//    TIM3->CCR1 = 54;
-//    TIM3->CCR2 = 54;
-//    TIM3->CCR3 = 54;
-//    TIM3->CCR4 = 54;
-//    OSTimeDly(5000);
-//    Open_Calib(); //打开零偏校准
+static void Task_Startup(void* p_arg)
+{
+// etect OS task current capacity
+#if (OS_TASK_STAT_EN > 0)
+    OSStatInit();
+#endif
+    //最低占空比启动电机
+    TIM3->CCR1 = 54;
+    TIM3->CCR2 = 54;
+    TIM3->CCR3 = 54;
+    TIM3->CCR4 = 54;
+    OSTimeDly(5000);
+    Open_Calib(); //打开零偏校准
 
-//    // Create functional task
-//    OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
-//    OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
+    // Create functional task
+    OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
+    OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
 
-//    // Delete itself
-//    OSTaskDel(OS_PRIO_SELF);
-//}
+    // Delete itself
+    OSTaskDel(OS_PRIO_SELF);
+}
 
 // 姿态解算任务
 static void Task_Angel(void* p_arg)
@@ -92,6 +92,7 @@ static void Task_Angel(void* p_arg)
         if (!Calib_Status()) {//零偏校准结束
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
             SendAttitude(angle.roll, angle.pitch, angle.yaw);//发送姿态数据帧
+            Send_RCData_Motor(PWM_IN_CH[2],PWM_IN_CH[0],PWM_IN_CH[3],PWM_IN_CH[1],motor1,motor2,motor3,motor4);//发送遥控器数据和电机速度数据帧
         }
         OSTimeDly(1);
     }
@@ -110,27 +111,18 @@ static void Task_PID(void* p_arg)
     }
 }
 
-static void Task_Startup(void* p_arg)
-{
-    u16 temp;
-    //最低占空比启动电机
-    TIM3->CCR1 = 54;
-    TIM3->CCR2 = 54;
-    TIM3->CCR3 = 54;
-    TIM3->CCR4 = 54;
-    OSTimeDly(5000);
-    Open_Calib();
-    while (1) {
-        OSTimeDly(1);
-        MPU9150_Read();
-        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); 
-        if (!Calib_Status()) {
-            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);
-            SendAttitude(angle.roll, -angle.pitch, -angle.yaw);
-            TIM3->CCR1 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
-            TIM3->CCR2 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
-            TIM3->CCR3 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
-            TIM3->CCR4 = PWM_IN_CH[2] * PWM_IN_TO_OUT;
-        }
-    }
-}
+//static void Task_Startup(void* p_arg)
+//{
+//    u16 temp;
+//    Open_Calib();//打开零偏校准
+//    while (1) {
+//        OSTimeDly(1);
+//        MPU9150_Read();//读取数据
+//        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
+//        if (!Calib_Status()) {//零偏校准状态
+//            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);//姿态解算
+//            //IMUUpdateOnlyGyro(fGyro.x, fGyro.y, fGyro.z);//姿态解算
+//            SendAttitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
+//        }
+//    }
+//}
