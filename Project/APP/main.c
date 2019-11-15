@@ -8,7 +8,7 @@ uint8_t gyroOffset = 0; //用于零偏校准
 uint8_t accOffset = 0;
 Acc acc, offsetAcc; //原始数据、零偏数据
 Gyro gyro, offsetGyro; //原始数据、零偏数据
-Mag mag;//原始数据
+Mag mag; //原始数据
 Float fGyro; //角速度数据（rad）
 Angle angle; //姿态解算-角度值
 // float ACC_IIR_FACTOR;
@@ -17,7 +17,7 @@ Angle angle; //姿态解算-角度值
 /***********************************PID相关*********************************************************/
 PID rollCore, rollShell, pitchCore, pitchShell, yawCore, yawShell; //六个环的pid结构体
 float pidT; //采样周期
-int16_t pidRoll, pidPitch, pidYaw; //pid输出
+float pidRoll, pidPitch, pidYaw; //pid输出
 float expRoll, expPitch, expYaw, expThr; //期望值
 /*******************************************************************************************************/
 
@@ -26,28 +26,32 @@ u8 sendBuf[50]; //发送数据缓存
 /*******************************************************************************************************/
 
 /***********************************PWM输入捕获******************************************************/
-u16 PWM_IN_CH[4];//PWM输入通道带宽
+u16 PWM_IN_CH[4]; //PWM输入通道带宽
 /*******************************************************************************************************/
 
 /***********************************PWM输出比较*********************************************************/
-int16_t motor1, motor2, motor3, motor4; //四个电机速度:左前顺时针，右前逆时针，左后逆时针，右后顺时针
+float motor1, motor2, motor3, motor4; //四个电机速度:左前顺时针，右前逆时针，左后逆时针，右后顺时针
 /*******************************************************************************************************/
 
 /**********************************操作系统相关*********************************************************/
 // 任务优先级定义
 #define TASK_STARTUP_PRIO 4
+#define TASK_COM_PRIO 7
 #define TASK_ANGEL_PRIO 5
 #define TASK_PID_PRIO 6
 // 任务栈大小定义
 #define TASK_STARTUP_STK_SIZE 1024
+#define TASK_COM_STK_SIZE 512
 #define TASK_ANGEL_STK_SIZE 512
 #define TASK_PID_STK_SIZE 512
 // 栈内存分配
 static OS_STK Task_Startup_STK[TASK_STARTUP_STK_SIZE];
+static OS_STK Task_COM_STK[TASK_COM_STK_SIZE];
 static OS_STK Task_Angel_STK[TASK_ANGEL_STK_SIZE];
 static OS_STK Task_PID_STK[TASK_PID_STK_SIZE];
 // 函数定义
 static void Task_Startup(void* p_arg);
+static void Task_COM(void* p_arg);
 static void Task_Angel(void* p_arg);
 static void Task_PID(void* p_arg);
 /*******************************************************************************************************/
@@ -76,6 +80,7 @@ static void Task_Startup(void* p_arg)
     Open_Calib(); //打开零偏校准
 
     // Create functional task
+    OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
     OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
     OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
 
@@ -83,16 +88,27 @@ static void Task_Startup(void* p_arg)
     OSTaskDel(OS_PRIO_SELF);
 }
 
+static void Task_COM(void* p_arg)
+{
+    while (1) {
+        //Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
+        Send_expVal(0xF1, expRoll, expPitch, expYaw, expThr); //发送遥控器数据转换成的期望值
+        if (!Calib_Status()) { //零偏校准结束
+            Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
+            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, pitchShell.output, pitchCore.output, yawShell.output, yawCore.output); //发送内外环PID计算结果
+        }
+        OSTimeDly(3);
+    }
+}
+
 // 姿态解算任务
 static void Task_Angel(void* p_arg)
 {
     while (1) {
-        MPU9150_Read();//读取九轴数据
-        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        if (!Calib_Status()) {//零偏校准结束
+        MPU9150_Read(); //读取九轴数据
+        if (!Calib_Status()) { //零偏校准结束
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            SendAttitude(angle.roll, angle.pitch, angle.yaw);//发送姿态数据帧
-            Send_RCData_Motor(PWM_IN_CH[2],PWM_IN_CH[0],PWM_IN_CH[3],PWM_IN_CH[1],motor1,motor2,motor3,motor4);//发送遥控器数据和电机速度数据帧
         }
         OSTimeDly(1);
     }
@@ -102,10 +118,10 @@ static void Task_Angel(void* p_arg)
 static void Task_PID(void* p_arg)
 {
     while (1) {
-        if (!Calib_Status()) {//零偏校准结束
-            Motor_Exp_Calc();// 计算遥控器的期望值
-            Motor_Calc();// 计算PID以及要输出的电机速度
-            PWM_OUT();// 输出电机速度
+        Motor_Exp_Calc(); // 计算遥控器的期望值
+        if (!Calib_Status()) { //零偏校准结束
+            Motor_Calc(); // 计算PID以及要输出的电机速度
+            PWM_OUT(); // 输出电机速度
         }
         OSTimeDly(5);
     }
@@ -118,11 +134,11 @@ static void Task_PID(void* p_arg)
 //    while (1) {
 //        OSTimeDly(1);
 //        MPU9150_Read();//读取数据
-//        SendSenser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
+//        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
 //        if (!Calib_Status()) {//零偏校准状态
 //            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);//姿态解算
 //            //IMUUpdateOnlyGyro(fGyro.x, fGyro.y, fGyro.z);//姿态解算
-//            SendAttitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
+//            Send_Attitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
 //        }
 //    }
 //}

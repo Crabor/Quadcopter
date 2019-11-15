@@ -16,11 +16,11 @@ int MPU6050_Init(void)
     }
     I2C_WriteByte(MPU6050_Addr, MPU6050_PWR_MGMT_1, 0x00); //解除休眠状态,使用内部8MHz振荡器
     I2C_WriteByte(MPU6050_Addr, MPU6050_SMPLRT_DIV, 0x00); //采样分频 (采样频率 = 陀螺仪输出频率 / (1+DIV)，采样频率1000hz）
-    I2C_WriteByte(MPU6050_Addr, MPU6050_CONFIG, 0x06);//设置低通滤波
+    I2C_WriteByte(MPU6050_Addr, MPU6050_CONFIG, 0x06); //设置低通滤波
     I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02); //打开旁路模式
     I2C_WriteByte(MPU6050_Addr, MPU6050_USER_CTRL, 0x00); //关闭主模式
     I2C_WriteByte(MPU6050_Addr, MPU6050_GYRO_CONFIG, 0x18); //陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒
-    I2C_WriteByte(MPU6050_Addr, MPU6050_ACCEL_CONFIG, 0x08); //加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8196LSB/g )
+    I2C_WriteByte(MPU6050_Addr, MPU6050_ACCEL_CONFIG, 0x08); //加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8192LSB/g )
 
 #if AK8975_EN
     I2C_WriteByte(AK8975_Addr, AK8975_CNTL, 0x00);
@@ -60,7 +60,7 @@ void HMC5883L_Init(void)
  * 调用  ：外部调用
  ************************************/
 uint16_t GetData_MPU6050(uint8_t REG_Address)
-{//不再使用，因为连续读六个数据更好
+{ //不再使用，因为连续读六个数据更好
     uint8_t H, L;
     H = I2C_ReadByte(MPU6050_Addr, REG_Address);
     L = I2C_ReadByte(MPU6050_Addr, REG_Address + 1);
@@ -75,7 +75,7 @@ uint16_t GetData_MPU6050(uint8_t REG_Address)
  * 调用  ：外部调用
  ************************************/
 uint16_t GetData_HMC5883L(uint8_t REG_Address)
-{//不再使用，因为连续读六个数据更好
+{ //不再使用，因为连续读六个数据更好
     uint8_t H, L;
     H = I2C_ReadByte(HMC5883L_Addr, REG_Address);
     L = I2C_ReadByte(HMC5883L_Addr, REG_Address + 1);
