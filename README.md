@@ -45,6 +45,10 @@ IDE：`Keil v5`
 ## 工程结构
 
 ```txt
+├── docs
+│   ├── 电压分配.txt
+│   ├── 引脚配置.txt
+│   └── 九轴数据变化.txt
 ├── PCB
 │   ├── IntLib
 │   └── PCB

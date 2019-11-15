@@ -45,6 +45,10 @@ Compiler" `ARM Compiler`(Integrated in `Keil uVision`) or `gcc-arm-none-eabi`(`L
 ## Project Structure
 
 ```txt
+├── docs
+│   ├── 电压分配.txt
+│   ├── 引脚配置.txt
+│   └── 九轴数据变化.txt
 ├── PCB
 │   ├── IntLib
 │   └── PCB
