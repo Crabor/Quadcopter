@@ -2,6 +2,12 @@
 #define PID_H
 #include "includes.h"
 
+#define CORE_INT_SEP_MAX 300.0f //内环积分分离幅值 
+#define CORE_INT_MAX 1000.0f //内环积分幅值
+#define PID_OUT_MAX 500.0f //PID输出幅值
+#define PWM_OUT_MAX 2000.0f //PWM输出幅值最大值
+#define PWM_OUT_MIN 1000.0f //PWM输出幅值最小值
+
 typedef struct {
     float eK; //本次误差
     float eK_1; //上次误差
@@ -9,10 +15,10 @@ typedef struct {
     float Kp; //比例系数
     float Ti; //积分时间
     float Td; //微分时间
-    float output;//pid输出
+    float output; //pid输出
 } PID;
 
-extern PID rollCore, rollShell, pitchCore, pitchShell, yawCore, yawShell; //六个环的pid结构体
+extern PID rollCore, rollShell, pitchCore, pitchShell, yawCore; //五个环的pid结构体
 extern float pidT; //采样周期
 extern float pidRoll, pidPitch, pidYaw; //pid输出
 extern float expRoll, expPitch, expYaw, expThr; //期望值

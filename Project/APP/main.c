@@ -15,7 +15,7 @@ Angle angle; //姿态解算-角度值
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
-PID rollCore, rollShell, pitchCore, pitchShell, yawCore, yawShell; //六个环的pid结构体
+PID rollCore, rollShell, pitchCore, pitchShell, yawCore; //五个环的pid结构体，yaw不需要外环
 float pidT; //采样周期
 float pidRoll, pidPitch, pidYaw; //pid输出
 float expRoll, expPitch, expYaw, expThr; //期望值
@@ -91,14 +91,14 @@ static void Task_Startup(void* p_arg)
 static void Task_COM(void* p_arg)
 {
     while (1) {
-        //Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
         Send_expVal(0xF1, expRoll, expPitch, expYaw, expThr); //发送遥控器数据转换成的期望值
         if (!Calib_Status()) { //零偏校准结束
             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
-            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, pitchShell.output, pitchCore.output, yawShell.output, yawCore.output); //发送内外环PID计算结果
+            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, pitchShell.output, pitchCore.output, 0.0f, yawCore.output); //发送内外环PID计算结果
         }
-        OSTimeDly(3);
+        OSTimeDly(10);
     }
 }
 
@@ -123,7 +123,7 @@ static void Task_PID(void* p_arg)
             Motor_Calc(); // 计算PID以及要输出的电机速度
             PWM_OUT(); // 输出电机速度
         }
-        OSTimeDly(5);
+        OSTimeDly(3);
     }
 }
 

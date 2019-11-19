@@ -4,22 +4,18 @@
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
 
-float rollShellKp = 1.0f; //外环Kp
-float rollShellTi = 1.0f; //外环Ti
-float rollCoreKp = 1.0f; //内环Kp
-float rollCoreTi = 1.0f; //内环Ti
-float rollCoreTd = 0.0f; //内环Td
+float rollShellKp = 1.5f; //外环Kp
+float rollCoreKp = 0.4f; //内环Kp
+float rollCoreTi = 0.04f; //内环Ti
+float rollCoreTd = 3.0f; //内环Td
 
 float pitchShellKp = 1.0f;
-float pitchShellTi = 1.0f;
 float pitchCoreKp = 1.0f;
-float pitchCoreTi = 1.0f;
+float pitchCoreTi = 10000.0f;
 float pitchCoreTd = 0.0f;
 
-float yawShellKp = 1.0f;
-float yawShellTi = 1.0f;
 float yawCoreKp = 1.0f;
-float yawCoreTi = 1.0f;
+float yawCoreTi = 10000.0f;
 float yawCoreTd = 0.0f;
 
 /******************************************************************************
@@ -30,42 +26,20 @@ void PID_Init(void)
 {
     //roll
     rollShell.Kp = rollShellKp;
-    rollShell.Ti = rollShellTi;
-    rollShell.eSum = 0.0f;
-    rollShell.output = 0.0f;
     rollCore.Kp = rollCoreKp;
     rollCore.Ti = rollCoreTi;
     rollCore.Td = rollCoreTd;
-    rollCore.eK = 0.0f;
-    rollCore.eK_1 = 0.0f;
-    rollCore.eSum = 0.0f;
-    rollCore.output = 0.0f;
 
     //pitch
     pitchShell.Kp = pitchShellKp;
-    pitchShell.Ti = pitchShellTi;
-    pitchShell.eSum = 0.0f;
-    pitchShell.output = 0.0f;
     pitchCore.Kp = pitchCoreKp;
     pitchCore.Ti = pitchCoreTi;
     pitchCore.Td = pitchCoreTd;
-    pitchCore.eK = 0.0f;
-    pitchCore.eK_1 = 0.0f;
-    pitchCore.eSum = 0.0f;
-    pitchCore.output = 0.0f;
 
     //yaw
-    yawShell.Kp = yawShellKp;
-    yawShell.Ti = yawShellTi;
-    yawShell.eSum = 0.0f;
-    yawShell.output = 0.0f;
     yawCore.Kp = yawCoreKp;
     yawCore.Ti = yawCoreTi;
     yawCore.Td = yawCoreTd;
-    yawCore.eK = 0.0f;
-    yawCore.eK_1 = 0.0f;
-    yawCore.eSum = 0.0f;
-    yawCore.output = 0.0f;
 }
 
 /******************************************************************************
@@ -79,19 +53,38 @@ void PID_Init(void)
 *******************************************************************************/
 float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 {
-    float shellKi, coreKi, coreKd;
+    float coreKi, coreKd;
+    int coreKiFlag;
 
-    shellKi = pidT / shell->Ti;
     coreKi = pidT / core->Ti;
     coreKd = core->Td / pidT;
 
-    shell->eK = angleErr;
-    shell->eSum = Limit(shell->eSum + angleErr, -300, 300); //外环积分限幅
-    shell->output = shell->Kp * (shell->eK + shell->eSum * shellKi); //外环输出
+    shell->output = shell->Kp * angleErr; //外环输出
 
     core->eK = shell->output - gyro; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
-    core->eSum = Limit(core->eSum + core->eK, -500, 500); //内环积分限幅
-    core->output = core->Kp * (core->eK + core->eSum * coreKi + (core->eK - core->eK_1) * coreKd); //内环输出
+
+    //内环积分分离
+    if (core->eK > CORE_INT_SEP_MAX || core->eK < -CORE_INT_SEP_MAX) {
+        coreKiFlag = 0;
+    } else {
+        coreKiFlag = 1;
+        //内环积分限幅
+        if (core->eSum > CORE_INT_MAX) {
+            if (core->eK < 0)
+                core->eSum += core->eK;
+        } else if (core->eSum < -CORE_INT_MAX) {
+            if (core->eK > 0)
+                core->eSum += core->eK;
+        } else {
+            core->eSum += core->eK;
+        }
+    }
+
+//    //TODO
+//    coreKiFlag = 0;
+
+    core->output = core->Kp * (core->eK + core->eSum * coreKi * coreKiFlag + (core->eK - core->eK_1) * coreKd); //内环输出
+    core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
 
     core->eK_1 = core->eK;
 
@@ -110,27 +103,22 @@ void Motor_Calc(void)
     //计算PID
     //TODO:注意正负
     pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y, &rollShell, &rollCore);
-    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore); //
+    //pidPitch =  PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore); //
     //TODO:yaw 与pitch、roll的pid计算不一样
     //pidYaw = PID_Calc(expYaw - angle.yaw, fGyro.z, &yawShell, &yawCore);
 
-    motor1 = 1000;
-    motor2 = 1000;
-    motor3 = 1000;
-    motor4 = 1000;
-
     //PWM限幅
-    motor1 = Limit(expThr - pidPitch + pidRoll - pidYaw, 1000, 2000);
-    motor2 = Limit(expThr - pidPitch - pidRoll + pidYaw, 1000, 2000);
-    motor3 = Limit(expThr + pidPitch + pidRoll + pidYaw, 1000, 2000);
-    motor4 = Limit(expThr + pidPitch - pidRoll - pidYaw, 1000, 2000);
+    motor1 = Limit(expThr - pidPitch + pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor2 = Limit(expThr - pidPitch - pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor3 = Limit(expThr + pidPitch + pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor4 = Limit(expThr + pidPitch - pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
 
-    //如果油门过小或者机体过于倾斜，则停止飞行
-    if (expThr <= 1050 || angle.pitch >= 35 || angle.pitch <= -35 || angle.roll >= 35 || angle.roll <= -35) {
-        motor1 = 1000;
-        motor2 = 1000;
-        motor3 = 1000;
-        motor4 = 1000;
+    //如果油门过小或者机体倾斜角大于65度，则停止飞行
+    if (expThr <= 1050 || angle.pitch >= 65 || angle.pitch <= -65 || angle.roll >= 65 || angle.roll <= -65) {
+        motor1 = PWM_OUT_MIN;
+        motor2 = PWM_OUT_MIN;
+        motor3 = PWM_OUT_MIN;
+        motor4 = PWM_OUT_MIN;
     }
 }
 
@@ -159,6 +147,9 @@ void Motor_Exp_Calc(void)
     PWMInCh2 = Limit(PWM_IN_CH[1], 1000, 2000);
     PWMInCh3 = Limit(PWM_IN_CH[2], 1000, 2000);
     PWMInCh4 = Limit(PWM_IN_CH[3], 1000, 2000);
+
+    //调节角速度环
+//    expRoll = (PWMInCh4 - 1500)*0.1f; 
 
     //转化为期望值
     expRoll = ((PWMInCh4 - 1500) * 0.04f); //最大倾角20°
