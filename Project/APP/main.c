@@ -22,6 +22,7 @@ float expRoll, expPitch, expYaw, expThr; //期望值
 /*******************************************************************************************************/
 
 /*************************************串口中断发送***********************************************************/
+//OS_EVENT *sendBufMutex;//发送数据缓存锁
 u8 sendBuf[50]; //发送数据缓存
 /*******************************************************************************************************/
 
@@ -36,9 +37,9 @@ float motor1, motor2, motor3, motor4; //四个电机速度:左前顺时针，右
 /**********************************操作系统相关*********************************************************/
 // 任务优先级定义
 #define TASK_STARTUP_PRIO 4
-#define TASK_COM_PRIO 7
-#define TASK_ANGEL_PRIO 5
-#define TASK_PID_PRIO 6
+#define TASK_COM_PRIO 8
+#define TASK_ANGEL_PRIO 6
+#define TASK_PID_PRIO 7
 // 任务栈大小定义
 #define TASK_STARTUP_STK_SIZE 1024
 #define TASK_COM_STK_SIZE 512
@@ -67,6 +68,7 @@ int main(void)
 
 static void Task_Startup(void* p_arg)
 {
+    //INT8U err;
 // etect OS task current capacity
 #if (OS_TASK_STAT_EN > 0)
     OSStatInit();
@@ -78,6 +80,9 @@ static void Task_Startup(void* p_arg)
     TIM3->CCR4 = 54;
     OSTimeDly(5000);
     Open_Calib(); //打开零偏校准
+    
+    //Create mutex
+    //sendBufMutex=OSMutexCreate(5,&err);
 
     // Create functional task
     OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
@@ -105,6 +110,7 @@ static void Task_COM(void* p_arg)
 // 姿态解算任务
 static void Task_Angel(void* p_arg)
 {
+    //INT8U err;
     while (1) {
         MPU9150_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
@@ -117,11 +123,12 @@ static void Task_Angel(void* p_arg)
 // PID任务
 static void Task_PID(void* p_arg)
 {
+    //INT8U err;
     while (1) {
         Motor_Exp_Calc(); // 计算遥控器的期望值
         if (!Calib_Status()) { //零偏校准结束
             Motor_Calc(); // 计算PID以及要输出的电机速度
-            PWM_OUT(); // 输出电机速度
+            //PWM_OUT(); // 输出电机速度
         }
         OSTimeDly(3);
     }
@@ -129,16 +136,17 @@ static void Task_PID(void* p_arg)
 
 //static void Task_Startup(void* p_arg)
 //{
-//    u16 temp;
-//    Open_Calib();//打开零偏校准
+////    u16 temp;
+////    Open_Calib();//打开零偏校准
 //    while (1) {
 //        OSTimeDly(1);
-//        MPU9150_Read();//读取数据
-//        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
-//        if (!Calib_Status()) {//零偏校准状态
-//            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);//姿态解算
-//            //IMUUpdateOnlyGyro(fGyro.x, fGyro.y, fGyro.z);//姿态解算
-//            Send_Attitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
-//        }
+//        Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4);
+////        MPU9150_Read();//读取数据
+////        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
+////        if (!Calib_Status()) {//零偏校准状态
+////            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);//姿态解算
+////            //IMUUpdateOnlyGyro(fGyro.x, fGyro.y, fGyro.z);//姿态解算
+////            Send_Attitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
+////        }
 //    }
 //}

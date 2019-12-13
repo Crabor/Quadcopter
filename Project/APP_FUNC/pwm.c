@@ -226,10 +226,7 @@ void TIM5_PWM_IN_IRQ(void)
             }
         }
     }
-    // i = 2;
-    // SendPWMIN(0xF1, &TIM5_CAPTURE_STA[i], &TIM5_CAPTURE_OVF[i], &TIM5_CAPTURE_VAL[i][0], &TIM5_CAPTURE_VAL[i][1], &PWM_IN_CH[i]);
 }
-
 
 //库函数版定时器中断
 // // Capture status of channels
@@ -367,8 +364,8 @@ void TIM5_PWM_IN_IRQ(void)
 
 void PWM_OUT(void)
 {
-    TIM3->CCR1 = motor2*PWM_IN_TO_OUT;
-    TIM3->CCR2 = motor4*PWM_IN_TO_OUT;
-    TIM3->CCR3 = motor3*PWM_IN_TO_OUT;
-    TIM3->CCR4 = motor1*PWM_IN_TO_OUT;
+    TIM3->CCR1 = motor2 * PWM_IN_TO_OUT;
+    TIM3->CCR2 = motor4 * PWM_IN_TO_OUT;
+    TIM3->CCR3 = motor3 * PWM_IN_TO_OUT;
+    TIM3->CCR4 = motor1 * PWM_IN_TO_OUT;
 }

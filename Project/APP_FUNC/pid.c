@@ -4,10 +4,10 @@
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
 
-float rollShellKp = 1.5f; //外环Kp
-float rollCoreKp = 0.4f; //内环Kp
-float rollCoreTi = 0.04f; //内环Ti
-float rollCoreTd = 3.0f; //内环Td
+float rollShellKp = 1.6f; //外环Kp
+float rollCoreKp = 4.0f; //内环Kp
+float rollCoreTi = 0.08f; //内环Ti
+float rollCoreTd = 0.05f; //内环Td
 
 float pitchShellKp = 1.0f;
 float pitchCoreKp = 1.0f;
@@ -53,39 +53,52 @@ void PID_Init(void)
 *******************************************************************************/
 float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 {
-    float coreKi, coreKd;
+    float shellKd, coreKi, coreKd;
     int coreKiFlag;
 
+    shellKd = shell->Td / pidT;
     coreKi = pidT / core->Ti;
     coreKd = core->Td / pidT;
 
-    shell->output = shell->Kp * angleErr; //外环输出
+    // shell->eK = angleErr;
+    // shell->output = shell->Kp * shell->eK;
 
-    core->eK = shell->output - gyro; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
+    // core->eK = shell->output - gyro*RAD_TO_ANGLE; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
+    core->eK = expRoll - gyro * RAD_TO_ANGLE; //角速度一定要化成角度/秒，弧度/秒害死人
 
-    //内环积分分离
-    if (core->eK > CORE_INT_SEP_MAX || core->eK < -CORE_INT_SEP_MAX) {
-        coreKiFlag = 0;
-    } else {
-        coreKiFlag = 1;
-        //内环积分限幅
-        if (core->eSum > CORE_INT_MAX) {
-            if (core->eK < 0)
-                core->eSum += core->eK;
-        } else if (core->eSum < -CORE_INT_MAX) {
-            if (core->eK > 0)
-                core->eSum += core->eK;
-        } else {
+    // //内环积分分离
+    // if (core->eK > CORE_INT_SEP_MAX || core->eK < CORE_INT_SEP_MIN) {
+    //     coreKiFlag = 0;
+    // } else {
+    //     coreKiFlag = 1;
+    //     //内环积分限幅
+    //     if (core->eSum > CORE_INT_MAX) {
+    //         if (core->eK < 0.0f)
+    //             core->eSum += core->eK;
+    //     } else if (core->eSum < CORE_INT_MIN) {
+    //         if (core->eK > 0.0f)
+    //             core->eSum += core->eK;
+    //     } else {
+    //         core->eSum += core->eK;
+    //     }
+    // }
+
+    //TODO:内环积分浮点数比大小出问题
+    //内环积分限幅
+    if (core->eSum > CORE_INT_MAX) {
+        if (core->eK < -3.0f)
             core->eSum += core->eK;
-        }
+    } else if (core->eSum < CORE_INT_MIN) {
+        if (core->eK > 3.0f)
+            core->eSum += core->eK;
+    } else {
+        core->eSum += core->eK;
     }
 
-//    //TODO
-//    coreKiFlag = 0;
+    coreKiFlag = 0;
 
     core->output = core->Kp * (core->eK + core->eSum * coreKi * coreKiFlag + (core->eK - core->eK_1) * coreKd); //内环输出
     core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
-
     core->eK_1 = core->eK;
 
     return core->output;
@@ -149,7 +162,7 @@ void Motor_Exp_Calc(void)
     PWMInCh4 = Limit(PWM_IN_CH[3], 1000, 2000);
 
     //调节角速度环
-//    expRoll = (PWMInCh4 - 1500)*0.1f; 
+    //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
     expRoll = ((PWMInCh4 - 1500) * 0.04f); //最大倾角20°
