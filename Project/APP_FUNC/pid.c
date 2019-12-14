@@ -5,9 +5,9 @@ extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
 
 float rollShellKp = 1.6f; //外环Kp
-float rollCoreKp = 4.0f; //内环Kp
-float rollCoreTi = 0.08f; //内环Ti
-float rollCoreTd = 0.05f; //内环Td
+float rollCoreKp = 2.5f; //内环Kp
+float rollCoreTi = 0.5f; //内环Ti
+float rollCoreTd = 0.06f; //内环Td
 
 float pitchShellKp = 1.0f;
 float pitchCoreKp = 1.0f;
@@ -75,7 +75,7 @@ float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
     //     if (core->eSum > CORE_INT_MAX) {
     //         if (core->eK < 0.0f)
     //             core->eSum += core->eK;
-    //     } else if (core->eSum < CORE_INT_MIN) {
+    //     } else if (core->eSum < -CORE_INT_MAX) {
     //         if (core->eK > 0.0f)
     //             core->eSum += core->eK;
     //     } else {
@@ -88,14 +88,14 @@ float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
     if (core->eSum > CORE_INT_MAX) {
         if (core->eK < -3.0f)
             core->eSum += core->eK;
-    } else if (core->eSum < CORE_INT_MIN) {
+    } else if (core->eSum < -CORE_INT_MAX) {
         if (core->eK > 3.0f)
             core->eSum += core->eK;
     } else {
         core->eSum += core->eK;
     }
 
-    coreKiFlag = 0;
+    coreKiFlag = 1;
 
     core->output = core->Kp * (core->eK + core->eSum * coreKi * coreKiFlag + (core->eK - core->eK_1) * coreKd); //内环输出
     core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
@@ -165,7 +165,7 @@ void Motor_Exp_Calc(void)
     //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
-    expRoll = ((PWMInCh4 - 1500) * 0.04f); //最大倾角20°
+    expRoll = ((PWMInCh4 - 1500) * 0.06f);
     expPitch = ((PWMInCh2 - 1500) * 0.04f);
     //TODO:yaw与roll、pitch不一样
     // expYaw = (float)((PWMInCh1 - 1500) * 0.04f);

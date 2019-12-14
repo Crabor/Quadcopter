@@ -3,7 +3,7 @@
 #include "includes.h"
 
 #define CORE_INT_SEP_MAX 300.0f //内环积分分离幅值 
-#define CORE_INT_MAX 1000.0f //内环积分幅值
+#define CORE_INT_MAX 4000.0f //内环积分幅值
 #define PID_OUT_MAX 500.0f //PID输出幅值
 #define PWM_OUT_MAX 2000.0f //PWM输出幅值最大值
 #define PWM_OUT_MIN 1000.0f //PWM输出幅值最小值

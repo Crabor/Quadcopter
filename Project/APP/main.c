@@ -80,7 +80,7 @@ static void Task_Startup(void* p_arg)
     TIM3->CCR4 = 54;
     OSTimeDly(5000);
     Open_Calib(); //打开零偏校准
-    
+
     //Create mutex
     //sendBufMutex=OSMutexCreate(5,&err);
 
@@ -95,13 +95,17 @@ static void Task_Startup(void* p_arg)
 
 static void Task_COM(void* p_arg)
 {
+    float P, I, D;
     while (1) {
-        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
         Send_expVal(0xF1, expRoll, expPitch, expYaw, expThr); //发送遥控器数据转换成的期望值
         if (!Calib_Status()) { //零偏校准结束
             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
-            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, pitchShell.output, pitchCore.output, 0.0f, yawCore.output); //发送内外环PID计算结果
+            P = rollCore.Kp * rollCore.eK;
+            I = rollCore.Kp * rollCore.eSum * pidT / rollCore.Ti;
+            D = rollCore.Kp * (rollCore.eK - rollCore.eK_1) * rollCore.Td / pidT;
+            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, P, I, D, yawCore.output); //发送内外环PID计算结果
         }
         OSTimeDly(10);
     }
@@ -128,7 +132,7 @@ static void Task_PID(void* p_arg)
         Motor_Exp_Calc(); // 计算遥控器的期望值
         if (!Calib_Status()) { //零偏校准结束
             Motor_Calc(); // 计算PID以及要输出的电机速度
-            //PWM_OUT(); // 输出电机速度
+            PWM_OUT(); // 输出电机速度
         }
         OSTimeDly(3);
     }
