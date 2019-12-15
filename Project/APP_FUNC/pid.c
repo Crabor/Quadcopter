@@ -4,15 +4,15 @@
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
 
-float rollShellKp = 1.6f; //外环Kp
-float rollCoreKp = 2.5f; //内环Kp
+float rollShellKp = 4.4f; //外环Kp
+float rollCoreKp = 2.6f; //内环Kp
 float rollCoreTi = 0.5f; //内环Ti
-float rollCoreTd = 0.06f; //内环Td
+float rollCoreTd = 0.08f; //内环Td
 
-float pitchShellKp = 1.0f;
-float pitchCoreKp = 1.0f;
-float pitchCoreTi = 10000.0f;
-float pitchCoreTd = 0.0f;
+float pitchShellKp = 4.4f;
+float pitchCoreKp = 2.6f;
+float pitchCoreTi = 0.5f;
+float pitchCoreTd = 0.08f;
 
 float yawCoreKp = 1.0f;
 float yawCoreTi = 10000.0f;
@@ -53,18 +53,18 @@ void PID_Init(void)
 *******************************************************************************/
 float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 {
-    float shellKd, coreKi, coreKd;
+    float coreKi, coreKd;
     int coreKiFlag;
 
-    shellKd = shell->Td / pidT;
     coreKi = pidT / core->Ti;
     coreKd = core->Td / pidT;
 
-    // shell->eK = angleErr;
-    // shell->output = shell->Kp * shell->eK;
+    shell->eK = angleErr;
+    shell->output = shell->Kp * shell->eK;
+    shell->eK_1 = shell->eK;
 
-    // core->eK = shell->output - gyro*RAD_TO_ANGLE; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
-    core->eK = expRoll - gyro * RAD_TO_ANGLE; //角速度一定要化成角度/秒，弧度/秒害死人
+    core->eK = shell->output - gyro * RAD_TO_ANGLE; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
+    //core->eK = expRoll - gyro * RAD_TO_ANGLE; //角速度一定要化成角度/秒，弧度/秒害死人
 
     // //内环积分分离
     // if (core->eK > CORE_INT_SEP_MAX || core->eK < CORE_INT_SEP_MIN) {
@@ -116,7 +116,7 @@ void Motor_Calc(void)
     //计算PID
     //TODO:注意正负
     pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y, &rollShell, &rollCore);
-    //pidPitch =  PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore); //
+    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore);
     //TODO:yaw 与pitch、roll的pid计算不一样
     //pidYaw = PID_Calc(expYaw - angle.yaw, fGyro.z, &yawShell, &yawCore);
 
@@ -165,7 +165,7 @@ void Motor_Exp_Calc(void)
     //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
-    expRoll = ((PWMInCh4 - 1500) * 0.06f);
+    expRoll = ((PWMInCh4 - 1500) * 0.04f);
     expPitch = ((PWMInCh2 - 1500) * 0.04f);
     //TODO:yaw与roll、pitch不一样
     // expYaw = (float)((PWMInCh1 - 1500) * 0.04f);
