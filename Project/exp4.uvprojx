@@ -499,16 +499,6 @@
               <FilePath>.\APP_FUNC\iic.c</FilePath>
             </File>
             <File>
-              <FileName>MPU9150.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\APP_FUNC\MPU9150.h</FilePath>
-            </File>
-            <File>
-              <FileName>MPU9150.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\APP_FUNC\MPU9150.c</FilePath>
-            </File>
-            <File>
               <FileName>IMU.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\APP_FUNC\IMU.h</FilePath>
@@ -527,6 +517,16 @@
               <FileName>pid.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\APP_FUNC\pid.h</FilePath>
+            </File>
+            <File>
+              <FileName>GY86.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\APP_FUNC\GY86.c</FilePath>
+            </File>
+            <File>
+              <FileName>GY86.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\APP_FUNC\GY86.h</FilePath>
             </File>
           </Files>
         </Group>

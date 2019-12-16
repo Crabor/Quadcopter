@@ -2,8 +2,6 @@
 #define APP_CFG_H
 
 //选择编译开关
-//AK8975还是HMC388L
-#define AK8975_EN 0
 //串口发送是否采用中断形式
 #define USART_IT_EN 0
 
@@ -15,7 +13,7 @@
 #define USART_EN 1
 #define PWM_EN 1
 #define I2C_EN 1
-#define MPU9150_EN 1
+#define GY86_EN 1
 #define IMU_EN 1
 #define DELAY_EN 1
 #define PID_EN 1
@@ -52,8 +50,8 @@
 #include "iic.h"
 #endif
 
-#if MPU9150_EN
-#include "MPU9150.h"
+#if GY86_EN
+#include "GY86.h"
 #endif
 
 #if IMU_EN

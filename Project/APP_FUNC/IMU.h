@@ -61,20 +61,15 @@ extern Gyro gyro, offsetGyro; //原始数据、零偏数据
 extern Mag mag;//原始数据
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
-//extern float ACC_IIR_FACTOR;
 
 // 函数声明
 float invSqrt(float x);
 void Open_Calib(void);
 u8 Calib_Status(void);
 void MPU6050_Offset(void);
-void MPU9150_Read(void);
-// void Calculate_FilteringCoefficient(float Time, float cutOff);
-// void ACC_IIR_Filter(Acc* accIn, Acc* accOut);
-// void Gyro_Filter(Gyro* gyroIn, Gyro* gyroOut);
+void GY86_Read(void);
 void Quat_Init(void);
 void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-void IMUUpdateOnlyGyro(float gx, float gy, float gz);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
 #endif

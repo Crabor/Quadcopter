@@ -610,6 +610,7 @@ void  OSInit (void)
 #if OS_DEBUG_EN > 0u
     OSDebugInit();
 #endif
+//    OSIntNesting=0;////////////////////////////////////////////////////
 }
 /*$PAGE*/
 /*

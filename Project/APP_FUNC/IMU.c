@@ -113,33 +113,13 @@ void MPU6050_Offset(void)
 }
 
 /******************************************************************************
-函数原型：	void MPU9150_Read(void)
+函数原型：	void GY86_Read(void)
 功    能：	读取MPU6050的16位数据
 *******************************************************************************/
-void MPU9150_Read(void)
+void GY86_Read(void)
 {
     uint8_t dataBuf[14];
-
-#if !AK8975_EN
-    if (!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, dataBuf)) { //必须连续读完这六个数据，否则会导致隔很长一段时间才出新数据
-        mag.x = (dataBuf[0] << 8) | dataBuf[1];
-        mag.y = (dataBuf[4] << 8) | dataBuf[5];
-        mag.z = (dataBuf[2] << 8) | dataBuf[3];
-
-        // 读取的原数据为补码形式，这里完成转换
-        if (mag.x > 0x7fff)
-            mag.x -= 0xffff;
-        if (mag.y > 0x7fff)
-            mag.y -= 0xffff;
-        if (mag.z > 0x7fff)
-            mag.z -= 0xffff;
-    }
-#else
-    mag.x = GetData_AK8975(AK8975_MAG_XOUT_L);
-    mag.y = GetData_AK8975(AK8975_MAG_YOUT_L);
-    mag.z = GetData_AK8975(AK8975_MAG_ZOUT_L);
-#endif
-
+    
     if (!i2cread(MPU6050_Addr_Real, MPU6050_ACCEL_XOUT_H, 14, dataBuf)) {
         acc.x = ((((int16_t)dataBuf[0]) << 8) | dataBuf[1]) - offsetAcc.x;
         acc.y = ((((int16_t)dataBuf[2]) << 8) | dataBuf[3]) - offsetAcc.y;
@@ -154,62 +134,22 @@ void MPU9150_Read(void)
         fGyro.z = (float)(gyro.z * RAW_TO_RAD);
     }
 
+    if (!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, dataBuf)) { //必须连续读完这六个数据，否则会导致隔很长一段时间才出新数据
+        mag.x = (dataBuf[0] << 8) | dataBuf[1];
+        mag.y = (dataBuf[4] << 8) | dataBuf[5];
+        mag.z = (dataBuf[2] << 8) | dataBuf[3];
+
+        // 读取的原数据为补码形式，这里完成转换
+        if (mag.x > 0x7fff)
+            mag.x -= 0xffff;
+        if (mag.y > 0x7fff)
+            mag.y -= 0xffff;
+        if (mag.z > 0x7fff)
+            mag.z -= 0xffff;
+    }
+
     MPU6050_Offset();
 }
-
-////////////////因为MPU6050自带低通滤波，所以这里就不需要对加速度数据和陀螺仪数据进行滤波了////////////////////////////////////////
-
-// /******************************************************************************
-// 函数原型：	void Calculate_FilteringCoefficient(float Time, float cutOff)
-// 功    能：	iir低通滤波参数计算
-// *******************************************************************************/
-// void Calculate_FilteringCoefficient(float Time, float cutOff)
-// {
-//     ACC_IIR_FACTOR = Time / (Time + 1 / (2.0f * PI * cutOff));
-// }
-
-// /******************************************************************************
-// 函数原型：	void ACC_IIR_Filter(Acc *accIn,Acc *accOut)
-// 功    能：	iir低通滤波
-// *******************************************************************************/
-// void ACC_IIR_Filter(Acc* accIn, Acc* accOut)
-// {
-//     accOut->x = accOut->x + ACC_IIR_FACTOR * (accIn->x - accOut->x);
-//     accOut->y = accOut->y + ACC_IIR_FACTOR * (accIn->y - accOut->y);
-//     accOut->z = accOut->z + ACC_IIR_FACTOR * (accIn->z - accOut->z);
-// }
-
-// /******************************************************************************
-// 函数原型：	void Gyro_Filter(Gyro *gyroIn,Gyro *gyroOut)
-// 功    能：	gyro窗口滑动滤波
-// *******************************************************************************/
-// void Gyro_Filter(Gyro* gyroIn, Gyro* gyroOut)
-// {
-//     static int16_t Filter_x[FILTER_NUM], Filter_y[FILTER_NUM], Filter_z[FILTER_NUM];
-//     static uint8_t Filter_count;
-//     int32_t Filter_sum_x = 0, Filter_sum_y = 0, Filter_sum_z = 0;
-//     uint8_t i = 0;
-
-//     Filter_x[Filter_count] = gyroIn->x;
-//     Filter_y[Filter_count] = gyroIn->y;
-//     Filter_z[Filter_count] = gyroIn->z;
-
-//     for (i = 0; i < FILTER_NUM; i++) {
-//         Filter_sum_x += Filter_x[i];
-//         Filter_sum_y += Filter_y[i];
-//         Filter_sum_z += Filter_z[i];
-//     }
-
-//     gyroOut->x = Filter_sum_x / FILTER_NUM;
-//     gyroOut->y = Filter_sum_y / FILTER_NUM;
-//     gyroOut->z = Filter_sum_z / FILTER_NUM;
-
-//     Filter_count++;
-//     if (Filter_count == FILTER_NUM)
-//         Filter_count = 0;
-// }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 四元数初始化
 void Quat_Init(void)
@@ -217,7 +157,6 @@ void Quat_Init(void)
     int16_t initMx, initMy, initMz;
     float initYaw, initPitch, initRoll;
 
-#if !AK8975_EN
     uint8_t dataBuf[14];
     if (!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, dataBuf)) {
         initMx = (dataBuf[0] << 8) | dataBuf[1];
@@ -232,11 +171,6 @@ void Quat_Init(void)
         if (initMz > 0x7fff)
             initMz -= 0xffff;
     }
-#else
-    initMx = GetData_AK8975(AK8975_MAG_XOUT_L);
-    initMy = GetData_AK8975(AK8975_MAG_YOUT_L);
-    initMz = GetData_AK8975(AK8975_MAG_ZOUT_L);
-#endif
 
     //求出初始欧拉角，初始状态水平，所以roll、pitch为0
     initRoll = 0.0f;
@@ -285,7 +219,6 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     vx = 2 * (q1q3 - q0q2);
     vy = 2 * (q0q1 + q2q3);
     vz = q0q0 - q1q1 - q2q2 + q3q3;
-   
 
     //磁力计数据归一化
     norm = invSqrt(mx * mx + my * my + mz * mz);
@@ -305,16 +238,13 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     wy = 2 * by * (0.5f - q1q1 - q3q3) + 2 * bz * (q0q1 + q2q3);
     wz = 2 * by * (q2q3 - q0q1) + 2 * bz * (0.5f - q1q1 - q2q2);
 
-
     //误差计算（加速度和磁场强度一起）
     ex = (ay * vz - az * vy) + (my * wz - mz * wy);
     ey = (az * vx - ax * vz) + (mz * wx - mx * wz);
     ez = (ax * vy - ay * vx) + (mx * wy - my * wx);
 
-
     //由定时器获取采样周期的一半
     halfT = Get_AHRS_Time();
-
 
     //pi运算
     if (ex != 0.0f && ey != 0.0f && ez != 0.0f) {
@@ -334,39 +264,6 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     q1_last = q1;
     q2_last = q2;
     q3_last = q3;
-    // 积分增量运算
-    q0 = q0_last + (-q1_last * gx - q2_last * gy - q3_last * gz) * halfT;
-    q1 = q1_last + (q0_last * gx + q2_last * gz - q3_last * gy) * halfT;
-    q2 = q2_last + (q0_last * gy - q1_last * gz + q3_last * gx) * halfT;
-    q3 = q3_last + (q0_last * gz + q1_last * gy - q2_last * gx) * halfT;
-
-    // 归一化四元数
-    norm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-    q0 = q0 * norm; //w
-    q1 = q1 * norm; //x
-    q2 = q2 * norm; //y
-    q3 = q3 * norm; //z
-
-    //四元数转欧拉角
-    angle.roll = asin(2.0f * (q0 * q2 - q1 * q3)) * RAD_TO_ANGLE;
-    angle.pitch = -atan2(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * RAD_TO_ANGLE;
-    angle.yaw = atan2(2.0f * (q0 * q3 + q1 * q2), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD_TO_ANGLE;
-}
-
-void IMUUpdateOnlyGyro(float gx, float gy, float gz)
-{
-    float norm;
-    float q0_last, q1_last, q2_last, q3_last;
-
-    //由定时器获取采样周期的一半
-    halfT = Get_AHRS_Time();
-
-    // 保存四元数
-    q0_last = q0;
-    q1_last = q1;
-    q2_last = q2;
-    q3_last = q3;
-
     // 积分增量运算
     q0 = q0_last + (-q1_last * gx - q2_last * gy - q3_last * gz) * halfT;
     q1 = q1_last + (q0_last * gx + q2_last * gz - q3_last * gy) * halfT;

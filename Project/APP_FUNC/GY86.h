@@ -1,5 +1,5 @@
-#ifndef __MPU9150_H_
-#define __MPU9150_H_
+#ifndef __GY86_H_
+#define __GY86_H_
 #include "includes.h"
 #include "math.h"
 
@@ -88,28 +88,6 @@ Magnetometer Features(HMC5883L in GY-86)
 #define MPU6050_PWR_MGMT_1 0x6B //电源管理，典型值：0x00(正常启用)
 #define MPU6050_WHO_AM_I 0x75 //IIC地址寄存器(默认数值0x68，只读)
 
-/* AK8975 Register Address ------------------------------------------------------------*/
-#define AK8975_Addr 0x18 //IIC写入时的地址字节数据，0x0C左移一位，I2C_ReadByte()、I2C_WriteByte()时用
-#define AK8975_Addr_Real 0x0C //i2cread()、i2cwrite()时用这个地址
-#define AK8975_Device_ID 0x48
-
-#define AK8975_WIA 0x00
-#define AK8975_INFO 0x01
-#define AK8975_ST1 0x02
-#define AK8975_MAG_XOUT_L 0x03
-#define AK8975_MAG_XOUT_H 0x04
-#define AK8975_MAG_YOUT_L 0x05
-#define AK8975_MAG_YOUT_H 0x06
-#define AK8975_MAG_ZOUT_L 0x07
-#define AK8975_MAG_ZOUT_H 0x08
-#define AK8975_ST2 0x09
-#define AK8975_CNTL 0x0A
-#define AK8975_ASTC 0x0C
-#define AK8975_I2CDIS 0x0F
-#define AK8975_ASAX 0x10
-#define AK8975_ASAY 0x11
-#define AK8975_ASAZ 0x12
-
 /* HMC5883L Register Address ------------------------------------------------------------*/
 #define HMC5883L_Addr 0x3C //IIC写入时的地址字节数据，0x1E左移一位，I2C_ReadByte()、I2C_WriteByte()时用
 #define HMC5883L_Addr_Real 0x1E //i2cread()、i2cwrite()时用这个地址
@@ -129,8 +107,9 @@ Magnetometer Features(HMC5883L in GY-86)
 #define HMC5883L_ID_C 0x0C
 
 /* MS5611 Register Address ------------------------------------------------------------*/
-//#define MS561101BA_ADDR  0xec   //CBR=1 0x76 I2C address when CSB is connected to HIGH (VCC)
-#define MS561101BA_ADDR   0xEE   //CBR=0 0x77 I2C address when CSB is connected to LOW (GND)
+//#define MS561101BA_Addr  0xec   //CBR=1 0x76 I2C address when CSB is connected to HIGH (VCC)
+#define MS561101BA_Addr 0xEE //CBR=0 0x77 I2C address when CSB is connected to LOW (GND)
+#define MS561101BA_Addr_Real 0x77 
 
 // 定义MS561101BA内部地址
 // registers of the device
@@ -145,21 +124,20 @@ Magnetometer Features(HMC5883L in GY-86)
 #define MS561101BA_OSR_1024 0x04
 #define MS561101BA_OSR_2048 0x06
 #define MS561101BA_OSR_4096 0x08
-//#define  MS561101BA_D1_OSR_256 0x40 
-//#define  MS561101BA_D1_OSR_512 0x42 
-//#define  MS561101BA_D1_OSR_1024 0x44 
-//#define  MS561101BA_D1_OSR_2048 0x46 
-#define  MS561101BA_D1_OSR_4096 0x48 
-//#define  MS561101BA_D2_OSR_256 0x50 
-//#define  MS561101BA_D2_OSR_512 0x52 
-//#define  MS561101BA_D2_OSR_1024 0x54 
-//#define  MS561101BA_D2_OSR_2048 0x56 
-#define  MS561101BA_D2_OSR_4096 0x58 
-#define MS561101BA_PROM_BASE_ADDR 0xA0 // by adding ints from 0 to 6 we can read all the prom configuration values. 
+//#define  MS561101BA_D1_OSR_256 0x40
+//#define  MS561101BA_D1_OSR_512 0x42
+//#define  MS561101BA_D1_OSR_1024 0x44
+//#define  MS561101BA_D1_OSR_2048 0x46
+#define MS561101BA_D1_OSR_4096 0x48
+//#define  MS561101BA_D2_OSR_256 0x50
+//#define  MS561101BA_D2_OSR_512 0x52
+//#define  MS561101BA_D2_OSR_1024 0x54
+//#define  MS561101BA_D2_OSR_2048 0x56
+#define MS561101BA_D2_OSR_4096 0x58
+#define MS561101BA_PROM_BASE_ADDR 0xA0 // by adding ints from 0 to 6 we can read all the prom configuration values.
 // C1 will be at 0xA2 and all the subsequent are multiples of 2
 #define MS561101BA_PROM_REG_COUNT 6 // number of registers in the PROM
 #define MS561101BA_PROM_REG_SIZE 2 // size in bytes of a prom registry.
-
 
 //函数定义
 int MPU6050_Init(void);
@@ -167,7 +145,6 @@ void HMC5883L_Init(void);
 void MS561101BA_Init(void);
 uint16_t GetData_MPU6050(uint8_t REG_Address);
 uint16_t GetData_HMC5883L(uint8_t REG_Address);
-uint16_t GetData_AK8975(uint8_t REG_Address);
 void MS561101BA_Reset(void);
 void MS561101BA_readPROM(void);
 uint32_t MS561101BA_DO_CONVERSION(u8 command);

@@ -6,9 +6,7 @@ void BSP_Init(void){
 	USART6_Init(84,115200);
 	IIC_Init();
 	while(MPU6050_Init()!=1);//若MPU6050初始化不成功，则程序不向下运行;
-#if !AK8975_EN
 	HMC5883L_Init();
-#endif
     MS561101BA_Init();
 	Quat_Init();
 	PWM_OUT_Init();

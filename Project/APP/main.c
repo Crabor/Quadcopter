@@ -1,5 +1,5 @@
 #include "includes.h"
-
+#include "math.h"
 //为了各函数调用全局变量方便以及如果把全局变量放到各子文件会出现种种bug,
 //所以将大部分全局变量统一定义在主文件，其他子文件要用时用extern引用
 
@@ -64,7 +64,6 @@ static void Task_PID(void* p_arg);
 
 int main(void)
 {
-    BSP_Init();
     OSInit();
     OSTaskCreate(Task_Startup, (void*)0, &Task_Startup_STK[TASK_STARTUP_STK_SIZE - 1], TASK_STARTUP_PRIO);
     OSStart();
@@ -121,7 +120,7 @@ static void Task_Angel(void* p_arg)
 {
     //INT8U err;
     while (1) {
-        MPU9150_Read(); //读取九轴数据
+        GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
             IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
         }
@@ -145,19 +144,21 @@ static void Task_PID(void* p_arg)
 
 static void Task_Startup(void* p_arg)
 {
-    u8 i;
-    u32 t,p;
+    u32 t, h;
+    BSP_Init();
+    // etect OS task current capacity
+ #if (OS_TASK_STAT_EN > 0)
+    OSStatInit();
+ #endif
     while (1) {
         OSTimeDly(10);
-//        SendByte(0xF1,&i);
-//        i++;
-        MPU9150_Read();
-        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        t=Temperature;p=Pressure;
-        delay_ms(10);
+        t = Temperature;
+        h = 44300*(1-pow(Pressure/101325,1/5.256))*100;
         MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
         MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
-        SendWord(0xF1,&t);
-        SendWord(0xF2,&p);
+        SendWord(0xF1, &t);
+        SendWord(0xF2, &h);
+        GY86_Read();
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
     }
 }

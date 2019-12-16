@@ -1,4 +1,4 @@
-#include "MPU9150.h"
+#include "GY86.h"
 //因为MPU9150里面的磁力计AK8975有问题，所以后面改MPU9150为GY86了，里面的磁力计HMC5883L性能较好。
 //两种外设间切换通过AK8975_EN这个宏决定。为了避免麻烦所以文件名还是统一用MPU9150
 
@@ -29,16 +29,8 @@ int MPU6050_Init(void)
     I2C_WriteByte(MPU6050_Addr, MPU6050_CONFIG, 0x06); //设置低通滤波
     I2C_WriteByte(MPU6050_Addr, MPU6050_GYRO_CONFIG, 0x18); //陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒
     I2C_WriteByte(MPU6050_Addr, MPU6050_ACCEL_CONFIG, 0x08); //加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8192LSB/g )
-
-#if AK8975_EN
-    I2C_WriteByte(AK8975_Addr, AK8975_CNTL, 0x00);
-    delay_ms(100);
-    I2C_WriteByte(AK8975_Addr, AK8975_CNTL, 0x01);
-
-    if (I2C_ReadByte(AK8975_Addr, AK8975_WIA) != AK8975_Device_ID) { //检查MPU6050是否正常
-        return 0;
-    }
-#endif
+    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02);//打开旁路模式
+    I2C_WriteByte(MPU6050_Addr, MPU6050_USER_CTRL, 0x00);//关闭主模式
 
     return 1;
 }
@@ -52,14 +44,26 @@ int MPU6050_Init(void)
  *************************************/
 void HMC5883L_Init(void)
 {
-    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02); //打开旁路模式
-    I2C_WriteByte(MPU6050_Addr, MPU6050_USER_CTRL, 0x00); //关闭主模式
     // 设置标准数据输出速率75HZ
     I2C_WriteByte(HMC5883L_Addr, HMC5883L_CONFIG_A, 0x18);
     // 设置传感器磁场范围±1.3Ga
     I2C_WriteByte(HMC5883L_Addr, HMC5883L_CONFIG_B, 0x20);
     // 打开continuous measurement模式
     I2C_WriteByte(HMC5883L_Addr, HMC5883L_MODE, 0x00);
+}
+
+/************************************************************   
+* 函数名:MS561101BA_Init   
+* 描述 : MS561101BA初始化
+* 输入  :无   
+* 输出  :无    
+*/
+void MS561101BA_Init(void)
+{
+    MS561101BA_Reset();
+    delay_ms(100);
+    MS561101BA_readPROM();
+    delay_ms(100);
 }
 
 /*************************************
@@ -92,31 +96,6 @@ uint16_t GetData_HMC5883L(uint8_t REG_Address)
     return (H << 8) | L; //合成数据
 }
 
-/*************************************
- * 函数名：GetData_AK8975_MAG
- * 描述  ：获得16位数据
- * 输入  ：REG_Address 寄存器地址
- * 输出  ：返回寄存器数据
- * 调用  ：外部调用
- ************************************/
-uint16_t GetData_AK8975(uint8_t REG_Address)
-{
-    uint8_t H, L, err;
-    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02); //打开旁路模式
-
-    I2C_WriteByte(AK8975_Addr, AK8975_CNTL, 0x01);
-    //	while(I2C_ByteRead (AK8975_Addr,AK8975_ST1)==0x00);
-    delay_ms(10);
-    L = I2C_ReadByte(AK8975_Addr, REG_Address);
-    err = I2C_ReadByte(AK8975_Addr, AK8975_ST2) & 0x04;
-    if (err)
-        L = I2C_ReadByte(AK8975_Addr, REG_Address);
-    H = I2C_ReadByte(AK8975_Addr, REG_Address + 1);
-
-    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x00); //关闭旁路模式
-    return (H << 8) | L; //合成
-}
-
 /************************************************************   
 * 函数名:MS561101BA_Reset   
 * 描述 : 复位  
@@ -125,7 +104,7 @@ uint16_t GetData_AK8975(uint8_t REG_Address)
 */
 void MS561101BA_Reset(void)
 {
-    I2C_NoAddr_WriteByte(MS561101BA_ADDR, MS561101BA_RESET);
+    I2C_NoAddr_WriteByte(MS561101BA_Addr, MS561101BA_RESET);
 }
 
 /************************************************************   
@@ -140,11 +119,11 @@ void MS561101BA_readPROM(void)
     u8 temp1[2] = { 0 };
     u8 i;
     for (i = 0; i <= MS561101BA_PROM_REG_COUNT; i++) {
-        // I2C_Read_MultiBytes(MS561101BA_ADDR,MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE),2,temp1);
+        // I2C_Read_MultiBytes(MS561101BA_Addr,MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE),2,temp1);
 
         //value=temp1[0]<<8|temp1[1];
         //Cal_C[i]=value;
-        Cal_C[i] = I2C_Read_2Bytes(MS561101BA_ADDR, MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE));
+        Cal_C[i] = I2C_Read_2Bytes(MS561101BA_Addr, MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE));
     }
 }
 
@@ -158,17 +137,27 @@ uint32_t MS561101BA_DO_CONVERSION(uint8_t command)
 {
     uint32_t conversion;
 
-    I2C_NoAddr_WriteByte(MS561101BA_ADDR, command);
+    I2C_NoAddr_WriteByte(MS561101BA_Addr, command);
 
-    switch(command&0x0f){//延时,去掉数据错误
-        case 0:delay_us(900);break;
-        case 2:delay_ms(6);break;
-        case 4:delay_ms(8);break;
-        case 6:delay_ms(12);break;
-        case 8:delay_ms(20);break;
+    switch (command & 0x0f) { //延时,去掉数据错误
+    case 0:
+        delay_us(900);
+        break;
+    case 2:
+        delay_ms(6);
+        break;
+    case 4:
+        delay_ms(8);
+        break;
+    case 6:
+        delay_ms(12);
+        break;
+    case 8:
+        delay_ms(20);
+        break;
     }
 
-    conversion = I2C_Read_3Bytes(MS561101BA_ADDR, 0);
+    conversion = I2C_Read_3Bytes(MS561101BA_Addr, 0);
 
     return conversion;
 }
@@ -228,18 +217,4 @@ void MS561101BA_GetPressure(u8 OSR_Pres)
     SENS = SENS - SENS2;
 
     Pressure = (D1_Pres * SENS / 0x200000 - OFF) / 0x8000;
-}
-
-/************************************************************   
-* 函数名:MS561101BA_Init   
-* 描述 : MS561101BA初始化
-* 输入  :无   
-* 输出  :无    
-*/
-void MS561101BA_Init(void)
-{
-    MS561101BA_Reset();
-    delay_ms(100);
-    MS561101BA_readPROM();
-    delay_ms(100);
 }
