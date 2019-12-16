@@ -14,6 +14,11 @@ Angle angle; //姿态解算-角度值
 // float ACC_IIR_FACTOR;
 /*******************************************************************************************************/
 
+/**********************************高度相关**************************************************************/
+float Pressure; //温度补偿大气压
+float Temperature; //实际温度
+/*******************************************************************************************************/
+
 /***********************************PID相关*********************************************************/
 PID rollCore, rollShell, pitchCore, pitchShell, yawCore; //五个环的pid结构体，yaw不需要外环
 float pidT; //采样周期
@@ -66,32 +71,32 @@ int main(void)
     return 0;
 }
 
-static void Task_Startup(void* p_arg)
-{
-    //INT8U err;
-// etect OS task current capacity
-#if (OS_TASK_STAT_EN > 0)
-    OSStatInit();
-#endif
-    //最低占空比启动电机
-    TIM3->CCR1 = 54;
-    TIM3->CCR2 = 54;
-    TIM3->CCR3 = 54;
-    TIM3->CCR4 = 54;
-    OSTimeDly(5000);
-    Open_Calib(); //打开零偏校准
+// static void Task_Startup(void* p_arg)
+// {
+//     //INT8U err;
+// // etect OS task current capacity
+// #if (OS_TASK_STAT_EN > 0)
+//     OSStatInit();
+// #endif
+//     //最低占空比启动电机
+//     TIM3->CCR1 = 54;
+//     TIM3->CCR2 = 54;
+//     TIM3->CCR3 = 54;
+//     TIM3->CCR4 = 54;
+//     OSTimeDly(5000);
+//     Open_Calib(); //打开零偏校准
 
-    //Create mutex
-    //sendBufMutex=OSMutexCreate(5,&err);
+//     //Create mutex
+//     //sendBufMutex=OSMutexCreate(5,&err);
 
-    // Create functional task
-    OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
-    OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
-    OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
+//     // Create functional task
+//     OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
+//     OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
+//     OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
 
-    // Delete itself
-    OSTaskDel(OS_PRIO_SELF);
-}
+//     // Delete itself
+//     OSTaskDel(OS_PRIO_SELF);
+// }
 
 static void Task_COM(void* p_arg)
 {
@@ -138,19 +143,21 @@ static void Task_PID(void* p_arg)
     }
 }
 
-//static void Task_Startup(void* p_arg)
-//{
-////    u16 temp;
-////    Open_Calib();//打开零偏校准
-//    while (1) {
-//        OSTimeDly(1);
-//        Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4);
-////        MPU9150_Read();//读取数据
-////        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据
-////        if (!Calib_Status()) {//零偏校准状态
-////            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z);//姿态解算
-////            //IMUUpdateOnlyGyro(fGyro.x, fGyro.y, fGyro.z);//姿态解算
-////            Send_Attitude(angle.roll, angle.pitch, angle.yaw);//发送欧拉角姿态
-////        }
-//    }
-//}
+static void Task_Startup(void* p_arg)
+{
+    u8 i;
+    u32 t,p;
+    while (1) {
+        OSTimeDly(10);
+//        SendByte(0xF1,&i);
+//        i++;
+        MPU9150_Read();
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        t=Temperature;p=Pressure;
+        delay_ms(10);
+        MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
+        MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
+        SendWord(0xF1,&t);
+        SendWord(0xF2,&p);
+    }
+}

@@ -9,6 +9,7 @@ void BSP_Init(void){
 #if !AK8975_EN
 	HMC5883L_Init();
 #endif
+    MS561101BA_Init();
 	Quat_Init();
 	PWM_OUT_Init();
 	PWM_IN_Init();
