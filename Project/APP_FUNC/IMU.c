@@ -1,19 +1,5 @@
 #include "IMU.h"
 
-// ==================================================================================
-// 描述:
-// 必须定义'halfT '为周期的一半，以及滤波器的参数Kp和Ki
-// 四元数'q0', 'q1', 'q2', 'q3'定义为全局变量
-// 需要在每一个采样周期调用'IMUupdate()'函数
-// 陀螺仪数据单位是弧度/秒，加速度计、磁力计的单位无关重要，因为会被规范化
-// ==================================================================================
-float Kp = 2.0f; // 比例常数
-float Ki = 0.005f; // 积分常数
-float halfT = 0.0005f; //采样周期的一半，实际halfT由定时器求出
-float T = 0.001f; // 采样周期为1ms
-float q0 = 1, q1 = 0, q2 = 0, q3 = 0; // 四元数
-float exInt = 0, eyInt = 0, ezInt = 0; // 误差积分累计值
-
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 // 快速计算开根号的倒数
@@ -36,6 +22,7 @@ void Open_Calib(void)
 {
     accOffset = 1;
     gyroOffset = 1;
+    pressOffset = 1;
 }
 
 /******************************************************************************
@@ -46,7 +33,7 @@ void Open_Calib(void)
 *******************************************************************************/
 u8 Calib_Status(void)
 {
-    return accOffset | gyroOffset;
+    return accOffset | gyroOffset | pressOffset;
 }
 
 /******************************************************************************
@@ -73,7 +60,7 @@ void MPU6050_Offset(void)
             ACC_Y += acc.y;
             ACC_Z += acc.z;
         }
-        if (count_acc == 251) {
+        if (count_acc == 101) {
             count_acc--;
             offsetAcc.x = ACC_X / count_acc;
             offsetAcc.y = ACC_Y / count_acc;
@@ -101,13 +88,40 @@ void MPU6050_Offset(void)
             GYRO_Y += gyro.y;
             GYRO_Z += gyro.z;
         }
-        if (count_gyro == 251) {
+        if (count_gyro == 101) {
             count_gyro--;
             offsetGyro.x = GYRO_X / count_gyro;
             offsetGyro.y = GYRO_Y / count_gyro;
             offsetGyro.z = GYRO_Z / count_gyro;
             count_gyro = 0;
             gyroOffset = 0;
+        }
+    }
+
+    if (pressOffset) { //气压计校准
+        static float PRESS = 0;
+        static uint8_t count_press = 0;
+        if (count_press == 0) {
+            offsetPress = 0;
+            PRESS = 0;
+            count_press = 1;
+            return;
+        } else {
+            count_press++;
+            PRESS += press;
+        }
+        if (count_press == 51) {
+            count_press--;
+            offsetPress = PRESS / count_press;
+            count_press = 0;
+            pressOffset = 0;
+            //海拔-气压微分公式
+            //d_High=-44300*pow(p/p_0,-4.256/5.256)*d_Pressure/(5.256*p_0)
+            //d_Pressure：气压微分，单位Pa
+            //p_0：标准大气压，101325Pa
+            //d_High：高度微分，单位m
+            //p：当地气压
+            K_PRESS_TO_HIGH = -44300 * pow(offsetPress / 101325, -4.256 / 5.256) / (5.256 * 101325);
         }
     }
 }
@@ -119,7 +133,8 @@ void MPU6050_Offset(void)
 void GY86_Read(void)
 {
     uint8_t dataBuf[14];
-    
+
+    //mpu6050
     if (!i2cread(MPU6050_Addr_Real, MPU6050_ACCEL_XOUT_H, 14, dataBuf)) {
         acc.x = ((((int16_t)dataBuf[0]) << 8) | dataBuf[1]) - offsetAcc.x;
         acc.y = ((((int16_t)dataBuf[2]) << 8) | dataBuf[3]) - offsetAcc.y;
@@ -134,6 +149,7 @@ void GY86_Read(void)
         fGyro.z = (float)(gyro.z * RAW_TO_RAD);
     }
 
+    //HMC5883L
     if (!i2cread(HMC5883L_Addr_Real, HMC5883L_XOUT_MSB, 6, dataBuf)) { //必须连续读完这六个数据，否则会导致隔很长一段时间才出新数据
         mag.x = (dataBuf[0] << 8) | dataBuf[1];
         mag.y = (dataBuf[4] << 8) | dataBuf[5];
@@ -148,8 +164,27 @@ void GY86_Read(void)
             mag.z -= 0xffff;
     }
 
+    //MS5611
+    MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
+    MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
+    press -= offsetPress;
+
     MPU6050_Offset();
 }
+
+// ==================================================================================
+// 描述:
+// 必须定义'halfT '为周期的一半，以及滤波器的参数Kp和Ki
+// 四元数'q0', 'q1', 'q2', 'q3'定义为全局变量
+// 需要在每一个采样周期调用'IMUupdate()'函数
+// 陀螺仪数据单位是弧度/秒，加速度计、磁力计的单位无关重要，因为会被规范化
+// ==================================================================================
+float Kp = 2.0f; // 比例常数
+float Ki = 0.005f; // 积分常数
+float halfT = 0.0005f; //采样周期的一半，实际halfT由定时器求出
+float T = 0.001f; // 采样周期为1ms
+float q0 = 1, q1 = 0, q2 = 0, q3 = 0; // 四元数
+float exInt = 0, eyInt = 0, ezInt = 0; // 误差积分累计值
 
 // 四元数初始化
 void Quat_Init(void)
@@ -186,11 +221,11 @@ void Quat_Init(void)
 }
 
 // ==================================================================================
-// 函数原型：void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+// 函数原型：void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 // 功        能：互补滤波进行姿态解算
 // 输        入：陀螺仪数据及加速度计数据及磁力计数据
 // ==================================================================================
-void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 {
     float norm;
     float hx, hy, hz, bz, by;
@@ -281,6 +316,31 @@ void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float
     angle.roll = asin(2.0f * (q0 * q2 - q1 * q3)) * RAD_TO_ANGLE;
     angle.pitch = -atan2(2.0f * (q0 * q1 + q2 * q3), q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3) * RAD_TO_ANGLE;
     angle.yaw = atan2(2.0f * (q0 * q3 + q1 * q2), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD_TO_ANGLE;
+}
+
+void HeightUpdate(float ax, float ay, float az, float press)
+{
+    float vx, vy, vz; //地理坐标系下加速度
+    float pressHeight;
+
+    //加速度转换
+    vx = 2 * ax * (0.5f - q2*q2 - q3*q3) + 2 * ay * (q1*q2 - q0*q3) + 2 * az * (q1*q3 + q0*q2);
+    vy = 2 * ax * (q1*q2 + q0*q3) + 2 * ay * (0.5f - q1*q1 - q3*q3) + 2 * az * (q2*q3 - q0*q1);
+    vz = 2 * ax * (q1*q3 - q0*q2) + 2 * ay * (q2*q3 + q0*q1) + 2 * az * (0.5f - q1*q1 - q2*q2);
+
+    //加速度单位转化cm/s^2
+    vx*=9.8f/8192;
+    vx*=100;
+    vy*=9.8f/8192;
+    vy*=100;
+    vz*=9.8f/8192;
+    vz-=9.8f;
+    vz*=100;
+
+    //气压高度计算cm
+    pressHeight=press*K_PRESS_TO_HIGH*100;
+
+
 }
 
 //用于获取姿态解算采样时间

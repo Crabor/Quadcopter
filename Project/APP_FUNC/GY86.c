@@ -4,7 +4,7 @@
 
 uint16_t Cal_C[7]; //用于存放PROM中的6组数据
 uint32_t D1_Pres, D2_Temp; // 存放数字压力和温度
-extern float Pressure; //温度补偿大气压
+extern float press; //温度补偿大气压
 extern float Temperature; //实际温度
 float dT, Temperature2; //实际和参考温度之间的差异,中间值
 double OFF, SENS; //实际温度抵消,实际温度灵敏度
@@ -29,8 +29,8 @@ int MPU6050_Init(void)
     I2C_WriteByte(MPU6050_Addr, MPU6050_CONFIG, 0x06); //设置低通滤波
     I2C_WriteByte(MPU6050_Addr, MPU6050_GYRO_CONFIG, 0x18); //陀螺仪满量程+-2000度/秒 (最低分辨率 = 2^15/2000 = 16.4LSB/度/秒
     I2C_WriteByte(MPU6050_Addr, MPU6050_ACCEL_CONFIG, 0x08); //加速度满量程+-4g   (最低分辨率 = 2^15/4g = 8192LSB/g )
-    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02);//打开旁路模式
-    I2C_WriteByte(MPU6050_Addr, MPU6050_USER_CTRL, 0x00);//关闭主模式
+    I2C_WriteByte(MPU6050_Addr, MPU6050_INT_PIN_CFG, 0x02); //打开旁路模式
+    I2C_WriteByte(MPU6050_Addr, MPU6050_USER_CTRL, 0x00); //关闭主模式
 
     return 1;
 }
@@ -139,23 +139,7 @@ uint32_t MS561101BA_DO_CONVERSION(uint8_t command)
 
     I2C_NoAddr_WriteByte(MS561101BA_Addr, command);
 
-    switch (command & 0x0f) { //延时,去掉数据错误
-    case 0:
-        delay_us(900);
-        break;
-    case 2:
-        delay_ms(6);
-        break;
-    case 4:
-        delay_ms(8);
-        break;
-    case 6:
-        delay_ms(12);
-        break;
-    case 8:
-        delay_ms(20);
-        break;
-    }
+    delay_ms(9);
 
     conversion = I2C_Read_3Bytes(MS561101BA_Addr, 0);
 
@@ -172,7 +156,8 @@ void MS561101BA_GetTemperature(u8 OSR_Temp)
 {
 
     D2_Temp = MS561101BA_DO_CONVERSION(OSR_Temp);
-    delay_ms(10);
+
+    delay_ms(9);
 
     dT = D2_Temp - (((uint32_t)Cal_C[5]) << 8);
     Temperature = 2000 + dT * ((uint32_t)Cal_C[6]) / 0x800000; //算出温度值的100倍，2001表示20.01°
@@ -189,7 +174,7 @@ void MS561101BA_GetPressure(u8 OSR_Pres)
 
     D1_Pres = MS561101BA_DO_CONVERSION(OSR_Pres);
 
-    delay_ms(10);
+    delay_ms(9);
 
     OFF = (uint32_t)(Cal_C[2] << 16) + ((uint32_t)Cal_C[4] * dT) / 0x80;
     SENS = (uint32_t)(Cal_C[1] << 15) + ((uint32_t)Cal_C[3] * dT) / 0x100;
@@ -216,5 +201,5 @@ void MS561101BA_GetPressure(u8 OSR_Pres)
     OFF = OFF - OFF2;
     SENS = SENS - SENS2;
 
-    Pressure = (D1_Pres * SENS / 0x200000 - OFF) / 0x8000;
+    press = (D1_Pres * SENS / 0x200000 - OFF) / 0x8000;
 }

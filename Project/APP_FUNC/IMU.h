@@ -54,13 +54,16 @@ typedef struct
 } Angle;
 
 //变量定义
-extern uint8_t gyroOffset; //用于零偏校准
-extern uint8_t accOffset;
+extern uint8_t gyroOffset, accOffset, pressOffset; //用于零偏校准
 extern Acc acc, offsetAcc; //原始数据、零偏数据
 extern Gyro gyro, offsetGyro; //原始数据、零偏数据
-extern Mag mag;//原始数据
+extern Mag mag; //原始数据
 extern Float fGyro; //角速度数据（rad）
 extern Angle angle; //姿态解算-角度值
+extern float press, offsetPress; //温度补偿大气压，零偏大气压
+extern float Temperature; //实际温度
+extern float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
+extern float height;//高度
 
 // 函数声明
 float invSqrt(float x);
@@ -69,7 +72,9 @@ u8 Calib_Status(void);
 void MPU6050_Offset(void);
 void GY86_Read(void);
 void Quat_Init(void);
-void IMUUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
+void HeightUpdate(float ax, float ay, float az,float press);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
+
 #endif

@@ -4,19 +4,16 @@
 //所以将大部分全局变量统一定义在主文件，其他子文件要用时用extern引用
 
 /**********************************姿态解算相关******************************************************/
-uint8_t gyroOffset = 0; //用于零偏校准
-uint8_t accOffset = 0;
+uint8_t gyroOffset, accOffset, pressOffset; //用于零偏校准
 Acc acc, offsetAcc; //原始数据、零偏数据
 Gyro gyro, offsetGyro; //原始数据、零偏数据
 Mag mag; //原始数据
 Float fGyro; //角速度数据（rad）
 Angle angle; //姿态解算-角度值
-// float ACC_IIR_FACTOR;
-/*******************************************************************************************************/
-
-/**********************************高度相关**************************************************************/
-float Pressure; //温度补偿大气压
+float press, offsetPress; //温度补偿大气压，零偏大气压
 float Temperature; //实际温度
+float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
+float height;//高度
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
@@ -122,7 +119,7 @@ static void Task_Angel(void* p_arg)
     while (1) {
         GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
-            IMUUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+            AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
         }
         OSTimeDly(1);
     }
@@ -144,21 +141,25 @@ static void Task_PID(void* p_arg)
 
 static void Task_Startup(void* p_arg)
 {
-    u32 t, h;
+    int32_t t, h, p;
     BSP_Init();
     // etect OS task current capacity
- #if (OS_TASK_STAT_EN > 0)
+#if (OS_TASK_STAT_EN > 0)
     OSStatInit();
- #endif
+#endif
+    Open_Calib();
     while (1) {
-        OSTimeDly(10);
-        t = Temperature;
-        h = 44300*(1-pow(Pressure/101325,1/5.256))*100;
-        MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
-        MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
-        SendWord(0xF1, &t);
-        SendWord(0xF2, &h);
+        OSTimeDly(1);
         GY86_Read();
-        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        if(!Calib_Status()){
+            //t = Temperature;
+            //h = 44300*(1-pow(press/101325,1/5.256))*100;
+            p = press;
+            h = press*K_PRESS_TO_HIGH*100;
+            SendWord(0xF1, &p);
+            SendWord(0xF2, &h);
+            Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        }
+
     }
 }
