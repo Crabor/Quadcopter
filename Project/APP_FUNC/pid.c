@@ -15,8 +15,10 @@ float pitchCoreTi = 0.5f;
 float pitchCoreTd = 0.08f;
 
 float yawCoreKp = 1.0f;
-float yawCoreTi = 10000.0f;
 float yawCoreTd = 0.0f;
+
+float thrShellKp = 1.0f;
+float thrShellTd = 0.0f;
 
 /******************************************************************************
 函数原型：	void PID_Init(void)
@@ -38,8 +40,17 @@ void PID_Init(void)
 
     //yaw
     yawCore.Kp = yawCoreKp;
-    yawCore.Ti = yawCoreTi;
     yawCore.Td = yawCoreTd;
+
+    //thr
+    thrShell.Kp = thrShellKp;
+    thrShell.Td = thrShellTd;
+
+    //flyMode
+    flyMode = STOP;
+
+    //expHeight
+    expHeight = 0;
 }
 
 /******************************************************************************
@@ -53,55 +64,98 @@ void PID_Init(void)
 *******************************************************************************/
 float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 {
-    float coreKi, coreKd;
-    int coreKiFlag;
+    float shellKd, coreKi, coreKd;
 
-    coreKi = pidT / core->Ti;
-    coreKd = core->Td / pidT;
+    //ROLL,PITCH--串级PID
+    if (shell && core) {
+        coreKi = pidT / core->Ti;
+        coreKd = core->Td / pidT;
 
-    shell->eK = angleErr;
-    shell->output = shell->Kp * shell->eK;
-    shell->eK_1 = shell->eK;
+        shell->eK = angleErr;
+        shell->output = shell->Kp * shell->eK;
+        shell->eK_1 = shell->eK;
 
-    core->eK = shell->output - gyro * RAD_TO_ANGLE; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
-    //core->eK = expRoll - gyro * RAD_TO_ANGLE; //角速度一定要化成角度/秒，弧度/秒害死人
+        core->eK = shell->output - gyro; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
 
-    // //内环积分分离
-    // if (core->eK > CORE_INT_SEP_MAX || core->eK < CORE_INT_SEP_MIN) {
-    //     coreKiFlag = 0;
-    // } else {
-    //     coreKiFlag = 1;
-    //     //内环积分限幅
-    //     if (core->eSum > CORE_INT_MAX) {
-    //         if (core->eK < 0.0f)
-    //             core->eSum += core->eK;
-    //     } else if (core->eSum < -CORE_INT_MAX) {
-    //         if (core->eK > 0.0f)
-    //             core->eSum += core->eK;
-    //     } else {
-    //         core->eSum += core->eK;
-    //     }
-    // }
-
-    //TODO:内环积分浮点数比大小出问题
-    //内环积分限幅
-    if (core->eSum > CORE_INT_MAX) {
-        if (core->eK < -3.0f)
+        //TODO:内环积分浮点数比大小出问题
+        //内环积分限幅
+        if (core->eSum > CORE_INT_MAX) {
+            if (core->eK < 0.0f)
+                core->eSum += core->eK;
+        } else if (core->eSum < -CORE_INT_MAX) {
+            if (core->eK > 0.0f)
+                core->eSum += core->eK;
+        } else {
             core->eSum += core->eK;
-    } else if (core->eSum < -CORE_INT_MAX) {
-        if (core->eK > 3.0f)
-            core->eSum += core->eK;
-    } else {
-        core->eSum += core->eK;
+        }
+
+        core->output = core->Kp * (core->eK + core->eSum * coreKi + (core->eK - core->eK_1) * coreKd); //内环输出
+        core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
+        core->eK_1 = core->eK;
+
+        return core->output;
     }
 
-    coreKiFlag = 1;
+    //HEIGHT--外环PID
+    if (shell && !core) {
+        shellKd = shell->Td / pidT;
 
-    core->output = core->Kp * (core->eK + core->eSum * coreKi * coreKiFlag + (core->eK - core->eK_1) * coreKd); //内环输出
-    core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
-    core->eK_1 = core->eK;
+        shell->eK = angleErr;
+        shell->output = shell->Kp * (shell->eK + (shell->eK - shell->eK_1) * shellKd);
+        shell->eK_1 = shell->eK;
+        return shell->output;
+    }
 
-    return core->output;
+    //YAW--内环PID
+    if (!shell && core) {
+        coreKd = core->Td / pidT;
+        core->eK = gyro;
+        core->output = core->Kp * (core->eK + (core->eK - core->eK_1) * coreKd);
+        core->eK_1 = core->eK;
+        return core->output;
+    }
+
+    return 0;
+}
+
+//飞行器模式状态机转换
+void FlyMode(float expmode)
+{
+    switch (flyMode) {
+    case STOP:
+        if (expmode > 1250) {
+            flyMode = HOVER;
+            expHeight = 100;
+        }
+        break;
+    case HOVER:
+        if (expmode > 1750) {
+            flyMode = UP;
+            break;
+        }
+        if (expmode < 1250) {
+            flyMode = DOWN;
+            break;
+        }
+    case UP:
+        if (expmode < 1750) {
+            flyMode = HOVER;
+            expHeight = height;
+        }
+        break;
+    case DOWN:
+        if (expmode > 1250) {
+            flyMode = HOVER;
+            expHeight = height;
+            break;
+        }
+        if (expmode < 1050) {
+            flyMode = STOP;
+            break;
+        }
+    default:
+        flyMode = STOP;
+    }
 }
 
 /******************************************************************************
@@ -110,24 +164,36 @@ float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 *******************************************************************************/
 void Motor_Calc(void)
 {
+    float pidRoll = 0, pidPitch = 0, pidYaw = 0, pidThr = 0; //pid输出
     //计算采样周期
     pidT = Get_PID_Time();
 
-    //计算PID
+    //计算姿态PID
     //TODO:注意正负
-    pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y, &rollShell, &rollCore);
-    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x, &pitchShell, &pitchCore);
+    pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y * RAD_TO_ANGLE, &rollShell, &rollCore);
+    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x * RAD_TO_ANGLE, &pitchShell, &pitchCore);
     //TODO:yaw 与pitch、roll的pid计算不一样
-    //pidYaw = PID_Calc(expYaw - angle.yaw, fGyro.z, &yawShell, &yawCore);
+    pidYaw = PID_Calc(0, expYaw - fGyro.z * RAD_TO_ANGLE, 0, &yawCore);
+
+    //飞行模式判断
+    FlyMode(expMode);
+
+    if (flyMode == HOVER) {
+        pidThr = PID_Calc(expHeight - height, 0, &thrShell, 0);
+    } else if (flyMode == UP) {
+        pidThr = PID_Calc((expMode - 1750) * 0.1f, 0, &thrShell, 0);
+    } else if (flyMode == DOWN) {
+        pidThr = PID_Calc((expMode - 1250) * 0.1f, 0, &thrShell, 0);
+    }
 
     //PWM限幅
-    motor1 = Limit(expThr - pidPitch + pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
-    motor2 = Limit(expThr - pidPitch - pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
-    motor3 = Limit(expThr + pidPitch + pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
-    motor4 = Limit(expThr + pidPitch - pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor1 = Limit(1500 + pidThr - pidPitch + pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor2 = Limit(1500 + pidThr - pidPitch - pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor3 = Limit(1500 + pidThr + pidPitch + pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
+    motor4 = Limit(1500 + pidThr + pidPitch - pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
 
-    //如果油门过小或者机体倾斜角大于65度，则停止飞行
-    if (expThr <= 1050 || angle.pitch >= 65 || angle.pitch <= -65 || angle.roll >= 65 || angle.roll <= -65) {
+    //如果机体处于停止模式或倾斜角大于65度，则停止飞行
+    if (flyMode == STOP || angle.pitch >= 65 || angle.pitch <= -65 || angle.roll >= 65 || angle.roll <= -65) {
         motor1 = PWM_OUT_MIN;
         motor2 = PWM_OUT_MIN;
         motor3 = PWM_OUT_MIN;
@@ -165,11 +231,11 @@ void Motor_Exp_Calc(void)
     //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
-    expRoll = ((PWMInCh4 - 1500) * 0.04f);
-    expPitch = ((PWMInCh2 - 1500) * 0.04f);
+    expRoll = ((PWMInCh4 - 1500) * 0.04f); //最大20度
+    expPitch = ((PWMInCh2 - 1500) * 0.04f); //最大20度
     //TODO:yaw与roll、pitch不一样
-    // expYaw = (float)((PWMInCh1 - 1500) * 0.04f);
-    expThr = PWMInCh3;
+    expYaw = (float)((PWMInCh1 - 1500) * 0.02f); //最大10度每秒
+    expMode = PWMInCh3; //模式
 }
 
 //用于求pid采样时间

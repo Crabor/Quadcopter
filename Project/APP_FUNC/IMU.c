@@ -321,7 +321,7 @@ void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, 
 //死区计算
 void applyDeadband(float* value, float deadband)
 {
-    if (abs(*value) < deadband) {
+    if (*value < deadband && *value>deadband) {
         *value = 0;
     } else if (value > 0) {
         *value -= deadband;
@@ -335,26 +335,24 @@ void HeightUpdate(float ax, float ay, float az, float press)
     float mpu6050_az; //地理坐标系下的加速度
     float MS5611_press_height, MS5611_vz; //气压计高度，气压计速度
     float dT; //采样周期
-    float fused_vz;//融合速度
-    static float mpu6050_vz = 0, MS5611_press_height_old = 0,offset_az=0; //气压计滤波后高度，加速度计速度，前一时刻气压计高度
-    int32_t buf;
+    float fused_vz; //融合速度
+    static float mpu6050_vz = 0, MS5611_press_height_old = 0, offset_az = 0; //mpu6050加速度计速度,气压计滤波后高度，mpu6050加速度滤波
 
-    //加速度转换
+    //机体加速度转换到地理加速度
     mpu6050_az = 2 * ax * (q1 * q3 - q0 * q2) + 2 * ay * (q2 * q3 + q0 * q1) + 2 * az * (0.5f - q1 * q1 - q2 * q2);
 
     //加速度单位转化cm/s^2
     mpu6050_az *= 9.8f / 8192;
     mpu6050_az -= 9.8f;
     mpu6050_az *= 100;
-    
+
     //加速度低通滤波
-    offset_az-=offset_az/8;
-    offset_az+=mpu6050_az;
-    mpu6050_az-=offset_az/8;
+    offset_az -= offset_az / 8;
+    offset_az += mpu6050_az;
+    mpu6050_az -= offset_az / 8;
 
     //计算气压高度cm
     MS5611_press_height = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
-
     //计算高度（低通滤波）
     height = (height * 6 + MS5611_press_height * 2) / 8;
 
@@ -363,20 +361,18 @@ void HeightUpdate(float ax, float ay, float az, float press)
 
     //加速度计计算的速度
     mpu6050_vz += mpu6050_az * dT;
-    buf = mpu6050_vz;
-    SendWord(0xF4, &buf);
-
+    applyDeadband(&mpu6050_vz, 10);
     //气压计计算的速度
     MS5611_vz = (MS5611_press_height - MS5611_press_height_old) / dT;
     MS5611_press_height_old = MS5611_press_height;
-    applyDeadband(&MS5611_vz,10);
-
+    applyDeadband(&MS5611_vz, 10);
     //计算速度（融合）
     fused_vz = mpu6050_vz * 0.985f + MS5611_vz * 0.015f;
-    velocity = (velocity*6+fused_vz*2)/8;
-    applyDeadband(&velocity,5);
-    buf = velocity;
-    SendWord(0xF3, &buf);
+    velocity = (velocity * 6 + fused_vz * 2) / 8;
+    applyDeadband(&velocity, 5);
+
+    //高度计算补偿计算
+    height += velocity * dT;
 }
 
 //用于获取姿态解算采样时间

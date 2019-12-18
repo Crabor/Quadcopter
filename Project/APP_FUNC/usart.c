@@ -357,7 +357,7 @@ void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, in
 #endif
 }
 
-void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expThr)
+void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode)
 {
     u8 _cnt = 0;
     u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
@@ -382,7 +382,7 @@ void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float ex
     sendBuf[_cnt++] = BYTE1(_temp);
     sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = expThr;
+    _temp = expMode;
     sendBuf[_cnt++] = BYTE1(_temp);
     sendBuf[_cnt++] = BYTE0(_temp);
 
@@ -465,7 +465,7 @@ void Send_Height_Temp(float height, float temp)
     sendBuf[_cnt++] = 0x07; //高度和温度数据帧
     sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
 
-    _temp32 = height*100;
+    _temp32 = height * 100;
     sendBuf[_cnt++] = BYTE3(_temp32);
     sendBuf[_cnt++] = BYTE2(_temp32);
     sendBuf[_cnt++] = BYTE1(_temp32);
@@ -477,7 +477,7 @@ void Send_Height_Temp(float height, float temp)
     sendBuf[_cnt++] = BYTE1(_temp32);
     sendBuf[_cnt++] = BYTE0(_temp32);
 
-    _temp16 = temp*10;
+    _temp16 = temp * 10;
     sendBuf[_cnt++] = BYTE1(_temp16);
     sendBuf[_cnt++] = BYTE0(_temp16);
 

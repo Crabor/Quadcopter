@@ -23,7 +23,7 @@ void USART6_NItSend(unsigned char* DataToSend, u8 data_num);
 void Send_Senser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z, int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z, int16_t MAG_X, int16_t MAG_Y, int16_t MAG_Z);
 void Send_Attitude(float roll, float pitch, float yaw);
 void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
-void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expThr);
+void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode);
 void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput);
 void Send_Height_Temp(float height,float temp);
 

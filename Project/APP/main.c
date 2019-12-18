@@ -13,14 +13,14 @@ Angle angle; //姿态解算-角度值
 float press, offsetPress; //温度补偿大气压，零偏大气压
 float Temperature; //实际温度
 float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
-float height,velocity;//高度,速度
+float height, velocity; //高度（cm）,速度(cm/s)
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
-PID rollCore, rollShell, pitchCore, pitchShell, yawCore; //五个环的pid结构体，yaw不需要外环
+PID rollCore, rollShell, pitchCore, pitchShell, yawCore, thrShell; //六个环的pid结构体
 float pidT; //采样周期
-float pidRoll, pidPitch, pidYaw; //pid输出
-float expRoll, expPitch, expYaw, expThr; //期望值
+float expRoll, expPitch, expYaw, expMode, expHeight; //期望值
+FlyMode_t flyMode; //飞行模式
 /*******************************************************************************************************/
 
 /*************************************串口中断发送***********************************************************/
@@ -67,46 +67,35 @@ int main(void)
     return 0;
 }
 
-// static void Task_Startup(void* p_arg)
-// {
-//     //INT8U err;
-// // etect OS task current capacity
-// #if (OS_TASK_STAT_EN > 0)
-//     OSStatInit();
-// #endif
-//     //最低占空比启动电机
-//     TIM3->CCR1 = 54;
-//     TIM3->CCR2 = 54;
-//     TIM3->CCR3 = 54;
-//     TIM3->CCR4 = 54;
-//     OSTimeDly(5000);
-//     Open_Calib(); //打开零偏校准
+static void Task_Startup(void* p_arg)
+{
+    BSP_Init();
+    //最低占空比启动电机
+    TIM3->CCR1 = 54;
+    TIM3->CCR2 = 54;
+    TIM3->CCR3 = 54;
+    TIM3->CCR4 = 54;
+    OSTimeDly(5000);
+    Open_Calib(); //打开零偏校准
 
-//     //Create mutex
-//     //sendBufMutex=OSMutexCreate(5,&err);
+    // Create functional task
+    OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
+    OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
+    OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
 
-//     // Create functional task
-//     OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
-//     OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
-//     OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
-
-//     // Delete itself
-//     OSTaskDel(OS_PRIO_SELF);
-// }
+    // Delete itself
+    OSTaskDel(OS_PRIO_SELF);
+}
 
 static void Task_COM(void* p_arg)
 {
-    float P, I, D;
     while (1) {
         Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        Send_Height_Temp(height,Temperature);//发送气压高度和温度
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
-        Send_expVal(0xF1, expRoll, expPitch, expYaw, expThr); //发送遥控器数据转换成的期望值
+        Send_expVal(0xF1, expRoll, expPitch, expYaw, expMode); //发送遥控器数据转换成的期望值
         if (!Calib_Status()) { //零偏校准结束
             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
-            P = rollCore.Kp * rollCore.eK;
-            I = rollCore.Kp * rollCore.eSum * pidT / rollCore.Ti;
-            D = rollCore.Kp * (rollCore.eK - rollCore.eK_1) * rollCore.Td / pidT;
-            Send_pidOutVal(0xF2, rollShell.output, rollCore.output, P, I, D, yawCore.output); //发送内外环PID计算结果
         }
         OSTimeDly(10);
     }
@@ -120,6 +109,7 @@ static void Task_Angel(void* p_arg)
         GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
             AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+            HeightUpdate(acc.x, acc.y, acc.z, press);
         }
         OSTimeDly(1);
     }
@@ -139,23 +129,23 @@ static void Task_PID(void* p_arg)
     }
 }
 
-static void Task_Startup(void* p_arg)
-{
-    int32_t t, h, p, filterH = 0;
-    BSP_Init();
-    Open_Calib();
-    while (1) {
-        OSTimeDly(1);
-        GY86_Read();
-        Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        if (!Calib_Status()) {
-            AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            HeightUpdate(acc.x, acc.y, acc.z, press);
-            Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
-            h = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
-            SendWord(0xF1, &h);
-            h = height;
-            SendWord(0xF2, &h);
-        }
-    }
-}
+// static void Task_Startup(void* p_arg)
+// {
+//     int32_t t, h, p, filterH = 0;
+//     BSP_Init();
+//     Open_Calib();
+//     while (1) {
+//         OSTimeDly(1);
+//         GY86_Read();
+//         Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+//         if (!Calib_Status()) {
+//             AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+//             HeightUpdate(acc.x, acc.y, acc.z, press);
+//             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
+//             h = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
+//             SendWord(0xF1, &h);
+//             h = height;
+//             SendWord(0xF2, &h);
+//         }
+//     }
+// }
