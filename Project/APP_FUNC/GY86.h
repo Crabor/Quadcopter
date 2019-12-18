@@ -109,7 +109,7 @@ Magnetometer Features(HMC5883L in GY-86)
 /* MS5611 Register Address ------------------------------------------------------------*/
 //#define MS561101BA_Addr  0xec   //CBR=1 0x76 I2C address when CSB is connected to HIGH (VCC)
 #define MS561101BA_Addr 0xEE //CBR=0 0x77 I2C address when CSB is connected to LOW (GND)
-#define MS561101BA_Addr_Real 0x77 
+#define MS561101BA_Addr_Real 0x77
 
 // 定义MS561101BA内部地址
 // registers of the device
@@ -146,8 +146,8 @@ void MS561101BA_Init(void);
 uint16_t GetData_MPU6050(uint8_t REG_Address);
 uint16_t GetData_HMC5883L(uint8_t REG_Address);
 void MS561101BA_Reset(void);
-void MS561101BA_readPROM(void);
-uint32_t MS561101BA_DO_CONVERSION(u8 command);
+void MS561101BA_ReadPROM(void);
+uint32_t MS561101BA_Do_Conversion(u8 command);
 void MS561101BA_GetTemperature(u8 OSR_Temp);
 void MS561101BA_GetPressure(u8 OSR_Pres);
 

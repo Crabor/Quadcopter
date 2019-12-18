@@ -1,5 +1,8 @@
 #include "pwm.h"
 
+extern float motor1, motor2, motor3, motor4; //四个电机速度
+extern u16 PWM_IN_CH[4];
+
 void PWM_OUT_Init(void)
 {
     //TODO 是否要保持定时器PWM输出频率和遥控器接收器PWM输出频率一致？
@@ -305,7 +308,7 @@ void TIM5_PWM_IN_IRQ(void)
 //         }
 //     }
 
-//     // CH3 - THR - Acc
+//     // CH3 - THR - Acc_t
 //     if (TIM_GetITStatus(TIM5, TIM_IT_CC3) != RESET) {
 //         //        SendStr("ok1");
 //         TIM_ClearITPendingBit(TIM5, TIM_IT_CC3);

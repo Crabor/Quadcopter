@@ -1,8 +1,14 @@
 #include "pid.h"
 
-//因为结构体变量引用不能放在.h文件中，所以放这
-extern Float fGyro; //角速度数据（rad）
-extern Angle angle; //姿态解算-角度值
+extern PID_t rollCore, rollShell, pitchCore, pitchShell, yawCore, thrShell; //六个环的pid结构体
+extern float pidT; //采样周期
+extern float expRoll, expPitch, expYaw, expMode, expHeight; //期望值
+extern float motor1, motor2, motor3, motor4; //四个电机速度
+extern u16 PWM_IN_CH[4]; //定时器5四轴通道捕获PWM带宽值
+extern FlyMode_t flyMode; //飞行模式
+extern Float_t fGyro; //角速度数据（rad）
+extern Angle_t angle; //姿态解算-角度值
+extern float height, velocity; //高度（cm）,速度(cm/s)
 
 float rollShellKp = 4.4f; //外环Kp
 float rollCoreKp = 2.6f; //内环Kp
@@ -54,7 +60,7 @@ void PID_Init(void)
 }
 
 /******************************************************************************
-函数原型：	float PID_Calc(float angleErr, float gyro, PID *shell, PID *core)
+函数原型：	float PID_Calc(float angleErr, float gyro, PID_t *shell, PID_t *core)
 功    能：	PID计算
 输    入：  angleErr，角度偏差
             gyro，对应轴角速度
@@ -62,7 +68,7 @@ void PID_Init(void)
             core，内环
 返    回：  内环输出
 *******************************************************************************/
-float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
+float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
 {
     float shellKd, coreKi, coreKd;
 
@@ -119,37 +125,37 @@ float PID_Calc(float angleErr, float gyro, PID* shell, PID* core)
 }
 
 //飞行器模式状态机转换
-void FlyMode(float expmode)
+void Judge_FlyMode(float expMode)
 {
     switch (flyMode) {
     case STOP:
-        if (expmode > 1250) {
+        if (expMode > 1250) {
             flyMode = HOVER;
             expHeight = 100;
         }
         break;
     case HOVER:
-        if (expmode > 1750) {
+        if (expMode > 1750) {
             flyMode = UP;
             break;
         }
-        if (expmode < 1250) {
+        if (expMode < 1250) {
             flyMode = DOWN;
             break;
         }
     case UP:
-        if (expmode < 1750) {
+        if (expMode < 1750) {
             flyMode = HOVER;
             expHeight = height;
         }
         break;
     case DOWN:
-        if (expmode > 1250) {
+        if (expMode > 1250) {
             flyMode = HOVER;
             expHeight = height;
             break;
         }
-        if (expmode < 1050) {
+        if (expMode < 1050) {
             flyMode = STOP;
             break;
         }
@@ -176,7 +182,7 @@ void Motor_Calc(void)
     pidYaw = PID_Calc(0, expYaw - fGyro.z * RAD_TO_ANGLE, 0, &yawCore);
 
     //飞行模式判断
-    FlyMode(expMode);
+    Judge_FlyMode(expMode);
 
     if (flyMode == HOVER) {
         pidThr = PID_Calc(expHeight - height, 0, &thrShell, 0);

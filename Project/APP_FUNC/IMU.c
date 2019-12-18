@@ -1,5 +1,17 @@
 #include "IMU.h"
 
+//变量声明
+extern uint8_t gyroOffset, accOffset, pressOffset; //用于零偏校准
+extern Acc_t acc, offsetAcc; //原始数据、零偏数据
+extern Gyro_t gyro, offsetGyro; //原始数据、零偏数据
+extern Mag_t mag; //原始数据
+extern Float_t fGyro; //角速度数据（rad）
+extern Angle_t angle; //姿态解算-角度值
+extern float pressure, offsetPress; //温度补偿大气压，零偏大气压
+extern float Temperature; //实际温度
+extern float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
+extern float height, velocity; //高度,速度
+
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 // 快速计算开根号的倒数
@@ -108,7 +120,7 @@ void MPU6050_Offset(void)
             return;
         } else {
             count_press++;
-            PRESS += press;
+            PRESS += pressure;
         }
         if (count_press == 51) {
             count_press--;
@@ -167,7 +179,6 @@ void GY86_Read(void)
     //MS5611
     MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
     MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
-    //press -= offsetPress;
 
     MPU6050_Offset();
 }
@@ -221,11 +232,11 @@ void Quat_Init(void)
 }
 
 // ==================================================================================
-// 函数原型：void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+// 函数原型：void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 // 功        能：互补滤波进行姿态解算
 // 输        入：陀螺仪数据及加速度计数据及磁力计数据
 // ==================================================================================
-void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
+void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz)
 {
     float norm;
     float hx, hy, hz, bz, by;
@@ -319,18 +330,18 @@ void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, 
 }
 
 //死区计算
-void applyDeadband(float* value, float deadband)
+void Apply_Deadband(float* value, float deadBand)
 {
-    if (*value < deadband && *value>deadband) {
+    if (*value<deadBand&& * value> deadBand) {
         *value = 0;
     } else if (value > 0) {
-        *value -= deadband;
+        *value -= deadBand;
     } else if (value < 0) {
-        *value += deadband;
+        *value += deadBand;
     }
 }
 
-void HeightUpdate(float ax, float ay, float az, float press)
+void Height_Update(float ax, float ay, float az, float pressure)
 {
     float mpu6050_az; //地理坐标系下的加速度
     float MS5611_press_height, MS5611_vz; //气压计高度，气压计速度
@@ -352,7 +363,7 @@ void HeightUpdate(float ax, float ay, float az, float press)
     mpu6050_az -= offset_az / 8;
 
     //计算气压高度cm
-    MS5611_press_height = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
+    MS5611_press_height = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
     //计算高度（低通滤波）
     height = (height * 6 + MS5611_press_height * 2) / 8;
 
@@ -361,15 +372,15 @@ void HeightUpdate(float ax, float ay, float az, float press)
 
     //加速度计计算的速度
     mpu6050_vz += mpu6050_az * dT;
-    applyDeadband(&mpu6050_vz, 10);
+    Apply_Deadband(&mpu6050_vz, 10);
     //气压计计算的速度
     MS5611_vz = (MS5611_press_height - MS5611_press_height_old) / dT;
     MS5611_press_height_old = MS5611_press_height;
-    applyDeadband(&MS5611_vz, 10);
+    Apply_Deadband(&MS5611_vz, 10);
     //计算速度（融合）
     fused_vz = mpu6050_vz * 0.985f + MS5611_vz * 0.015f;
     velocity = (velocity * 6 + fused_vz * 2) / 8;
-    applyDeadband(&velocity, 5);
+    Apply_Deadband(&velocity, 5);
 
     //高度计算补偿计算
     height += velocity * dT;

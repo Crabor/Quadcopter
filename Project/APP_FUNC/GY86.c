@@ -4,7 +4,7 @@
 
 uint16_t Cal_C[7]; //用于存放PROM中的6组数据
 uint32_t D1_Pres, D2_Temp; // 存放数字压力和温度
-extern float press; //温度补偿大气压
+extern float pressure; //温度补偿大气压
 extern float Temperature; //实际温度
 float dT, Temperature2; //实际和参考温度之间的差异,中间值
 double OFF, SENS; //实际温度抵消,实际温度灵敏度
@@ -62,7 +62,7 @@ void MS561101BA_Init(void)
 {
     MS561101BA_Reset();
     delay_ms(100);
-    MS561101BA_readPROM();
+    MS561101BA_ReadPROM();
     delay_ms(100);
 }
 
@@ -113,16 +113,10 @@ void MS561101BA_Reset(void)
 * 输入  :无   
 * 输出  :无    
 */
-void MS561101BA_readPROM(void)
+void MS561101BA_ReadPROM(void)
 {
-    uint16_t value = 0;
-    u8 temp1[2] = { 0 };
     u8 i;
     for (i = 0; i <= MS561101BA_PROM_REG_COUNT; i++) {
-        // I2C_Read_MultiBytes(MS561101BA_Addr,MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE),2,temp1);
-
-        //value=temp1[0]<<8|temp1[1];
-        //Cal_C[i]=value;
         Cal_C[i] = I2C_Read_2Bytes(MS561101BA_Addr, MS561101BA_PROM_BASE_ADDR + (i * MS561101BA_PROM_REG_SIZE));
     }
 }
@@ -133,7 +127,7 @@ void MS561101BA_readPROM(void)
 * 输入  :无   
 * 输出  :无    
 */
-uint32_t MS561101BA_DO_CONVERSION(uint8_t command)
+uint32_t MS561101BA_Do_Conversion(uint8_t command)
 {
     uint32_t conversion;
 
@@ -155,7 +149,7 @@ uint32_t MS561101BA_DO_CONVERSION(uint8_t command)
 void MS561101BA_GetTemperature(u8 OSR_Temp)
 {
 
-    D2_Temp = MS561101BA_DO_CONVERSION(OSR_Temp);
+    D2_Temp = MS561101BA_Do_Conversion(OSR_Temp);
 
     delay_ms(9);
 
@@ -172,7 +166,7 @@ void MS561101BA_GetTemperature(u8 OSR_Temp)
 void MS561101BA_GetPressure(u8 OSR_Pres)
 {
 
-    D1_Pres = MS561101BA_DO_CONVERSION(OSR_Pres);
+    D1_Pres = MS561101BA_Do_Conversion(OSR_Pres);
 
     delay_ms(9);
 
@@ -201,5 +195,5 @@ void MS561101BA_GetPressure(u8 OSR_Pres)
     OFF = OFF - OFF2;
     SENS = SENS - SENS2;
 
-    press = (D1_Pres * SENS / 0x200000 - OFF) / 0x8000;
+    pressure = (D1_Pres * SENS / 0x200000 - OFF) / 0x8000;
 }

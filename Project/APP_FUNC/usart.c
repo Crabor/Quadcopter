@@ -1,5 +1,8 @@
 #include "usart.h"
 
+//Variable declaration
+extern u8 sendBuf[50]; //发送数据缓存
+
 //初始化IO 串口6
 //pclk2:PCLK2时钟频率(Mhz)
 //bound:波特率

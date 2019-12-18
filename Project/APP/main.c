@@ -5,19 +5,19 @@
 
 /**********************************姿态解算相关******************************************************/
 uint8_t gyroOffset, accOffset, pressOffset; //用于零偏校准
-Acc acc, offsetAcc; //原始数据、零偏数据
-Gyro gyro, offsetGyro; //原始数据、零偏数据
-Mag mag; //原始数据
-Float fGyro; //角速度数据（rad）
-Angle angle; //姿态解算-角度值
-float press, offsetPress; //温度补偿大气压，零偏大气压
+Acc_t acc, offsetAcc; //原始数据、零偏数据
+Gyro_t gyro, offsetGyro; //原始数据、零偏数据
+Mag_t mag; //原始数据
+Float_t fGyro; //角速度数据（rad）
+Angle_t angle; //姿态解算-角度值
+float pressure, offsetPress; //温度补偿大气压，零偏大气压
 float Temperature; //实际温度
 float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
 float height, velocity; //高度（cm）,速度(cm/s)
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
-PID rollCore, rollShell, pitchCore, pitchShell, yawCore, thrShell; //六个环的pid结构体
+PID_t rollCore, rollShell, pitchCore, pitchShell, yawCore, thrShell; //六个环的pid结构体
 float pidT; //采样周期
 float expRoll, expPitch, expYaw, expMode, expHeight; //期望值
 FlyMode_t flyMode; //飞行模式
@@ -91,7 +91,7 @@ static void Task_COM(void* p_arg)
 {
     while (1) {
         Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        Send_Height_Temp(height,Temperature);//发送气压高度和温度
+        Send_Height_Temp(height, Temperature); //发送气压高度和温度
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
         Send_expVal(0xF1, expRoll, expPitch, expYaw, expMode); //发送遥控器数据转换成的期望值
         if (!Calib_Status()) { //零偏校准结束
@@ -108,8 +108,8 @@ static void Task_Angel(void* p_arg)
     while (1) {
         GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
-            AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            HeightUpdate(acc.x, acc.y, acc.z, press);
+            Attitude_Update(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+            Height_Update(acc.x, acc.y, acc.z, pressure);
         }
         OSTimeDly(1);
     }
@@ -139,10 +139,10 @@ static void Task_PID(void* p_arg)
 //         GY86_Read();
 //         Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
 //         if (!Calib_Status()) {
-//             AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-//             HeightUpdate(acc.x, acc.y, acc.z, press);
+//             Attitude_Update(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+//             Height_Update(acc.x, acc.y, acc.z, pressure);
 //             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
-//             h = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
+//             h = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
 //             SendWord(0xF1, &h);
 //             h = height;
 //             SendWord(0xF2, &h);

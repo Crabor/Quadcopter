@@ -16,7 +16,7 @@ typedef struct {
     float Ti; //积分时间
     float Td; //微分时间
     float output; //pid输出
-} PID;
+} PID_t;
 
 typedef enum {
     STOP = 0, //停止
@@ -25,16 +25,9 @@ typedef enum {
     UP //上升
 } FlyMode_t;
 
-extern PID rollCore, rollShell, pitchCore, pitchShell, yawCore, thrShell; //六个环的pid结构体
-extern float pidT; //采样周期
-extern float expRoll, expPitch, expYaw, expMode, expHeight; //期望值
-extern float motor1, motor2, motor3, motor4; //四个电机速度
-extern u16 PWM_IN_CH[4]; //定时器5四轴通道捕获PWM带宽值
-extern FlyMode_t flyMode; //飞行模式
-
 void PID_Init(void);
-void FlyMode(float expmode);
-float PID_Calc(float err, float gyro, PID* shell, PID* core);
+void Judge_FlyMode(float expMode);
+float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core);
 void Motor_Calc(void);
 void Motor_Exp_Calc(void);
 float Limit(float pwm, float min, float max);

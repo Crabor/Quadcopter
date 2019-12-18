@@ -10,9 +10,6 @@
 #define BYTE2(dwTemp) (*((char*)(&dwTemp) + 2))
 #define BYTE3(dwTemp) (*((char*)(&dwTemp) + 3))
 
-//Variable declaration
-extern u8 sendBuf[50]; //发送数据缓存
-
 //函数定义
 // void USART2_Init(u32 pclk2, u32 bound);
 void USART6_Init(u32 pclk2, u32 bound);
