@@ -25,6 +25,7 @@ void Send_Attitude(float roll, float pitch, float yaw);
 void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
 void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expThr);
 void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput);
+void Send_Height_Temp(float height,float temp);
 
 void SendStr(const char* str);
 void SendByte(u8 frame, u8* p);

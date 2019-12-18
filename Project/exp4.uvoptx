@@ -206,9 +206,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>101</LineNumber>
+          <LineNumber>330</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134221374</Address>
+          <Address>134222120</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -217,55 +217,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\APP_FUNC\IMU.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\exp4\APP_FUNC/IMU.c\101</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>124</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134221500</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\APP_FUNC\IMU.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\exp4\APP_FUNC/IMU.c\124</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>168</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134219900</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\APP_FUNC\IMU.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\exp4\APP_FUNC/IMU.c\168</Expression>
-        </Bp>
-        <Bp>
-          <Number>3</Number>
-          <Type>0</Type>
-          <LineNumber>170</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134219912</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\APP_FUNC\IMU.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\exp4\APP_FUNC/IMU.c\170</Expression>
+          <Expression>\\exp4\APP_FUNC/IMU.c\330</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

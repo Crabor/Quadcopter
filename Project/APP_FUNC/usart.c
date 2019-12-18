@@ -451,6 +451,50 @@ void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float
 #endif
 }
 
+void Send_Height_Temp(float height, float temp)
+{
+    u8 _cnt = 0;
+    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+    int i;
+    int32_t _temp32;
+    int16_t _temp16;
+
+    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
+    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+    sendBuf[_cnt++] = 0x07; //高度和温度数据帧
+    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+
+    _temp32 = height*100;
+    sendBuf[_cnt++] = BYTE3(_temp32);
+    sendBuf[_cnt++] = BYTE2(_temp32);
+    sendBuf[_cnt++] = BYTE1(_temp32);
+    sendBuf[_cnt++] = BYTE0(_temp32);
+
+    _temp32 = 0;
+    sendBuf[_cnt++] = BYTE3(_temp32);
+    sendBuf[_cnt++] = BYTE2(_temp32);
+    sendBuf[_cnt++] = BYTE1(_temp32);
+    sendBuf[_cnt++] = BYTE0(_temp32);
+
+    _temp16 = temp*10;
+    sendBuf[_cnt++] = BYTE1(_temp16);
+    sendBuf[_cnt++] = BYTE0(_temp16);
+
+    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+
+    for (i = 0; i < _cnt; i++)
+        sum += sendBuf[i];
+
+    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
+
+#if USART_IT_EN
+    USART6_ItSend(sendBuf, _cnt);
+#else
+    USART6_NItSend(sendBuf, _cnt);
+#endif
+}
+
 // void SendPWMIN(u8 frame, u8* STA, u16* OVF, u16* VAL_UP, u16* VAL_DOWN, u16* PW)
 // {
 //     u8 _cnt = 0;

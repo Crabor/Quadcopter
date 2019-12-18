@@ -63,7 +63,7 @@ extern Angle angle; //姿态解算-角度值
 extern float press, offsetPress; //温度补偿大气压，零偏大气压
 extern float Temperature; //实际温度
 extern float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
-extern float height;//高度
+extern float height,velocity;//高度,速度
 
 // 函数声明
 float invSqrt(float x);
@@ -76,5 +76,6 @@ void AttitudeUpdate(float gx, float gy, float gz, float ax, float ay, float az, 
 void HeightUpdate(float ax, float ay, float az,float press);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
+void applyDeadband(float *value, float deadband);
 
 #endif

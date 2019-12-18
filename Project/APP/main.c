@@ -13,7 +13,7 @@ Angle angle; //姿态解算-角度值
 float press, offsetPress; //温度补偿大气压，零偏大气压
 float Temperature; //实际温度
 float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
-float height;//高度
+float height,velocity;//高度,速度
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
@@ -141,25 +141,21 @@ static void Task_PID(void* p_arg)
 
 static void Task_Startup(void* p_arg)
 {
-    int32_t t, h, p;
+    int32_t t, h, p, filterH = 0;
     BSP_Init();
-    // etect OS task current capacity
-#if (OS_TASK_STAT_EN > 0)
-    OSStatInit();
-#endif
     Open_Calib();
     while (1) {
         OSTimeDly(1);
         GY86_Read();
-        if(!Calib_Status()){
-            //t = Temperature;
-            //h = 44300*(1-pow(press/101325,1/5.256))*100;
-            p = press;
-            h = press*K_PRESS_TO_HIGH*100;
-            SendWord(0xF1, &p);
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        if (!Calib_Status()) {
+            AttitudeUpdate(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
+            HeightUpdate(acc.x, acc.y, acc.z, press);
+            Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
+            h = (press - offsetPress) * K_PRESS_TO_HIGH * 100;
+            SendWord(0xF1, &h);
+            h = height;
             SendWord(0xF2, &h);
-            Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
         }
-
     }
 }
