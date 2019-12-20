@@ -64,6 +64,6 @@ void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az,
 void Height_Update(float ax, float ay, float az, float pressure);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
-void Apply_Deadband(float* value, float deadBand);
+//void Apply_Deadband(float* value, float deadBand);
 
 #endif

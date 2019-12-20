@@ -206,18 +206,34 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>330</LineNumber>
+          <LineNumber>179</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134222120</Address>
+          <Address>134225156</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\APP_FUNC\IMU.c</Filename>
+          <Filename>.\APP_FUNC\pid.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\exp4\APP_FUNC/IMU.c\330</Expression>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
+          <Number>1</Number>
+          <Type>0</Type>
+          <LineNumber>182</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134225264</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>.\APP_FUNC\pid.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\exp4\APP_FUNC/pid.c\182</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -321,52 +337,37 @@
         <Ww>
           <count>0</count>
           <WinNumber>2</WinNumber>
-          <ItemText>OSIntNesting</ItemText>
+          <ItemText>h</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>size</ItemText>
+          <ItemText>corr_acc</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>2</WinNumber>
-          <ItemText>OSPrioHighRdy</ItemText>
+          <ItemText>z_est</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>2</WinNumber>
-          <ItemText>OSPrioCur</ItemText>
+          <ItemText>corr_baro</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
-          <ItemText>OSTCBHighRdy</ItemText>
+          <ItemText>offsetPress</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>2</WinNumber>
-          <ItemText>OSTCBCur</ItemText>
+          <ItemText>acc_bias</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>2</WinNumber>
-          <ItemText>accOffset</ItemText>
-        </Ww>
-        <Ww>
-          <count>7</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>gyroOffset</ItemText>
-        </Ww>
-        <Ww>
-          <count>8</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>pressOffset</ItemText>
-        </Ww>
-        <Ww>
-          <count>9</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>count_acc</ItemText>
+          <ItemText>height</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

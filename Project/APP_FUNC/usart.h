@@ -20,13 +20,14 @@ void USART6_NItSend(unsigned char* DataToSend, u8 data_num);
 void Send_Senser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z, int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z, int16_t MAG_X, int16_t MAG_Y, int16_t MAG_Z);
 void Send_Attitude(float roll, float pitch, float yaw);
 void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
-void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode);
-void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput);
+//void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode);
+//void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput);
 void Send_Height_Temp(float height,float temp);
 
 void SendStr(const char* str);
 void SendByte(u8 frame, u8* p);
 void SendHalfWord(u8 frame, u16* p);
 void SendWord(u8 frame, u32* p);
+void Send_5_float(u8 frame,float f1,float f2,float f3,float f4,float f5);
 //void SendPWMIN(u8 frame, u8* STA, u16* OVF, u16* VAL_UP, u16* VAL_DOWN, u16* PW);
 #endif

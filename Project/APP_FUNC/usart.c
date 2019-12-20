@@ -201,6 +201,52 @@ void SendWord(u8 frame, u32* p)
 #endif
 }
 
+void Send_5_float(u8 frame,float f1,float f2,float f3,float f4,float f5){
+    u8 _cnt = 0;
+    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+    int i;
+    vs16 _temp;
+
+    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
+    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+    sendBuf[_cnt++] = frame; //用户自定义帧
+    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+
+    _temp = f1;
+    sendBuf[_cnt++] = BYTE1(_temp); //将要发送的数据放至发送缓冲区
+    sendBuf[_cnt++] = BYTE0(_temp);
+
+    _temp = f2;
+    sendBuf[_cnt++] = BYTE1(_temp);
+    sendBuf[_cnt++] = BYTE0(_temp);
+
+    _temp = f3;
+    sendBuf[_cnt++] = BYTE1(_temp);
+    sendBuf[_cnt++] = BYTE0(_temp);
+
+    _temp = f4;
+    sendBuf[_cnt++] = BYTE1(_temp);
+    sendBuf[_cnt++] = BYTE0(_temp);
+
+    _temp = f5;
+    sendBuf[_cnt++] = BYTE1(_temp);
+    sendBuf[_cnt++] = BYTE0(_temp);
+
+    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+
+    for (i = 0; i < _cnt; i++)
+        sum += sendBuf[i];
+
+    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
+
+#if USART_IT_EN
+    USART6_ItSend(sendBuf, _cnt);
+#else
+    USART6_NItSend(sendBuf, _cnt);
+#endif
+}
+
 void Send_Senser(int16_t ACCEL_X, int16_t ACCEL_Y, int16_t ACCEL_Z, int16_t GYRO_X, int16_t GYRO_Y, int16_t GYRO_Z, int16_t MAG_X, int16_t MAG_Y, int16_t MAG_Z) //发送用户数据，这里有6个数据
 {
     u8 _cnt = 0;
@@ -360,107 +406,107 @@ void Send_RCData_Motor(int16_t THR, int16_t YAW, int16_t ROLL, int16_t PITCH, in
 #endif
 }
 
-void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode)
-{
-    u8 _cnt = 0;
-    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
-    int i;
-    int16_t _temp;
+//void Send_expVal(u8 frame, float expRoll, float expPitch, float expYaw, float expMode)
+//{
+//    u8 _cnt = 0;
+//    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+//    int i;
+//    vs16 _temp;
 
-    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
-    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
-    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-    sendBuf[_cnt++] = frame; //用户自定义帧
-    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+//    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
+//    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+//    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+//    sendBuf[_cnt++] = frame; //用户自定义帧
+//    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
 
-    _temp = expRoll;
-    sendBuf[_cnt++] = BYTE1(_temp); //将要发送的数据放至发送缓冲区
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = expRoll;
+//    sendBuf[_cnt++] = BYTE1(_temp); //将要发送的数据放至发送缓冲区
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = expPitch;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = expPitch;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = expYaw;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = expYaw;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = expMode;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = expMode;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+//    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
 
-    for (i = 0; i < _cnt; i++)
-        sum += sendBuf[i];
+//    for (i = 0; i < _cnt; i++)
+//        sum += sendBuf[i];
 
-    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
+//    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
 
-#if USART_IT_EN
-    USART6_ItSend(sendBuf, _cnt);
-#else
-    USART6_NItSend(sendBuf, _cnt);
-#endif
-}
+//#if USART_IT_EN
+//    USART6_ItSend(sendBuf, _cnt);
+//#else
+//    USART6_NItSend(sendBuf, _cnt);
+//#endif
+//}
 
-void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput)
-{
-    u8 _cnt = 0;
-    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
-    int i;
-    int16_t _temp;
+//void Send_pidOutVal(u8 frame, float rollShellOutput, float rollCoreOutput, float pitchShellOutput, float pitchCoreOutput, float yawShellOutput, float yawCoreOutput)
+//{
+//    u8 _cnt = 0;
+//    u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
+//    int i;
+//    vs16 _temp;
 
-    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
-    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
-    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
-    sendBuf[_cnt++] = frame; //用户自定义帧
-    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
+//    sendBuf[_cnt++] = 0xAA; //0xAA为帧头
+//    sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改
+//    sendBuf[_cnt++] = 0xAF; //0xAF为数据目的地，AF表示上位机，具体请参考匿名协议
+//    sendBuf[_cnt++] = frame; //用户自定义帧
+//    sendBuf[_cnt++] = 0; //本字节表示数据长度，这里先=0，函数最后再赋值，这样就不用人工计算长度了
 
-    _temp = rollShellOutput;
-    sendBuf[_cnt++] = BYTE1(_temp); //将要发送的数据放至发送缓冲区
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = rollShellOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp); //将要发送的数据放至发送缓冲区
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = rollCoreOutput;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = rollCoreOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = pitchShellOutput;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = pitchShellOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = pitchCoreOutput;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = pitchCoreOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = yawShellOutput;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = yawShellOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    _temp = yawCoreOutput;
-    sendBuf[_cnt++] = BYTE1(_temp);
-    sendBuf[_cnt++] = BYTE0(_temp);
+//    _temp = yawCoreOutput;
+//    sendBuf[_cnt++] = BYTE1(_temp);
+//    sendBuf[_cnt++] = BYTE0(_temp);
 
-    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
+//    sendBuf[4] = _cnt - 5; //_cnt用来计算数据长度，减5为减去帧开头5个非数据字节
 
-    for (i = 0; i < _cnt; i++)
-        sum += sendBuf[i];
+//    for (i = 0; i < _cnt; i++)
+//        sum += sendBuf[i];
 
-    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
+//    sendBuf[_cnt++] = sum; //将sum校验数据放置最后一字节
 
-#if USART_IT_EN
-    USART6_ItSend(sendBuf, _cnt);
-#else
-    USART6_NItSend(sendBuf, _cnt);
-#endif
-}
+//#if USART_IT_EN
+//    USART6_ItSend(sendBuf, _cnt);
+//#else
+//    USART6_NItSend(sendBuf, _cnt);
+//#endif
+//}
 
 void Send_Height_Temp(float height, float temp)
 {
     u8 _cnt = 0;
     u8 sum = 0; //以下为计算sum校验字节，从0xAA也就是首字节，一直到sum字节前一字节
     int i;
-    int32_t _temp32;
-    int16_t _temp16;
+    vs32 _temp32;
+    vs16 _temp16;
 
     sendBuf[_cnt++] = 0xAA; //0xAA为帧头
     sendBuf[_cnt++] = 0x05; //0x05为数据发送源，具体请参考匿名协议，本字节用户可以随意更改

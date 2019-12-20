@@ -9,6 +9,7 @@ extern FlyMode_t flyMode; //飞行模式
 extern Float_t fGyro; //角速度数据（rad）
 extern Angle_t angle; //姿态解算-角度值
 extern float height, velocity; //高度（cm）,速度(cm/s)
+extern float pidRoll, pidPitch, pidYaw, pidThr; //pid输出
 
 float rollShellKp = 4.4f; //外环Kp
 float rollCoreKp = 2.6f; //内环Kp
@@ -70,6 +71,7 @@ void PID_Init(void)
 *******************************************************************************/
 float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
 {
+    //TODO:0是否可以当空指针
     float shellKd, coreKi, coreKd;
 
     //ROLL,PITCH--串级PID
@@ -129,36 +131,34 @@ void Judge_FlyMode(float expMode)
 {
     switch (flyMode) {
     case STOP:
-        if (expMode > 1250) {
+        if (expMode > 1300) {
             flyMode = HOVER;
             expHeight = 100;
         }
         break;
     case HOVER:
-        if (expMode > 1750) {
+        if (expMode > 1700) {
             flyMode = UP;
-            break;
         }
-        if (expMode < 1250) {
+        if (expMode < 1300) {
             flyMode = DOWN;
-            break;
         }
+        break;
+    case DOWN:
+        if (expMode > 1300) {
+            flyMode = HOVER;
+            expHeight = height;
+        }
+        if (expMode < 1050) {
+            flyMode = STOP;
+        }
+        break;
     case UP:
-        if (expMode < 1750) {
+        if (expMode < 1700) {
             flyMode = HOVER;
             expHeight = height;
         }
         break;
-    case DOWN:
-        if (expMode > 1250) {
-            flyMode = HOVER;
-            expHeight = height;
-            break;
-        }
-        if (expMode < 1050) {
-            flyMode = STOP;
-            break;
-        }
     default:
         flyMode = STOP;
     }
@@ -170,7 +170,7 @@ void Judge_FlyMode(float expMode)
 *******************************************************************************/
 void Motor_Calc(void)
 {
-    float pidRoll = 0, pidPitch = 0, pidYaw = 0, pidThr = 0; //pid输出
+    //float pidRoll = 0, pidPitch = 0, pidYaw = 0, pidThr = 0; //pid输出
     //计算采样周期
     pidT = Get_PID_Time();
 
@@ -193,6 +193,7 @@ void Motor_Calc(void)
     }
 
     //PWM限幅
+    //TODO:1500是否是起飞临界值
     motor1 = Limit(1500 + pidThr - pidPitch + pidRoll - pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
     motor2 = Limit(1500 + pidThr - pidPitch - pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);
     motor3 = Limit(1500 + pidThr + pidPitch + pidRoll + pidYaw, PWM_OUT_MIN, PWM_OUT_MAX);

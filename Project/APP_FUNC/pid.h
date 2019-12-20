@@ -20,8 +20,8 @@ typedef struct {
 
 typedef enum {
     STOP = 0, //停止
-    HOVER, //悬停
     DOWN, //下降
+    HOVER, //悬停
     UP //上升
 } FlyMode_t;
 

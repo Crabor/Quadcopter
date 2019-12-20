@@ -10,7 +10,7 @@ extern Angle_t angle; //姿态解算-角度值
 extern float pressure, offsetPress; //温度补偿大气压，零偏大气压
 extern float Temperature; //实际温度
 extern float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
-extern float height, velocity; //高度,速度
+extern float height, velocity, acceleration_z; //高度（m）,垂直速度(m/s),垂直加速度（m/s^2）
 
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
@@ -179,6 +179,7 @@ void GY86_Read(void)
     //MS5611
     MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
     MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
+    //pressure -= offsetPress;
 
     MPU6050_Offset();
 }
@@ -329,61 +330,159 @@ void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az,
     angle.yaw = atan2(2.0f * (q0 * q3 + q1 * q2), q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3) * RAD_TO_ANGLE;
 }
 
-//死区计算
-void Apply_Deadband(float* value, float deadBand)
-{
-    if (*value<deadBand&& * value> deadBand) {
-        *value = 0;
-    } else if (value > 0) {
-        *value -= deadBand;
-    } else if (value < 0) {
-        *value += deadBand;
-    }
-}
+// //死区计算
+// void Apply_Deadband(float* value, float deadBand)
+// {
+//     if (*value<deadBand&& * value> deadBand) {
+//         *value = 0;
+//     } else if (value > 0) {
+//         *value -= deadBand;
+//     } else if (value < 0) {
+//         *value += deadBand;
+//     }
+// }
+
+////Combine Filter to correct err
+//static void inertial_filter_predict(float dt, float x[3])
+//{
+//    x[0] += x[1] * dt + x[2] * dt * dt / 2.0f;
+//    x[1] += x[2] * dt;
+//}
+
+//static void inertial_filter_correct(float e, float dt, float x[3], int i, float w)
+//{
+//    float ewdt = e * w * dt;
+//    x[i] += ewdt;
+
+//    if (i == 0) {
+//        x[1] += w * ewdt;
+//        x[2] += w * w * ewdt / 3.0f;
+
+//    } else if (i == 1) {
+//        x[2] += w * ewdt;
+//    }
+//}
+
+//float z_est[3]; // estimate z Vz  Az
+//float corr_acc[] = { 0.0f, 0.0f, 0.0f }; // 地理坐标系下加速度,  m/s2
+//float acc_bias[] = { 0.0f, 0.0f, 0.0f }; // 地理坐标系下加速度偏移量 ,
+//float corr_baro = 0.0f; //m
 
 void Height_Update(float ax, float ay, float az, float pressure)
 {
-    float mpu6050_az; //地理坐标系下的加速度
-    float MS5611_press_height, MS5611_vz; //气压计高度，气压计速度
-    float dT; //采样周期
-    float fused_vz; //融合速度
-    static float mpu6050_vz = 0, MS5611_press_height_old = 0, offset_az = 0; //mpu6050加速度计速度,气压计滤波后高度，mpu6050加速度滤波
+//    float dT; //采样周期
+//    float accel_bias_corr[3] = { 0.0f, 0.0f, 0.0f };
+//    static float w_z_baro = 0.5f;
+//    static float w_z_acc = 20.0f;
+//    static float w_acc_bias = 0.05f;
+    float baro_height = (pressure - offsetPress) * K_PRESS_TO_HIGH*100; //气压计相对高度cm
+//    vs32 _temp;
 
-    //机体加速度转换到地理加速度
-    mpu6050_az = 2 * ax * (q1 * q3 - q0 * q2) + 2 * ay * (q2 * q3 + q0 * q1) + 2 * az * (0.5f - q1 * q1 - q2 * q2);
+    height = (height * 7 + baro_height * 3) / 10;
 
-    //加速度单位转化cm/s^2
-    mpu6050_az *= 9.8f / 8192;
-    mpu6050_az -= 9.8f;
-    mpu6050_az *= 100;
+    //    baro_height = (baro_height*2+(pressure - offsetPress) * K_PRESS_TO_HIGH*6)/8;
 
-    //加速度低通滤波
-    offset_az -= offset_az / 8;
-    offset_az += mpu6050_az;
-    mpu6050_az -= offset_az / 8;
+    // //求采样周期
+    // dT = 2 * halfT;
 
-    //计算气压高度cm
-    MS5611_press_height = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
-    //计算高度（低通滤波）
-    height = (height * 6 + MS5611_press_height * 2) / 8;
+    // //机体加速度计减去偏移量（注意偏移量和零偏量不是一个东西）
+    // ax -= acc_bias[0];
+    // ay -= acc_bias[1];
+    // az -= acc_bias[2];
 
-    //采样周期计算
-    dT = 2 * halfT;
+    // //机体加速度转换到地理加速度
+    // corr_acc[0] = 2 * ax * (0.5f - q2 * q2 - q3 * q3) + 2 * ay * (q1 * q2 - q0 * q3) + 2 * az * (q1 * q3 + q0 * q2);
+    // corr_acc[1] = 2 * ax * (q1 * q2 + q0 * q3) + 2 * ay * (0.5f - q1 * q1 - q3 * q3) + 2 * az * (q2 * q3 - q0 * q1);
+    // corr_acc[2] = 2 * ax * (q1 * q3 - q0 * q2) + 2 * ay * (q2 * q3 + q0 * q1) + 2 * az * (0.5f - q1 * q1 - q2 * q2);
 
-    //加速度计计算的速度
-    mpu6050_vz += mpu6050_az * dT;
-    Apply_Deadband(&mpu6050_vz, 10);
-    //气压计计算的速度
-    MS5611_vz = (MS5611_press_height - MS5611_press_height_old) / dT;
-    MS5611_press_height_old = MS5611_press_height;
-    Apply_Deadband(&MS5611_vz, 10);
-    //计算速度（融合）
-    fused_vz = mpu6050_vz * 0.985f + MS5611_vz * 0.015f;
-    velocity = (velocity * 6 + fused_vz * 2) / 8;
-    Apply_Deadband(&velocity, 5);
+    // //加速度单位转化m/s^2
+    // corr_acc[0] *= 9.8f / 8192;
+    // corr_acc[1] *= 9.8f / 8192;
+    // corr_acc[2] *= 9.8f / 8192;
+    // corr_acc[2] -= 9.8f; //地理坐标系下的z轴加速度是有重力加速度的，因此补偿上去。
 
-    //高度计算补偿计算
-    height += velocity * dT;
+    // _temp = corr_acc[0] * 100;
+    // SendWord(0xF3, &_temp);
+    // _temp = corr_acc[1] * 100;
+    // SendWord(0xF4, &_temp);
+    // _temp = corr_acc[2] * 100;
+    // SendWord(0xF5, &_temp);
+
+    // z_est[2] = (z_est[2] * 6 + corr_acc[2] * 2) / 8;
+    // z_est[1] += z_est[2] * dT;
+    // z_est[0] += z_est[1] * dT + 0.5f * z_est[2] * dT * dT;
+
+    // height = (baro_height * 6 + z_est[0] * 2) / 8;
+
+    // //计算气压计校正系数
+    // corr_baro = -baro_height - z_est[0];
+
+    // //加速度偏移向量校正
+    // accel_bias_corr[2] -= corr_baro * w_z_baro * w_z_baro;
+
+    // //将偏移向量转换到机体坐标系
+    // ax = accel_bias_corr[2] * (2 * q1 * q3 - 2 * q0 * q2);
+    // ay = accel_bias_corr[2] * (2 * q0 * q1 + 2 * q2 * q3);
+    // az = accel_bias_corr[2] * (1 - 2 * q1 * q1 - 2 * q2 * q2);
+
+    // //累加偏移量
+    // acc_bias[0] += ax * w_acc_bias * dT;
+    // acc_bias[1] += ay * w_acc_bias * dT;
+    // acc_bias[2] += az * w_acc_bias * dT;
+
+    // //加速度推算高度
+    // inertial_filter_predict(dT, z_est);
+
+    // //气压计校正系数进行校正
+    // inertial_filter_correct(corr_baro, dT, z_est, 0, w_z_baro); //0.5f
+    // inertial_filter_correct(corr_acc[2], dT, z_est, 2, w_z_acc); //20.0f
+
+    // //求值
+    // height = z_est[0];
+    // velocity = z_est[1];
+    // acceleration_z = z_est[2];
+
+    //     float MS5611_press_height, MS5611_vz; //气压计高度，气压计速度
+    //     float dT; //采样周期
+    //     float fused_vz; //融合速度
+    //     static float mpu6050_vz = 0, MS5611_press_height_old = 0, offset_az = 0; //mpu6050加速度计速度,气压计滤波后高度，mpu6050加速度滤波
+
+    //     //机体加速度转换到地理加速度
+    //     mpu6050_az = 2 * ax * (q1 * q3 - q0 * q2) + 2 * ay * (q2 * q3 + q0 * q1) + 2 * az * (0.5f - q1 * q1 - q2 * q2);
+
+    //     //加速度单位转化cm/s^2
+    //     mpu6050_az *= 9.8f / 8192;
+    //     mpu6050_az -= 9.8f;
+    //     mpu6050_az *= 100;
+
+    //     //加速度低通滤波
+    //     offset_az -= offset_az / 8;
+    //     offset_az += mpu6050_az;
+    //     mpu6050_az -= offset_az / 8;
+
+    //     //计算气压高度cm
+    //     MS5611_press_height = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
+
+    //     //计算高度（低通滤波）
+    //     height = (height * 8 + MS5611_press_height * 2) / 10;
+
+    //     //采样周期计算
+    //     dT = 2 * halfT;
+
+    //     //加速度计计算的速度
+    //     mpu6050_vz += mpu6050_az * dT;
+    //     Apply_Deadband(&mpu6050_vz, 10);
+    //     //气压计计算的速度
+    //     MS5611_vz = (MS5611_press_height - MS5611_press_height_old) / dT;
+    //     MS5611_press_height_old = MS5611_press_height;
+    //     Apply_Deadband(&MS5611_vz, 10);
+    //     //计算速度（融合）
+    //     fused_vz = mpu6050_vz * 0.985f + MS5611_vz * 0.015f;
+    //     velocity = (velocity * 6 + fused_vz * 2) / 8;
+    //     Apply_Deadband(&velocity, 5);
+
+    // //    //高度计算补偿计算
+    // //    height += velocity * dT;
 }
 
 //用于获取姿态解算采样时间
