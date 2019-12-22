@@ -145,6 +145,7 @@ void MPU6050_Offset(void)
 void GY86_Read(void)
 {
     uint8_t dataBuf[14];
+    static u8 count = 10;
 
     //mpu6050
     if (!i2cread(MPU6050_Addr_Real, MPU6050_ACCEL_XOUT_H, 14, dataBuf)) {
@@ -176,10 +177,14 @@ void GY86_Read(void)
             mag.z -= 0xffff;
     }
 
-    //MS5611
-    MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
-    MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
-    //pressure -= offsetPress;
+    if (count == 10) {
+        //MS5611
+        MS561101BA_GetTemperature(MS561101BA_D2_OSR_4096); //0x58
+        MS561101BA_GetPressure(MS561101BA_D1_OSR_4096); //0x48
+        //pressure -= offsetPress;
+        count = 0;
+    }
+    count++;
 
     MPU6050_Offset();
 }
@@ -368,15 +373,15 @@ void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az,
 //float acc_bias[] = { 0.0f, 0.0f, 0.0f }; // 地理坐标系下加速度偏移量 ,
 //float corr_baro = 0.0f; //m
 
-void Height_Update(/*float ax, float ay, float az, */float pressure)
+void Height_Update(/*float ax, float ay, float az, */ float pressure)
 {
-//    float dT; //采样周期
-//    float accel_bias_corr[3] = { 0.0f, 0.0f, 0.0f };
-//    static float w_z_baro = 0.5f;
-//    static float w_z_acc = 20.0f;
-//    static float w_acc_bias = 0.05f;
-    float baro_height = (pressure - offsetPress) * K_PRESS_TO_HIGH*100; //气压计相对高度cm
-//    vs32 _temp;
+    //    float dT; //采样周期
+    //    float accel_bias_corr[3] = { 0.0f, 0.0f, 0.0f };
+    //    static float w_z_baro = 0.5f;
+    //    static float w_z_acc = 20.0f;
+    //    static float w_acc_bias = 0.05f;
+    float baro_height = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100; //气压计相对高度cm
+    //    vs32 _temp;
 
     height = (height * 7 + baro_height * 3) / 10;
 

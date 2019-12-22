@@ -14,7 +14,7 @@ Angle_t angle; //姿态解算-角度值
 float pressure, offsetPress; //温度补偿大气压，零偏大气压
 float Temperature; //实际温度
 float K_PRESS_TO_HIGH; //气压转换成高度，因为不同地区比例不一样，所以不设成宏
-float height, velocity,acceleration_z; //高度（cm）,垂直速度(cm/s),垂直加速度（cm/s^2）
+float height, velocity, acceleration_z; //高度（cm）,垂直速度(cm/s),垂直加速度（cm/s^2）
 /*******************************************************************************************************/
 
 /***********************************PID相关*********************************************************/
@@ -92,15 +92,14 @@ static void Task_COM(void* p_arg)
 {
     int32_t temp;
     while (1) {
-        Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        Send_Height_Temp(height, Temperature/100); //发送气压高度和温度
+        Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
+        Send_Height_Temp(height, Temperature / 100); //发送气压高度和温度
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
         //Send_expVal(0xF1, expRoll, expPitch, expYaw, expMode); //发送遥控器数据转换成的期望值
-        temp = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
-        SendWord(0xF1, &temp);
         temp = flyMode;
-        SendWord(0xF2, &temp);
-        Send_5_float(0xF3,pidRoll, pidPitch, pidYaw, pidThr,0);
+        SendWord(0xF1, &temp);
+        Send_5_float(0xF2, expRoll, expPitch, expYaw, expHeight, expMode);
+        Send_5_float(0xF3, pidRoll, pidPitch, pidYaw, pidThr, 0);
         if (!Calib_Status()) { //零偏校准结束
             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
         }
@@ -116,7 +115,7 @@ static void Task_Angel(void* p_arg)
         GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
             Attitude_Update(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            Height_Update(/*acc.x, acc.y, acc.z, */pressure);
+            Height_Update(/*acc.x, acc.y, acc.z, */ pressure);
         }
         OSTimeDly(1);
     }
@@ -130,7 +129,7 @@ static void Task_PID(void* p_arg)
         Motor_Exp_Calc(); // 计算遥控器的期望值
         if (!Calib_Status()) { //零偏校准结束
             Motor_Calc(); // 计算PID以及要输出的电机速度
-            //PWM_OUT(); // 输出电机速度
+            PWM_OUT(); // 输出电机速度
         }
         OSTimeDly(3);
     }
