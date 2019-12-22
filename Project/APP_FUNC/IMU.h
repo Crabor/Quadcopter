@@ -61,7 +61,7 @@ void MPU6050_Offset(void);
 void GY86_Read(void);
 void Quat_Init(void);
 void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-void Height_Update(float ax, float ay, float az, float pressure);
+void Height_Update(/*float ax, float ay, float az, */float pressure);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
 //void Apply_Deadband(float* value, float deadBand);

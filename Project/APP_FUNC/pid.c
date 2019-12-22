@@ -61,15 +61,15 @@ void PID_Init(void)
 }
 
 /******************************************************************************
-函数原型：	float PID_Calc(float angleErr, float gyro, PID_t *shell, PID_t *core)
+函数原型：	float PID_Calc(float shellErr, float coreStatus, PID_t *shell, PID_t *core)
 功    能：	PID计算
-输    入：  angleErr，角度偏差
-            gyro，对应轴角速度
+输    入：  shellErr，角度偏差
+            coreStatus，对应轴角速度
             shell,外环
             core，内环
 返    回：  内环输出
 *******************************************************************************/
-float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
+float PID_Calc(float shellErr, float coreStatus, PID_t* shell, PID_t* core)
 {
     //TODO:0是否可以当空指针
     float shellKd, coreKi, coreKd;
@@ -79,11 +79,11 @@ float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
         coreKi = pidT / core->Ti;
         coreKd = core->Td / pidT;
 
-        shell->eK = angleErr;
+        shell->eK = shellErr;
         shell->output = shell->Kp * shell->eK;
         shell->eK_1 = shell->eK;
 
-        core->eK = shell->output - gyro; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
+        core->eK = shell->output - coreStatus; //外环输出，作为内环输入 用陀螺仪当前的角速度作为实际值
 
         //TODO:内环积分浮点数比大小出问题
         //内环积分限幅
@@ -107,9 +107,9 @@ float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
     //HEIGHT--外环PID
     if (shell && !core) {
         shellKd = shell->Td / pidT;
-
-        shell->eK = angleErr;
+        shell->eK = shellErr;
         shell->output = shell->Kp * (shell->eK + (shell->eK - shell->eK_1) * shellKd);
+        shell->output = Limit(shell->output, -PID_OUT_MAX, PID_OUT_MAX);
         shell->eK_1 = shell->eK;
         return shell->output;
     }
@@ -117,8 +117,9 @@ float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core)
     //YAW--内环PID
     if (!shell && core) {
         coreKd = core->Td / pidT;
-        core->eK = gyro;
+        core->eK = expYaw - coreStatus;
         core->output = core->Kp * (core->eK + (core->eK - core->eK_1) * coreKd);
+        core->output = Limit(core->output, -PID_OUT_MAX, PID_OUT_MAX);
         core->eK_1 = core->eK;
         return core->output;
     }
@@ -131,21 +132,21 @@ void Judge_FlyMode(float expMode)
 {
     switch (flyMode) {
     case STOP:
-        if (expMode > 1300) {
+        if (expMode > 1350) {
             flyMode = HOVER;
             expHeight = 100;
         }
         break;
     case HOVER:
-        if (expMode > 1700) {
+        if (expMode > 1650) {
             flyMode = UP;
         }
-        if (expMode < 1300) {
+        if (expMode < 1350) {
             flyMode = DOWN;
         }
         break;
     case DOWN:
-        if (expMode > 1300) {
+        if (expMode > 1350) {
             flyMode = HOVER;
             expHeight = height;
         }
@@ -154,7 +155,7 @@ void Judge_FlyMode(float expMode)
         }
         break;
     case UP:
-        if (expMode < 1700) {
+        if (expMode < 1650) {
             flyMode = HOVER;
             expHeight = height;
         }
@@ -179,7 +180,7 @@ void Motor_Calc(void)
     pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y * RAD_TO_ANGLE, &rollShell, &rollCore);
     pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x * RAD_TO_ANGLE, &pitchShell, &pitchCore);
     //TODO:yaw 与pitch、roll的pid计算不一样
-    pidYaw = PID_Calc(0, expYaw - fGyro.z * RAD_TO_ANGLE, 0, &yawCore);
+    //pidYaw = PID_Calc(0,  fGyro.z * RAD_TO_ANGLE, 0, &yawCore);
 
     //飞行模式判断
     Judge_FlyMode(expMode);
@@ -187,9 +188,9 @@ void Motor_Calc(void)
     if (flyMode == HOVER) {
         pidThr = PID_Calc(expHeight - height, 0, &thrShell, 0);
     } else if (flyMode == UP) {
-        pidThr = PID_Calc((expMode - 1750) * 0.1f, 0, &thrShell, 0);
+        pidThr = PID_Calc((expMode - 1650) * 0.1f, 0, &thrShell, 0);
     } else if (flyMode == DOWN) {
-        pidThr = PID_Calc((expMode - 1250) * 0.1f, 0, &thrShell, 0);
+        pidThr = PID_Calc((expMode - 1350) * 0.1f, 0, &thrShell, 0);
     }
 
     //PWM限幅
@@ -238,8 +239,8 @@ void Motor_Exp_Calc(void)
     //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
-    expRoll = ((PWMInCh4 - 1500) * 0.04f); //最大20度
-    expPitch = ((PWMInCh2 - 1500) * 0.04f); //最大20度
+    expRoll = (float)((PWMInCh4 - 1500) * 0.04f); //最大20度
+    expPitch = (float)((PWMInCh2 - 1500) * 0.04f); //最大20度
     //TODO:yaw与roll、pitch不一样
     expYaw = (float)((PWMInCh1 - 1500) * 0.02f); //最大10度每秒
     expMode = PWMInCh3; //模式

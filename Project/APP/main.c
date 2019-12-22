@@ -93,12 +93,12 @@ static void Task_COM(void* p_arg)
     int32_t temp;
     while (1) {
         Send_Senser(acc.x, acc.y, acc.z, gyro.x, gyro.y * RAW_TO_ANGLE, gyro.z, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        //Send_Height_Temp(height*100, Temperature/100); //发送气压高度和温度
+        Send_Height_Temp(height, Temperature/100); //发送气压高度和温度
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
         //Send_expVal(0xF1, expRoll, expPitch, expYaw, expMode); //发送遥控器数据转换成的期望值
         temp = (pressure - offsetPress) * K_PRESS_TO_HIGH * 100;
         SendWord(0xF1, &temp);
-        temp = height;
+        temp = flyMode;
         SendWord(0xF2, &temp);
         Send_5_float(0xF3,pidRoll, pidPitch, pidYaw, pidThr,0);
         if (!Calib_Status()) { //零偏校准结束
@@ -116,7 +116,7 @@ static void Task_Angel(void* p_arg)
         GY86_Read(); //读取九轴数据
         if (!Calib_Status()) { //零偏校准结束
             Attitude_Update(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            Height_Update(acc.x, acc.y, acc.z, pressure);
+            Height_Update(/*acc.x, acc.y, acc.z, */pressure);
         }
         OSTimeDly(1);
     }

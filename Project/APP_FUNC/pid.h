@@ -27,7 +27,7 @@ typedef enum {
 
 void PID_Init(void);
 void Judge_FlyMode(float expMode);
-float PID_Calc(float angleErr, float gyro, PID_t* shell, PID_t* core);
+float PID_Calc(float shellErr, float coreErr, PID_t* shell, PID_t* core);
 void Motor_Calc(void);
 void Motor_Exp_Calc(void);
 float Limit(float pwm, float min, float max);

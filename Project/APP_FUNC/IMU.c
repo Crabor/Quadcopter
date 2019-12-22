@@ -368,7 +368,7 @@ void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az,
 //float acc_bias[] = { 0.0f, 0.0f, 0.0f }; // 地理坐标系下加速度偏移量 ,
 //float corr_baro = 0.0f; //m
 
-void Height_Update(float ax, float ay, float az, float pressure)
+void Height_Update(/*float ax, float ay, float az, */float pressure)
 {
 //    float dT; //采样周期
 //    float accel_bias_corr[3] = { 0.0f, 0.0f, 0.0f };
