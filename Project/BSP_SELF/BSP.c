@@ -7,7 +7,7 @@ void BSP_Init(void){
 	IIC_Init();
 	while(MPU6050_Init()!=1);//若MPU6050初始化不成功，则程序不向下运行;
 	HMC5883L_Init();
-    MS561101BA_Init();
+    //MS561101BA_Init();
 	Quat_Init();
 	PWM_OUT_Init();
 	PWM_IN_Init();

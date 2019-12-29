@@ -13,6 +13,11 @@
 
 #define FILTER_NUM 2
 
+typedef enum {
+    ACC_GYRO_MAG = 0,
+    TEMP_PRESS
+} Type_t;
+
 /* MPU6050--加速度计结构体 */
 typedef struct
 {
@@ -58,10 +63,10 @@ float invSqrt(float x);
 void Open_Calib(void);
 u8 Calib_Status(void);
 void MPU6050_Offset(void);
-void GY86_Read(void);
+void GY86_Read(Type_t type);
 void Quat_Init(void);
 void Attitude_Update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz);
-void Height_Update(/*float ax, float ay, float az, */float pressure);
+void Height_Update(/*float ax, float ay, float az, */ float pressure);
 void AHRS_Time_Init(void);
 float Get_AHRS_Time(void);
 //void Apply_Deadband(float* value, float deadBand);

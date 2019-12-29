@@ -11,7 +11,7 @@ extern Angle_t angle; //姿态解算-角度值
 extern float height, velocity; //高度（cm）,速度(cm/s)
 extern float pidRoll, pidPitch, pidYaw, pidThr; //pid输出
 
-float rollShellKp = 1.0f; //外环Kp
+float rollShellKp = 4.4f; //外环Kp
 float rollCoreKp = 2.6f; //内环Kp
 float rollCoreTi = 0.5f; //内环Ti
 float rollCoreTd = 0.08f; //内环Td
@@ -21,8 +21,8 @@ float pitchCoreKp = 2.6f;
 float pitchCoreTi = 0.5f;
 float pitchCoreTd = 0.08f;
 
-float yawCoreKp = 1.0f;
-float yawCoreTd = 0.0f;
+float yawCoreKp = 2.6f;
+float yawCoreTd = 0.08f;
 
 float thrShellKp = 1.0f;
 float thrShellTd = 0.0f;
@@ -88,7 +88,7 @@ float PID_Calc(float shellErr, float coreStatus, PID_t* shell, PID_t* core)
         //TODO:内环积分浮点数比大小出问题
         //内环积分限幅
         if (core->eSum > CORE_INT_MAX) {
-            if (core->eK < 0.0f)
+            if (core->eK < -0.0f)
                 core->eSum += core->eK;
         } else if (core->eSum < -CORE_INT_MAX) {
             if (core->eK > 0.0f)
@@ -178,7 +178,7 @@ void Motor_Calc(void)
     //计算姿态PID
     //TODO:注意正负
     pidRoll = PID_Calc(expRoll - angle.roll, fGyro.y * RAD_TO_ANGLE, &rollShell, &rollCore);
-    //pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x * RAD_TO_ANGLE, &pitchShell, &pitchCore);
+    pidPitch = PID_Calc(expPitch - angle.pitch, -fGyro.x * RAD_TO_ANGLE, &pitchShell, &pitchCore);
     //TODO:yaw 与pitch、roll的pid计算不一样
     //pidYaw = PID_Calc(0,  fGyro.z * RAD_TO_ANGLE, 0, &yawCore);
 
@@ -253,7 +253,7 @@ void Motor_Exp_Calc(void)
     //    expRoll = (PWMInCh4 - 1500)*0.1f;
 
     //转化为期望值
-    expRoll = (float)((PWMInCh4 - 1500) * 0.04f); //最大20度
+    expRoll = (float)((PWMInCh4 - 1500) * 0.03f); //最大20度
     expPitch = (float)((PWMInCh2 - 1500) * 0.04f); //最大20度
     //TODO:yaw与roll、pitch不一样
     expYaw = (float)((PWMInCh1 - 1500) * 0.02f); //最大10度每秒

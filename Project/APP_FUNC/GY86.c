@@ -11,6 +11,7 @@ double OFF, SENS; //实际温度抵消,实际温度灵敏度
 float Aux, OFF2, SENS2; //温度校验值
 uint32_t ex_Pressure; //串口读数转换值
 uint8_t exchange_num[8];
+extern OS_EVENT* IICMutex;
 
 /**************************************
  * 函数名：MPU6050_Init
@@ -130,12 +131,17 @@ void MS561101BA_ReadPROM(void)
 uint32_t MS561101BA_Do_Conversion(uint8_t command)
 {
     uint32_t conversion;
+    INT8U err;
 
+    OSMutexPend(IICMutex, 0, &err);
     I2C_NoAddr_WriteByte(MS561101BA_Addr, command);
+    OSMutexPost(IICMutex);
 
-    delay_ms(9);
+    OSTimeDly(9);
 
+    OSMutexPend(IICMutex, 0, &err);
     conversion = I2C_Read_3Bytes(MS561101BA_Addr, 0);
+    OSMutexPost(IICMutex);
 
     return conversion;
 }
@@ -151,7 +157,7 @@ void MS561101BA_GetTemperature(u8 OSR_Temp)
 
     D2_Temp = MS561101BA_Do_Conversion(OSR_Temp);
 
-    delay_ms(9);
+    OSTimeDly(9);
 
     dT = D2_Temp - (((uint32_t)Cal_C[5]) << 8);
     Temperature = 2000 + dT * ((uint32_t)Cal_C[6]) / 0x800000; //算出温度值的100倍，2001表示20.01°
@@ -168,7 +174,7 @@ void MS561101BA_GetPressure(u8 OSR_Pres)
 
     D1_Pres = MS561101BA_Do_Conversion(OSR_Pres);
 
-    delay_ms(9);
+    OSTimeDly(9);
 
     OFF = (uint32_t)(Cal_C[2] << 16) + ((uint32_t)Cal_C[4] * dT) / 0x80;
     SENS = (uint32_t)(Cal_C[1] << 15) + ((uint32_t)Cal_C[3] * dT) / 0x100;

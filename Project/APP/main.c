@@ -4,7 +4,7 @@
 //为了各函数调用全局变量方便以及如果把全局变量放到各子文件会出现种种bug,
 //所以将大部分全局变量统一定义在主文件，其他子文件要用时用extern引用
 
-/**********************************姿态解算相关******************************************************/
+/**********************************姿态、高度解算相关******************************************************/
 uint8_t gyroOffset, accOffset, pressOffset; //用于零偏校准
 Acc_t acc, offsetAcc; //原始数据、零偏数据
 Gyro_t gyro, offsetGyro; //原始数据、零偏数据
@@ -40,24 +40,31 @@ float motor1, motor2, motor3, motor4; //四个电机速度:左前顺时针，右
 /**********************************操作系统相关*********************************************************/
 // 任务优先级定义
 #define TASK_STARTUP_PRIO 4
-#define TASK_COM_PRIO 8
+#define MUTEX_IIC_PRIO 5
 #define TASK_ANGEL_PRIO 6
-#define TASK_PID_PRIO 7
+#define TASK_HEIGHT_PRIO 7
+#define TASK_PID_PRIO 8
+#define TASK_COM_PRIO 9
 // 任务栈大小定义
 #define TASK_STARTUP_STK_SIZE 1024
 #define TASK_COM_STK_SIZE 512
 #define TASK_ANGEL_STK_SIZE 512
+#define TASK_HEIGHT_STK_SIZE 512
 #define TASK_PID_STK_SIZE 512
 // 栈内存分配
 static OS_STK Task_Startup_STK[TASK_STARTUP_STK_SIZE];
 static OS_STK Task_COM_STK[TASK_COM_STK_SIZE];
 static OS_STK Task_Angel_STK[TASK_ANGEL_STK_SIZE];
+static OS_STK Task_Height_STK[TASK_HEIGHT_STK_SIZE];
 static OS_STK Task_PID_STK[TASK_PID_STK_SIZE];
 // 函数定义
 static void Task_Startup(void* p_arg);
 static void Task_COM(void* p_arg);
 static void Task_Angel(void* p_arg);
+static void Task_Height(void* p_arg);
 static void Task_PID(void* p_arg);
+//IIC互斥锁
+OS_EVENT* IICMutex;
 /*******************************************************************************************************/
 
 int main(void)
@@ -68,8 +75,10 @@ int main(void)
     return 0;
 }
 
+//启动任务
 static void Task_Startup(void* p_arg)
 {
+    INT8U err;
     BSP_Init();
     //最低占空比启动电机
     TIM3->CCR1 = 54;
@@ -80,28 +89,30 @@ static void Task_Startup(void* p_arg)
     Open_Calib(); //打开零偏校准
 
     // Create functional task
+    IICMutex = OSMutexCreate(MUTEX_IIC_PRIO, &err);
     OSTaskCreate(Task_COM, (void*)0, &Task_COM_STK[TASK_COM_STK_SIZE - 1], TASK_COM_PRIO);
     OSTaskCreate(Task_Angel, (void*)0, &Task_Angel_STK[TASK_ANGEL_STK_SIZE - 1], TASK_ANGEL_PRIO);
+    OSTaskCreate(Task_Height, (void*)0, &Task_Height_STK[TASK_HEIGHT_STK_SIZE - 1], TASK_HEIGHT_PRIO);
     OSTaskCreate(Task_PID, (void*)0, &Task_PID_STK[TASK_PID_STK_SIZE - 1], TASK_PID_PRIO);
 
     // Delete itself
     OSTaskDel(OS_PRIO_SELF);
 }
 
+//通信任务
 static void Task_COM(void* p_arg)
 {
     int32_t temp;
     while (1) {
         Send_Senser(acc.x, acc.y, acc.z, gyro.x * RAW_TO_ANGLE, gyro.y * RAW_TO_ANGLE, gyro.z * RAW_TO_ANGLE, mag.x, mag.y, mag.z); //发送传感器原始数据帧
-        Send_Height_Temp(height, Temperature / 100); //发送气压高度和温度
+        //Send_Height_Temp(height, Temperature / 100); //发送气压高度和温度
         Send_RCData_Motor(PWM_IN_CH[2], PWM_IN_CH[0], PWM_IN_CH[3], PWM_IN_CH[1], motor1, motor2, motor3, motor4); //发送遥控器数据和电机速度数据帧
-        //Send_expVal(0xF1, expRoll, expPitch, expYaw, expMode); //发送遥控器数据转换成的期望值
-        temp = flyMode;
-        SendWord(0xF1, &temp);
-        Send_5_float(0xF2, expRoll, expPitch, expYaw, expHeight, expMode);
-        Send_5_float(0xF3, pidRoll, pidPitch, pidYaw, pidThr, 0);
+        // temp = flyMode;
+        // SendWord(0xF1, &temp);
+        Send_5_float(0xF2, expRoll, expPitch, expYaw, expMode, expHeight);
         if (!Calib_Status()) { //零偏校准结束
             Send_Attitude(angle.roll, angle.pitch, angle.yaw); //发送姿态数据帧
+            Send_5_float(0xF3, pidRoll, pidPitch, pidYaw, pidThr, 0);
         }
         OSTimeDly(10);
     }
@@ -110,12 +121,22 @@ static void Task_COM(void* p_arg)
 // 姿态解算任务
 static void Task_Angel(void* p_arg)
 {
-    //INT8U err;
     while (1) {
-        GY86_Read(); //读取九轴数据
+        GY86_Read(ACC_GYRO_MAG); //读取加速度、角速度、磁场强度
         if (!Calib_Status()) { //零偏校准结束
             Attitude_Update(fGyro.x, fGyro.y, fGyro.z, acc.x, acc.y, acc.z, mag.x, mag.y, mag.z); //姿态解算
-            Height_Update(/*acc.x, acc.y, acc.z, */ pressure);
+        }
+        OSTimeDly(1);
+    }
+}
+
+//高度解算任务
+static void Task_Height(void* p_arg)
+{
+    while (1) {
+        GY86_Read(TEMP_PRESS); //读取温度、气压
+        if (!Calib_Status()) { //零偏校准结束
+            Height_Update(pressure); //高度解算
         }
         OSTimeDly(1);
     }
@@ -124,7 +145,6 @@ static void Task_Angel(void* p_arg)
 // PID任务
 static void Task_PID(void* p_arg)
 {
-    //INT8U err;
     while (1) {
         Motor_Exp_Calc(); // 计算遥控器的期望值
         if (!Calib_Status()) { //零偏校准结束
